@@ -8,7 +8,7 @@ import pygame.mixer as mixer
 from src.sounds import Sound
 from src.music import MusicManager
 
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(levelname)-6s: %(message)s', level=logging.DEBUG)
 
 
 class SoundServer:
