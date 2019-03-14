@@ -3,7 +3,7 @@ import json
 import random
 import logging
 
-import vlc
+import pygame.mixer as mixer
 
 from src.sounds import Sound
 from src.tracks import TrackList
@@ -19,6 +19,7 @@ class MusicManager:
     SLEEP_TIME = 0.01
 
     def __init__(self, config_path):
+        mixer.init()
         with open(config_path) as config_file:
             config = json.load(config_file)
         self.track_lists = tuple(TrackList.from_dict(config["scenes"]))
@@ -142,35 +143,37 @@ class MusicManager:
             await server.serve_forever()
 
     async def _play_track_list(self, track_list: TrackList):
+        """
+        Plays the given track list.
+
+        When a sound is being played, the volume of the track list will be lowered and increased again after the
+        sound finishes playing.
+        """
         logging.debug(f"Loading '{track_list.name}'")
         while True:
             tracks = list(track_list.tracks)  # Copy since random will shuffle in place
             if track_list.shuffle:
                 random.shuffle(tracks)
             for track in tracks:
-                player = vlc.MediaPlayer(vlc.Instance(), f"file:///{track.file_path}")
-                success = player.play()
-                if success == -1:
-                    raise RuntimeError(f"Failed to play {track.file_path}")
+                mixer.music.load(track.file_path)
+                mixer.music.play()
                 if track.start_at is not None:
-                    player.set_time(track.start_at)
+                    mixer.music.set_pos(track.start_at)
                 logging.info(f"Now Playing: {track.file_path}")
-                await asyncio.sleep(2)  # Give the media player time to start the song
-                while player.is_playing() or player.get_state() == vlc.State.Paused:
-                    current_state = player.get_state()
-                    if self.is_playing_sound and not current_state == vlc.State.Paused:
-                        player.set_pause(1)
-                        logging.info(f"Paused {track.file_path}")
-                    elif not self.is_playing_sound and current_state == vlc.State.Paused:
-                        player.set_pause(0)
-                        logging.info(f"Resumed {track.file_path}")
-                    time = player.get_time()
-                    duration = player.get_length()
-                    remaining_time_in_ms = duration - time
+                has_lowered_volume = False
+                while mixer.music.get_busy():
+                    if self.is_playing_sound and not has_lowered_volume:
+                        mixer.music.set_volume(0.5)
+                        has_lowered_volume = True
+                        logging.debug(f"Lowered volume {track.file_path}")
+                    elif not self.is_playing_sound and has_lowered_volume:
+                        mixer.music.set_volume(1)
+                        has_lowered_volume = False
+                        logging.debug(f"Increased volume {track.file_path}")
                     try:
                         await asyncio.sleep(self.SLEEP_TIME)
                     except asyncio.CancelledError:
-                        player.stop()
+                        mixer.music.stop()
                         self.track_currently_playing = None
                         logging.info(f"Stopped {track.file_path}")
                         raise
@@ -183,25 +186,16 @@ class MusicManager:
         Plays the given sound.
         First, `self.is_playing_sound` is set to indicate that a sound is going to be played.
         Then the control is given to the event loop that will give control to the track that is being played
-        and this track will mute itself.
+        and this track will lower its volume.
         After playing the sound `self.is_playing_sound` is unset to signal the track to resume playing.
         """
         self.is_playing_sound = True
-        await asyncio.sleep(self.SLEEP_TIME)  # Back to the track list task, it will pause
+        await asyncio.sleep(self.SLEEP_TIME)  # Back to the track list task, it will lower its volume
         logging.debug(f"\tLoading '{sound.name}'")
         file = random.choice(sound.files)
-        player = vlc.MediaPlayer(vlc.Instance(), f"file:///{file}")
-        success = player.play()
-        if success == -1:
-            raise RuntimeError(f"Failed to play {file}")
+        sound = mixer.Sound(file)
+        sound.play()
         logging.info(f"Now Playing: {file}")
-        await asyncio.sleep(0.5)  # Give the media player time to start the song
-        while player.is_playing():
-            try:
-                await asyncio.sleep(0.1)
-            except asyncio.CancelledError:
-                player.stop()
-                logging.info(f"Stopped {file}")
-                raise
+        await asyncio.sleep(sound.get_length())
         logging.info(f"Finished playing: {file}")
         self.is_playing_sound = False

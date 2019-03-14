@@ -11,12 +11,16 @@ class Track(NamedTuple):
         if isinstance(data_dict, list):
             return [Track.from_dict(element) for element in data_dict]
         if isinstance(data_dict, str):  # only a file_path
+            if not data_dict.endswith(".mp3"):
+                raise TypeError("Music files must use the `.mp3` format.")
             return Track(file_path=data_dict)
         file_path = data_dict["file_path"]
+        if not file_path.endswith(".mp3"):
+            raise TypeError("Music files must use the `.mp3` format.")
         start_at = None if "start_at" not in data_dict else data_dict["start_at"]
         if start_at is not None:
             time_struct = (time.strptime(start_at, "%H:%M:%S"))
-            start_at = time_struct.tm_sec * 1000 + time_struct.tm_min * 1000 * 60 + time_struct.tm_hour * 1000 * 60 * 60
+            start_at = time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 60 * 60
         return Track(file_path=file_path, start_at=start_at)
 
 

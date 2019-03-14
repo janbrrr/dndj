@@ -1,2 +1,2 @@
-python-vlc==3.0.6108
 pydub==0.23.1
+pygame==1.9.4
