@@ -2,18 +2,16 @@ import asyncio
 import json
 import random
 import logging
-import time
 
 import pygame.mixer as mixer
 
 from src.sounds import Sound
-from src.tracks import TrackList
+from src.music import MusicManager
+
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
 
-logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
-
-
-class MusicManager:
+class SoundServer:
     STATE_SCENE_SELECTION = 0
     STATE_SOUND_SELECTION = 1
 
@@ -23,10 +21,8 @@ class MusicManager:
         mixer.init()
         with open(config_path) as config_file:
             config = json.load(config_file)
-        self.track_lists = tuple(TrackList.from_dict(config["scenes"]))
-        self.track_currently_playing = None
-        self.sounds = tuple(Sound.from_dict(config["sounds"]))
-        self.is_playing_sound = False
+        self.music = MusicManager(config["music"], mixer.music)
+        self.sounds = tuple(Sound.from_dict(config["sound"]["sounds"]))
 
     async def handle_connection(self, reader, writer):
         """
@@ -54,9 +50,9 @@ class MusicManager:
         logging.debug(f"Received {message!r} from {addr!r}")
 
         index = int(message) - 1
-        if index in range(0, len(self.track_lists)):
-            self._schedule_track(index)
-            writer.write(f"Now playing: {self.track_lists[index].name}\n\n".encode())
+        if index in range(0, len(self.music.track_lists)):
+            self.music.play_track_list(index)
+            writer.write(f"Now playing: {self.music.track_lists[index].name}\n\n".encode())
             return self.STATE_SCENE_SELECTION
         elif index == -1:
             return self.STATE_SOUND_SELECTION
@@ -71,21 +67,9 @@ class MusicManager:
         The first option is to switch to the sound menu.
         """
         message = "Available Scenes\n(0) Switch to Sounds\n"
-        for index, track_list in enumerate(self.track_lists):
+        for index, track_list in enumerate(self.music.track_lists):
             message += f"({index+1}) {track_list.name}\n"
         return message
-
-    def _schedule_track(self, index):
-        """
-        Creates an asynchronous task to play the track at the given index.
-        If a track is already being played as indicated by `self.track_currently_playing`, it will be cancelled
-        and the new track will be played.
-        """
-        track_list = self.track_lists[index]
-        if self.track_currently_playing is not None:
-            self.track_currently_playing.cancel()
-        loop = asyncio.get_event_loop()
-        self.track_currently_playing = loop.create_task(self._play_track_list(track_list))
 
     async def _handle_sound_selection(self, reader, writer) -> int:
         """
@@ -143,69 +127,16 @@ class MusicManager:
         async with server:
             await server.serve_forever()
 
-    async def _play_track_list(self, track_list: TrackList):
-        """
-        Plays the given track list.
-
-        When a sound is being played, the volume of the track list will be lowered and increased again after the
-        sound finishes playing.
-        """
-        logging.debug(f"Loading '{track_list.name}'")
-        while True:
-            tracks = list(track_list.tracks)  # Copy since random will shuffle in place
-            if track_list.shuffle:
-                random.shuffle(tracks)
-            for track in tracks:
-                mixer.music.load(track.file_path)
-                mixer.music.play()
-                if track.start_at is not None:
-                    mixer.music.set_pos(track.start_at)
-                logging.info(f"Now Playing: {track.file_path}")
-                has_lowered_volume = False
-                min_volume = 0.3
-                n_steps = 10
-                step_size = (1 - min_volume) / n_steps
-                while mixer.music.get_busy():
-                    if self.is_playing_sound and not has_lowered_volume:
-                        for i in range(n_steps):
-                            mixer.music.set_volume(1-(i+1) * step_size)
-                            time.sleep(1 / n_steps)
-                        has_lowered_volume = True
-                        print("Lowered volume to", mixer.music.get_volume())
-                        logging.debug(f"Lowered volume {track.file_path}")
-                    elif not self.is_playing_sound and has_lowered_volume:
-                        for i in range(n_steps):
-                            mixer.music.set_volume(min_volume+(i+1) * step_size)
-                            time.sleep(1 / n_steps)
-                        has_lowered_volume = False
-                        print("Increased volume to", mixer.music.get_volume())
-                        logging.debug(f"Increased volume {track.file_path}")
-                    try:
-                        await asyncio.sleep(self.SLEEP_TIME)
-                    except asyncio.CancelledError:
-                        mixer.music.stop()
-                        self.track_currently_playing = None
-                        logging.info(f"Stopped {track.file_path}")
-                        raise
-                logging.info(f"Finished playing: {track.file_path}")
-            if not track_list.loop:
-                break
-
     async def _play_sound(self, sound: Sound):
         """
         Plays the given sound.
-        First, `self.is_playing_sound` is set to indicate that a sound is going to be played.
-        Then the control is given to the event loop that will give control to the track that is being played
-        and this track will lower its volume.
-        After playing the sound `self.is_playing_sound` is unset to signal the track to resume playing.
         """
-        self.is_playing_sound = True
-        await asyncio.sleep(self.SLEEP_TIME)  # Back to the track list task, it will lower its volume
-        logging.debug(f"\tLoading '{sound.name}'")
+        await self.music.set_volume(0.3)
+        logging.debug(f"Loading '{sound.name}'")
         file = random.choice(sound.files)
         sound = mixer.Sound(file)
         sound.play()
         logging.info(f"Now Playing: {file}")
         await asyncio.sleep(sound.get_length())
         logging.info(f"Finished playing: {file}")
-        self.is_playing_sound = False
+        await self.music.set_volume(1)

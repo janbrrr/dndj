@@ -1,7 +1,7 @@
 import asyncio
 
-from src.server import MusicManager
+from src.server import SoundServer
 
 if __name__ == "__main__":
-    manager = MusicManager("config.json")
-    asyncio.run(manager.start_server())
+    server = SoundServer("config.json")
+    asyncio.run(server.start_server())
