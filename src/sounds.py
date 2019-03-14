@@ -14,6 +14,6 @@ class Sound(NamedTuple):
         if isinstance(files, str):
             files = [files]
         for file in files:
-            if not file.endswith(".mp3"):
+            if not file.endswith(".wav"):
                 raise TypeError("Sound files must use the `.wav` format.")
         return Sound(name=name, files=files)

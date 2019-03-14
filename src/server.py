@@ -2,6 +2,7 @@ import asyncio
 import json
 import random
 import logging
+import time
 
 import pygame.mixer as mixer
 
@@ -161,14 +162,23 @@ class MusicManager:
                     mixer.music.set_pos(track.start_at)
                 logging.info(f"Now Playing: {track.file_path}")
                 has_lowered_volume = False
+                min_volume = 0.3
+                n_steps = 10
+                step_size = (1 - min_volume) / n_steps
                 while mixer.music.get_busy():
                     if self.is_playing_sound and not has_lowered_volume:
-                        mixer.music.set_volume(0.5)
+                        for i in range(n_steps):
+                            mixer.music.set_volume(1-(i+1) * step_size)
+                            time.sleep(1 / n_steps)
                         has_lowered_volume = True
+                        print("Lowered volume to", mixer.music.get_volume())
                         logging.debug(f"Lowered volume {track.file_path}")
                     elif not self.is_playing_sound and has_lowered_volume:
-                        mixer.music.set_volume(1)
+                        for i in range(n_steps):
+                            mixer.music.set_volume(min_volume+(i+1) * step_size)
+                            time.sleep(1 / n_steps)
                         has_lowered_volume = False
+                        print("Increased volume to", mixer.music.get_volume())
                         logging.debug(f"Increased volume {track.file_path}")
                     try:
                         await asyncio.sleep(self.SLEEP_TIME)
