@@ -12,7 +12,7 @@ class Track:
         """
         Initializes a `Track` instance.
 
-        If the parameter `config` in a `string`, it is expected to be the file name.
+        If the `config` parameter is a `str`, it is expected to be the file name.
         Else it is expected to be a dictionary with the following keys:
         - "file": the filename (only the filename, excluding the directory)
         - "start_at": time at which the track should start in the %H:%M:%S format (Optional)
@@ -86,7 +86,7 @@ class MusicManager:
             self.currently_playing.cancel()
             self.currently_playing = None
 
-    def play_track_list(self, index):
+    async def play_track_list(self, index):
         """
         Creates an asynchronous task to play the track list at the given index.
         If a track list is already being played, it will be cancelled and the new track list will be played.
@@ -95,13 +95,11 @@ class MusicManager:
         self.cancel()
         loop = asyncio.get_event_loop()
         self.currently_playing = loop.create_task(self._play_track_list(track_list))
+        await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
 
     async def _play_track_list(self, track_list: TrackList):
         """
         Plays the given track list.
-
-        When a sound is being played, the volume of the track list will be lowered and increased again after the
-        sound finishes playing.
         """
         logging.debug(f"Loading '{track_list.name}'")
         while True:
@@ -125,7 +123,7 @@ class MusicManager:
             if not track_list.loop:
                 break
 
-    async def set_volume(self, volume, smooth=True, n_steps=10, seconds=1):
+    def set_volume(self, volume, smooth=True, n_steps=10, seconds=0.5):
         """
         Sets the volume for the music.
 

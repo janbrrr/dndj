@@ -1,11 +1,10 @@
 import asyncio
 import json
-import random
 import logging
 
 import pygame.mixer as mixer
 
-from src.sounds import Sound
+from src.sounds import SoundManager
 from src.music import MusicManager
 
 logging.basicConfig(format='%(levelname)-6s: %(message)s', level=logging.DEBUG)
@@ -22,7 +21,7 @@ class SoundServer:
         with open(config_path) as config_file:
             config = json.load(config_file)
         self.music = MusicManager(config["music"], mixer.music)
-        self.sounds = tuple(Sound.from_dict(config["sound"]["sounds"]))
+        self.sound = SoundManager(config["sound"], mixer)
 
     async def handle_connection(self, reader, writer):
         """
@@ -51,7 +50,7 @@ class SoundServer:
 
         index = int(message) - 1
         if index in range(0, len(self.music.track_lists)):
-            self.music.play_track_list(index)
+            await self.music.play_track_list(index)
             writer.write(f"Now playing: {self.music.track_lists[index].name}\n\n".encode())
             return self.STATE_SCENE_SELECTION
         elif index == -1:
@@ -85,9 +84,11 @@ class SoundServer:
         logging.debug(f"Received {message!r} from {addr!r}")
 
         index = int(message) - 1
-        if index in range(0, len(self.sounds)):
-            self._schedule_sound(index)
-            writer.write(f"Now playing: {self.sounds[index].name}\n\n".encode())
+        if index in range(0, len(self.sound.sounds)):
+            self.music.set_volume(0.3)
+            await self.sound.play_sound(index)
+            self.music.set_volume(1)
+            writer.write(f"Now playing: {self.sound.sounds[index].name}\n\n".encode())
             return self.STATE_SOUND_SELECTION
         elif index == -1:  # Switch to scenes
             return self.STATE_SCENE_SELECTION
@@ -102,17 +103,9 @@ class SoundServer:
         The first option is to switch back to the scene menu.
         """
         message = "Available Sound Options\n(0) Switch to Scenes\n"
-        for index, sound in enumerate(self.sounds):
+        for index, sound in enumerate(self.sound.sounds):
             message += f"({index + 1}) {sound.name}\n"
         return message
-
-    def _schedule_sound(self, index):
-        """
-        Creates an asynchronous task to play the sound at the given index.
-        """
-        sound = self.sounds[index]
-        loop = asyncio.get_event_loop()
-        play_sound_task = loop.create_task(self._play_sound(sound))
 
     async def start_server(self):
         """
@@ -126,17 +119,3 @@ class SoundServer:
 
         async with server:
             await server.serve_forever()
-
-    async def _play_sound(self, sound: Sound):
-        """
-        Plays the given sound.
-        """
-        await self.music.set_volume(0.3)
-        logging.debug(f"Loading '{sound.name}'")
-        file = random.choice(sound.files)
-        sound = mixer.Sound(file)
-        sound.play()
-        logging.info(f"Now Playing: {file}")
-        await asyncio.sleep(sound.get_length())
-        logging.info(f"Finished playing: {file}")
-        await self.music.set_volume(1)
