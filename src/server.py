@@ -85,9 +85,7 @@ class SoundServer:
 
         index = int(message) - 1
         if index in range(0, len(self.sound.sounds)):
-            self.music.set_volume(0.3)
             await self.sound.play_sound(index)
-            self.music.set_volume(1)
             writer.write(f"Now playing: {self.sound.sounds[index].name}\n\n".encode())
             return self.STATE_SOUND_SELECTION
         elif index == -1:  # Switch to scenes

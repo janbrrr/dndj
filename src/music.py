@@ -64,7 +64,7 @@ class MusicManager:
         Initializes a `MusicManager` instance.
 
         The `dict` parameter is expected to be a dictionary with the following keys:
-        - "volume": a value between 0 and 1 where 1 is maximum volume and 0 is no volume
+        - "volume": a value between 0 (mute) and 1 (max)
         - "directory": the directory where the files are
         - "track_lists": a list of track_list configs. See `TrackList` class for more information
 
@@ -108,6 +108,7 @@ class MusicManager:
                 random.shuffle(tracks)
             for track in tracks:
                 self.music_mixer.load(os.path.join(self.directory, track.file))
+                self.music_mixer.set_volume(self.volume)
                 self.music_mixer.play()
                 if track.start_at is not None:
                     self.music_mixer.set_pos(track.start_at)
@@ -140,4 +141,5 @@ class MusicManager:
             for i in range(n_steps):
                 self.music_mixer.set_volume(current_volume - (i + 1) * step_size)
                 time.sleep(seconds / n_steps)
+        self.volume = volume
         logging.debug(f"Changed music volume to {volume}")

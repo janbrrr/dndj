@@ -68,6 +68,7 @@ class SoundManager:
         logging.debug(f"Loading '{sound.name}'")
         file = random.choice(sound.files)
         sound = self.mixer.Sound(os.path.join(self.directory, file))
+        sound.set_volume(self.volume)
         sound.play()
         logging.info(f"Now Playing: {file}")
         await asyncio.sleep(sound.get_length())
