@@ -1,4 +1,4 @@
-function playSound(index) {
+function playSound(groupIndex, soundIndex) {
     const xhr = new XMLHttpRequest();
     const url = "sound/play/";
     xhr.onreadystatechange = function() {
@@ -8,7 +8,7 @@ function playSound(index) {
     };
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.send("index=" + index);
+    xhr.send("groupIndex=" + groupIndex + "&soundIndex=" + soundIndex);
 }
 
 function setSoundVolume() {

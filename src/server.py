@@ -78,7 +78,7 @@ class Server:
             },
             "sound": {
                 "volume": self.sound.volume,
-                "sounds": self.sound.sounds
+                "groups": self.sound.groups
             }
         }
         return aiohttp_jinja2.render_template('index.html', request, context)
@@ -105,9 +105,10 @@ class Server:
 
     async def play_sound(self, request):
         post_dict = await request.post()
-        if "index" in post_dict:
-            index = int(post_dict["index"])
-            await self.sound.play_sound(index)
+        if "groupIndex" in post_dict and "soundIndex" in post_dict:
+            group_index = int(post_dict["groupIndex"])
+            sound_index = int(post_dict["soundIndex"])
+            await self.sound.play_sound(group_index, sound_index)
             return Response(status=200)
         return Response(status=400)
 

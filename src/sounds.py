@@ -30,44 +30,64 @@ class Sound:
                 raise TypeError("Sound files must use the `.wav` format.")
 
 
+class SoundGroup:
+
+    def __init__(self, config: Dict):
+        """
+        Initializes a `SoundGroup` instance.
+
+        A ``SoundGroup`` groups multiple `Sound` instances. For more information have a look at the `Sound` class.
+
+        The `config` parameter is expected to be a dictionary with the following keys:
+        - "name": a descriptive name for the sound group
+        - "directory": the directory where the files for this group are
+        - "sounds": a list of configs for `Sound` instances. See `Sound` class for more information
+
+        :param config: `dict`
+        """
+        self.name = config["name"]
+        self.directory = config["directory"]
+        sounds = [Sound(sound_config) for sound_config in config["sounds"]]
+        self.sounds = tuple(sounds)
+
+
 class SoundManager:
 
     SLEEP_TIME = 0.01
 
-    def __init__(self, config_dict: Dict, mixer):
+    def __init__(self, config: Dict, mixer):
         """
         Initializes a `SoundManager` instance.
 
-        The `config_dict` parameter is expected to be a dictionary with the following keys:
+        The `config` parameter is expected to be a dictionary with the following keys:
         - "volume": a value between 0 and 1 where 1 is maximum volume and 0 is no volume
-        - "directory": the directory where the files are
-        - "sounds": a list of sound configs. See `Sound` class for more information
+        - "groups": a list of configs for `SoundGroup` instances. See `SoundGroup` class for more information
 
-        :param config_dict: `dict`
+        :param config: `dict`
         :param mixer: reference to `pygame.mixer` after it has been initialized
         """
         self.mixer = mixer
-        self.volume = float(config_dict["volume"])
-        self.directory = config_dict["directory"]
-        sounds = [Sound(sound_config) for sound_config in config_dict["sounds"]]
-        self.sounds = tuple(sounds)
+        self.volume = float(config["volume"])
+        groups = [SoundGroup(sound_group_config) for sound_group_config in config["groups"]]
+        self.groups = tuple(groups)
 
-    async def play_sound(self, index):
+    async def play_sound(self, group_index, sound_index):
         """
-        Creates an asynchronous task to play the sound at the given index.
+        Creates an asynchronous task to play the sound from the given group at the given index.
         """
-        sound = self.sounds[index]
+        group = self.groups[group_index]
+        sound = group.sounds[sound_index]
         loop = asyncio.get_event_loop()
-        playing = loop.create_task(self._play_sound(sound))
+        playing = loop.create_task(self._play_sound(group, sound))
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
 
-    async def _play_sound(self, sound: Sound):
+    async def _play_sound(self, group: SoundGroup, sound: Sound):
         """
         Plays the given sound.
         """
         logging.debug(f"Loading '{sound.name}'")
         file = random.choice(sound.files)
-        sound = self.mixer.Sound(os.path.join(self.directory, file))
+        sound = self.mixer.Sound(os.path.join(group.directory, file))
         sound.set_volume(self.volume)
         sound.play()
         logging.info(f"Now Playing: {file}")
