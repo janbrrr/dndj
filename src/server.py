@@ -51,6 +51,7 @@ class Server:
             app, loader=jinja2.PackageLoader('src', 'templates'))
         app.router.add_get('/', self.index)
         app.router.add_post('/music/play/', self.play_music)
+        app.router.add_post('/music/stop/', self.stop_music)
         app.router.add_post('/music/volume/', self.set_music_volume)
         app.router.add_post('/sound/play/', self.play_sound)
         app.router.add_post('/sound/volume/', self.set_sound_volume)
@@ -89,6 +90,10 @@ class Server:
             await self.music.play_track_list(index)
             return Response(status=200)
         return Response(status=400)
+
+    async def stop_music(self, request):
+        self.music.cancel()
+        return Response(status=200)
 
     async def set_music_volume(self, request):
         post_dict = await request.post()

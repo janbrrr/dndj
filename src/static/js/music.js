@@ -14,6 +14,20 @@ function playMusic(index) {
     xhr.send("index=" + index);
 }
 
+function stopMusic() {
+    const xhr = new XMLHttpRequest();
+    const url = "music/stop/";
+    xhr.onreadystatechange = function() {
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            $(".playing").removeClass("playing");
+        } else if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
+            console.log("Error attempting to stop music");
+        }
+    };
+    xhr.open("POST", url);
+    xhr.send();
+}
+
 function setMusicVolume() {
     const volume = $("#music-volume").val();
     const xhr = new XMLHttpRequest();
