@@ -73,3 +73,12 @@ class SoundManager:
         logging.info(f"Now Playing: {file}")
         await asyncio.sleep(sound.get_length())
         logging.info(f"Finished playing: {file}")
+
+    def set_volume(self, volume):
+        """
+        Sets the volume for the sounds.
+
+        :param volume: new volume, a value between 0 (mute) and 1 (max)
+        """
+        self.volume = volume
+        logging.debug(f"Changed sound volume to {volume}")

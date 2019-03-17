@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<html>
+  <head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="/static/js/music.js/"></script>
+    <script src="/static/js/sound.js/"></script>
+  </head>
+  <body>
+    <h1>D&D Music Manager</h1>
+    <div id="music">
+      <h3>Music</h3>
+      <p>
+        Volume:
+        <input id="music-volume" type="number" value="{{ music.volume }}"
+               min="0" max="1" step="0.05" onfocusout="setMusicVolume()"/>
+      </p>
+      <ul class="list-group">
+        {% if music.track_lists %}
+          {% for _track_list in music.track_lists %}
+            <li id="music-{{ loop.index0 }}" class="list-group-item {% if music.currently_playing and music.currently_playing.0.name == _track_list.name %}playing{% endif %}">
+              <button type="button" class="btn" onclick="playMusic({{ loop.index0 }})">
+                <i class="fas fa-play"></i>
+              </button> {{ _track_list.name }}
+            </li>
+          {% endfor %}
+        {% else %}
+          <li class="list-group-item">No track lists available.</li>
+        {% endif %}
+      </ul>
+    </div>
+    <div id="sound">
+      <h3>Sounds</h3>
+      <p>
+        Volume:
+        <input id="sound-volume" type="number" value="{{ sound.volume }}"
+               min="0" max="1" step="0.05" onfocusout="setSoundVolume()"/>
+      </p>
+      <ul class="list-group">
+        {% if sound.sounds %}
+          {% for _sound in sound.sounds %}
+            <li class="list-group-item">
+              <button type="button" class="btn" onclick="playSound({{ loop.index0 }})">
+                <i class="fas fa-play"></i>
+              </button> {{ _sound.name }}
+            </li>
+          {% endfor %}
+        {% else %}
+          <li class="list-group-item">No sounds available</li>
+        {% endif %}
+      </ul>
+    </div>
+  </body>
+</html>

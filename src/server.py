@@ -1,16 +1,23 @@
-import asyncio
 import json
 import logging
+import pathlib
 
 import pygame.mixer as mixer
+import jinja2
 
-from src.sounds import SoundManager
+import aiohttp_jinja2
+from aiohttp import web
+from aiohttp.web_response import Response
+
 from src.music import MusicManager
+from src.sounds import SoundManager
 
 logging.basicConfig(format='%(levelname)-6s: %(message)s', level=logging.DEBUG)
 
+PROJECT_ROOT = pathlib.Path(__file__).parent
 
-class SoundServer:
+
+class Server:
     STATE_SCENE_SELECTION = 0
     STATE_SOUND_SELECTION = 1
 
@@ -22,98 +29,87 @@ class SoundServer:
             config = json.load(config_file)
         self.music = MusicManager(config["music"], mixer.music)
         self.sound = SoundManager(config["sound"], mixer)
+        self.app = None
 
-    async def handle_connection(self, reader, writer):
+    def start(self):
+        """
+        Starts the web server.
+        """
+        host = "127.0.0.1"
+        port = 8080
+        self.app = self._init_app()
+        logging.info(f'Server started on http://{host}:{port}')
+        web.run_app(self.app, host=host, port=port)
+
+    async def _init_app(self):
+        """
+        Initializes the web application.
+        """
+        app = web.Application()
+        app.on_shutdown.append(self._shutdown_app)
+        aiohttp_jinja2.setup(
+            app, loader=jinja2.PackageLoader('src', 'templates'))
+        app.router.add_get('/', self.index)
+        app.router.add_post('/music/play/', self.play_music)
+        app.router.add_post('/music/volume/', self.set_music_volume)
+        app.router.add_post('/sound/play/', self.play_sound)
+        app.router.add_post('/sound/volume/', self.set_sound_volume)
+        app.router.add_static('/static/',
+                              path=PROJECT_ROOT / 'static',
+                              name='static')
+        return app
+
+    async def _shutdown_app(self, app):
+        """
+        Called when the app shut downs. Perform clean-up.
+        """
+        pass
+
+    async def index(self, request):
         """
         Handles the client connection.
         """
-        state = self.STATE_SCENE_SELECTION
+        context = {
+            "music": {
+                "volume": self.music.volume,
+                "currently_playing": self.music.currently_playing,
+                "track_lists": self.music.track_lists
+            },
+            "sound": {
+                "volume": self.sound.volume,
+                "sounds": self.sound.sounds
+            }
+        }
+        return aiohttp_jinja2.render_template('index.html', request, context)
 
-        while True:
-            if state == self.STATE_SCENE_SELECTION:
-                state = await self._handle_scene_selection(reader, writer)
-            elif state == self.STATE_SOUND_SELECTION:
-                state = await self._handle_sound_selection(reader, writer)
-
-    async def _handle_scene_selection(self, reader, writer) -> int:
-        """
-        Handles the scene selection with the client.
-        Returns the new state.
-        """
-        writer.write(self._get_scene_selection_message().encode())
-        await writer.drain()
-
-        data = await reader.read(1000)
-        message = data.decode()
-        addr = writer.get_extra_info('peername')
-        logging.debug(f"Received {message!r} from {addr!r}")
-
-        index = int(message) - 1
-        if index in range(0, len(self.music.track_lists)):
+    async def play_music(self, request):
+        post_dict = await request.post()
+        if "index" in post_dict:
+            index = int(post_dict["index"])
             await self.music.play_track_list(index)
-            writer.write(f"Now playing: {self.music.track_lists[index].name}\n\n".encode())
-            return self.STATE_SCENE_SELECTION
-        elif index == -1:
-            return self.STATE_SOUND_SELECTION
-        else:
-            logging.error(f"Received invalid index ({index}). Closing the connection.")
-            writer.close()
-            return self.STATE_SCENE_SELECTION
+            return Response(status=200)
+        return Response(status=400)
 
-    def _get_scene_selection_message(self) -> str:
-        """
-        Returns a message listing the available track list options as `(<index>) <name>`.
-        The first option is to switch to the sound menu.
-        """
-        message = "Available Scenes\n(0) Switch to Sounds\n"
-        for index, track_list in enumerate(self.music.track_lists):
-            message += f"({index+1}) {track_list.name}\n"
-        return message
+    async def set_music_volume(self, request):
+        post_dict = await request.post()
+        if "volume" in post_dict:
+            volume = float(post_dict["volume"])
+            self.music.set_volume(volume)
+            return Response(status=200)
+        return Response(status=400)
 
-    async def _handle_sound_selection(self, reader, writer) -> int:
-        """
-        Handles the sound selection with the client.
-        Returns the new state.
-        """
-        writer.write(self._get_sound_selection_message().encode())
-        await writer.drain()
-
-        data = await reader.read(1000)
-        message = data.decode()
-        addr = writer.get_extra_info('peername')
-        logging.debug(f"Received {message!r} from {addr!r}")
-
-        index = int(message) - 1
-        if index in range(0, len(self.sound.sounds)):
+    async def play_sound(self, request):
+        post_dict = await request.post()
+        if "index" in post_dict:
+            index = int(post_dict["index"])
             await self.sound.play_sound(index)
-            writer.write(f"Now playing: {self.sound.sounds[index].name}\n\n".encode())
-            return self.STATE_SOUND_SELECTION
-        elif index == -1:  # Switch to scenes
-            return self.STATE_SCENE_SELECTION
-        else:
-            logging.error(f"Received invalid index ({index}). Closing the connection.")
-            writer.close()
-            return self.STATE_SOUND_SELECTION
+            return Response(status=200)
+        return Response(status=400)
 
-    def _get_sound_selection_message(self):
-        """
-        Returns a message listing the available sound options as `(<index>) <name>`.
-        The first option is to switch back to the scene menu.
-        """
-        message = "Available Sound Options\n(0) Switch to Scenes\n"
-        for index, sound in enumerate(self.sound.sounds):
-            message += f"({index + 1}) {sound.name}\n"
-        return message
-
-    async def start_server(self):
-        """
-        Starts the server.
-        """
-        server = await asyncio.start_server(
-            self.handle_connection, '127.0.0.1', 8888)
-
-        addr = server.sockets[0].getsockname()
-        logging.info(f'Serving on {addr}')
-
-        async with server:
-            await server.serve_forever()
+    async def set_sound_volume(self, request):
+        post_dict = await request.post()
+        if "volume" in post_dict:
+            volume = float(post_dict["volume"])
+            self.sound.set_volume(volume)
+            return Response(status=200)
+        return Response(status=400)

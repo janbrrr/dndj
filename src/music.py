@@ -3,6 +3,7 @@ import time
 import logging
 import random
 import os
+from collections import namedtuple
 from typing import Union, Dict
 
 
@@ -55,6 +56,9 @@ class TrackList:
         self.tracks = tuple(tracks)  # immutable
 
 
+CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["play_list", "task"])
+
+
 class MusicManager:
 
     SLEEP_TIME = 0.01
@@ -83,7 +87,7 @@ class MusicManager:
         If a track is currently being played, the replay will be cancelled.
         """
         if self.currently_playing is not None:
-            self.currently_playing.cancel()
+            self.currently_playing.task.cancel()
             self.currently_playing = None
 
     async def play_track_list(self, index):
@@ -94,7 +98,7 @@ class MusicManager:
         track_list = self.track_lists[index]
         self.cancel()
         loop = asyncio.get_event_loop()
-        self.currently_playing = loop.create_task(self._play_track_list(track_list))
+        self.currently_playing = CurrentlyPlaying(track_list, loop.create_task(self._play_track_list(track_list)))
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
 
     async def _play_track_list(self, track_list: TrackList):
