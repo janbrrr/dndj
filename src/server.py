@@ -93,14 +93,14 @@ class Server:
         return Response(status=400)
 
     async def stop_music(self, request):
-        self.music.cancel()
+        await self.music.cancel()
         return Response(status=200)
 
     async def set_music_volume(self, request):
         post_dict = await request.post()
         if "volume" in post_dict:
             volume = float(post_dict["volume"])
-            self.music.set_volume(volume)
+            await self.music.set_volume(volume)
             return Response(status=200)
         return Response(status=400)
 

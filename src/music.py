@@ -102,13 +102,14 @@ class MusicManager:
         self.groups = tuple(groups)
         self.currently_playing = None
 
-    def cancel(self):
+    async def cancel(self):
         """
         If a track is currently being played, the replay will be cancelled.
         """
         if self.currently_playing is not None:
             self.currently_playing.task.cancel()
-            self.currently_playing = None
+            while self.currently_playing is not None:  # wait till track list finishes cancelling
+                await asyncio.sleep(self.SLEEP_TIME)
 
     async def play_track_list(self, group_index, track_list_index):
         """
@@ -117,7 +118,7 @@ class MusicManager:
         """
         group = self.groups[group_index]
         track_list = group.track_lists[track_list_index]
-        self.cancel()
+        await self.cancel()
         loop = asyncio.get_event_loop()
         self.currently_playing = CurrentlyPlaying(track_list,
                                                   loop.create_task(self._play_track_list(group, track_list_index)))
@@ -135,27 +136,31 @@ class MusicManager:
                 random.shuffle(tracks)
             for track in tracks:
                 self.music_mixer.load(os.path.join(group.directory, track.file))
-                self.music_mixer.set_volume(self.volume)
+                self.music_mixer.set_volume(0)
                 self.music_mixer.play()
                 if track.start_at is not None:
                     self.music_mixer.set_pos(track.start_at)
                 logging.info(f"Now Playing: {track.file}")
+                await self.set_volume(self.volume, set_global=False)
                 while self.music_mixer.get_busy():
                     try:
                         await asyncio.sleep(self.SLEEP_TIME)
                     except asyncio.CancelledError:
+                        await self.set_volume(0, set_global=False)
                         self.music_mixer.stop()
+                        self.currently_playing = None
                         logging.info(f"Stopped {track.file}")
                         raise
                 logging.info(f"Finished playing: {track.file}")
             if not track_list.loop:
                 break
 
-    def set_volume(self, volume, smooth=True, n_steps=10, seconds=0.5):
+    async def set_volume(self, volume, set_global=True, smooth=True, n_steps=20, seconds=2):
         """
         Sets the volume for the music.
 
         :param volume: new volume, a value between 0 (mute) and 1 (max)
+        :param set_global: whether to set this as the new global volume
         :param smooth: whether to do a smooth transitions
         :param n_steps: how many steps the transitions incorporates
         :param seconds: the time in which the transitions takes place
@@ -167,6 +172,7 @@ class MusicManager:
             step_size = (current_volume - volume) / n_steps
             for i in range(n_steps):
                 self.music_mixer.set_volume(current_volume - (i + 1) * step_size)
-                time.sleep(seconds / n_steps)
-        self.volume = volume
-        logging.debug(f"Changed music volume to {volume}")
+                await asyncio.sleep(seconds / n_steps)
+        if set_global:
+            self.volume = volume
+            logging.debug(f"Changed music volume to {volume}")
