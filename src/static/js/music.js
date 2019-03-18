@@ -1,17 +1,17 @@
-function playMusic(index) {
+function playMusic(groupIndex, trackListIndex) {
     const xhr = new XMLHttpRequest();
     const url = "music/play/";
     xhr.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             $(".playing").removeClass("playing");
-            $("#music-" + index).addClass("playing");
+            $("#music-" + groupIndex + "-" + trackListIndex).addClass("playing");
         } else if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
-            console.log("Error attempting to play music at index " + index);
+            console.log("Error attempting to play music in group " + groupIndex + " at index " + trackListIndex);
         }
     };
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.send("index=" + index);
+    xhr.send("groupIndex=" + groupIndex + "&trackListIndex=" + trackListIndex);
 }
 
 function stopMusic() {

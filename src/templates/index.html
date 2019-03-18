@@ -25,19 +25,32 @@
         <input id="music-volume" type="number" value="{{ music.volume }}"
                min="0" max="1" step="0.05" onfocusout="setMusicVolume()"/>
       </p>
-      <ul class="list-group">
-        {% if music.track_lists %}
-          {% for _track_list in music.track_lists %}
-            <li id="music-{{ loop.index0 }}" class="list-group-item {% if music.currently_playing and music.currently_playing.0.name == _track_list.name %}playing{% endif %}">
-              <button type="button" class="btn" onclick="playMusic({{ loop.index0 }})">
-                <i class="fas fa-play"></i>
-              </button> {{ _track_list.name }}
-            </li>
-          {% endfor %}
-        {% else %}
-          <li class="list-group-item">No track lists available.</li>
-        {% endif %}
-      </ul>
+      <div>
+        {% for group in music.groups %}
+          {% set outer_loop = loop %}
+          <div>
+            <a class="btn" data-toggle="collapse" href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
+               aria-expanded="false" aria-controls="collapseMusicGroup{{outer_loop.index0}}">
+              <h5>{{ group.name }}</h5>
+            </a>
+            <div class="collapse" id="collapseMusicGroup{{outer_loop.index0}}">
+              <ul class="list-group">
+                {% if group.track_lists %}
+                  {% for _track_list in group.track_lists %}
+                    <li id="music-{{ outer_loop.index0 }}-{{ loop.index0 }}" class="list-group-item {% if music.currently_playing and music.currently_playing.0.name == _track_list.name %}playing{% endif %}">
+                      <button type="button" class="btn" onclick="playMusic({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                        <i class="fas fa-play"></i>
+                      </button> {{ _track_list.name }}
+                    </li>
+                  {% endfor %}
+                {% else %}
+                  <li class="list-group-item">No track lists available.</li>
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
     </div>
     <div id="sound">
       <h3>Sounds</h3>

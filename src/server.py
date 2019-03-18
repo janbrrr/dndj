@@ -74,7 +74,7 @@ class Server:
             "music": {
                 "volume": self.music.volume,
                 "currently_playing": self.music.currently_playing,
-                "track_lists": self.music.track_lists
+                "groups": self.music.groups
             },
             "sound": {
                 "volume": self.sound.volume,
@@ -85,9 +85,10 @@ class Server:
 
     async def play_music(self, request):
         post_dict = await request.post()
-        if "index" in post_dict:
-            index = int(post_dict["index"])
-            await self.music.play_track_list(index)
+        if "groupIndex" in post_dict and "trackListIndex" in post_dict:
+            group_index = int(post_dict["groupIndex"])
+            track_list_index = int(post_dict["trackListIndex"])
+            await self.music.play_track_list(group_index, track_list_index)
             return Response(status=200)
         return Response(status=400)
 

@@ -56,30 +56,50 @@ class TrackList:
         self.tracks = tuple(tracks)  # immutable
 
 
-CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["play_list", "task"])
+class MusicGroup:
+
+    def __init__(self, config: Dict):
+        """
+        Initializes a `MusicGroup` instance.
+
+        A ``MusicGroup`` groups multiple `TrackList` instances.
+        For more information have a look at the `TrackList` class.
+
+        The `config` parameter is expected to be a dictionary with the following keys:
+        - "name": a descriptive name for the music group
+        - "directory": the directory where the files for this group are
+        - "track_lists": a list of configs for `TrackList` instances. See `TrackList` class for more information
+
+        :param config: `dict`
+        """
+        self.name = config["name"]
+        self.directory = config["directory"]
+        track_lists = [TrackList(track_list_config) for track_list_config in config["track_lists"]]
+        self.track_lists = tuple(track_lists)
+
+
+CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["track_list", "task"])
 
 
 class MusicManager:
 
     SLEEP_TIME = 0.01
 
-    def __init__(self, config_dict: Dict, music_mixer):
+    def __init__(self, config: Dict, music_mixer):
         """
         Initializes a `MusicManager` instance.
 
-        The `dict` parameter is expected to be a dictionary with the following keys:
+        The `config` parameter is expected to be a dictionary with the following keys:
         - "volume": a value between 0 (mute) and 1 (max)
-        - "directory": the directory where the files are
-        - "track_lists": a list of track_list configs. See `TrackList` class for more information
+        - "groups": a list of configs for `MusicGroup` instances. See `MusicGroup` class for more information
 
-        :param config_dict: `dict`
+        :param config: `dict`
         :param music_mixer: reference to `pygame.mixer.music` after it has been initialized
         """
         self.music_mixer = music_mixer
-        self.volume = float(config_dict["volume"])
-        self.directory = config_dict["directory"]
-        track_lists = [TrackList(track_list_config) for track_list_config in config_dict["track_lists"]]
-        self.track_lists = tuple(track_lists)
+        self.volume = float(config["volume"])
+        groups = [MusicGroup(group_config) for group_config in config["groups"]]
+        self.groups = tuple(groups)
         self.currently_playing = None
 
     def cancel(self):
@@ -90,28 +110,31 @@ class MusicManager:
             self.currently_playing.task.cancel()
             self.currently_playing = None
 
-    async def play_track_list(self, index):
+    async def play_track_list(self, group_index, track_list_index):
         """
         Creates an asynchronous task to play the track list at the given index.
         If a track list is already being played, it will be cancelled and the new track list will be played.
         """
-        track_list = self.track_lists[index]
+        group = self.groups[group_index]
+        track_list = group.track_lists[track_list_index]
         self.cancel()
         loop = asyncio.get_event_loop()
-        self.currently_playing = CurrentlyPlaying(track_list, loop.create_task(self._play_track_list(track_list)))
+        self.currently_playing = CurrentlyPlaying(track_list,
+                                                  loop.create_task(self._play_track_list(group, track_list_index)))
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
 
-    async def _play_track_list(self, track_list: TrackList):
+    async def _play_track_list(self, group: MusicGroup, track_list_index: int):
         """
-        Plays the given track list.
+        Plays the track list at the given index from the given group.
         """
+        track_list = group.track_lists[track_list_index]
         logging.debug(f"Loading '{track_list.name}'")
         while True:
             tracks = list(track_list.tracks)  # Copy since random will shuffle in place
             if track_list.shuffle:
                 random.shuffle(tracks)
             for track in tracks:
-                self.music_mixer.load(os.path.join(self.directory, track.file))
+                self.music_mixer.load(os.path.join(group.directory, track.file))
                 self.music_mixer.set_volume(self.volume)
                 self.music_mixer.play()
                 if track.start_at is not None:
