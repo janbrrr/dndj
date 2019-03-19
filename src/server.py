@@ -1,3 +1,6 @@
+import uuid
+
+import aiohttp
 import json
 import logging
 import pathlib
@@ -7,7 +10,6 @@ import jinja2
 
 import aiohttp_jinja2
 from aiohttp import web
-from aiohttp.web_response import Response
 
 from src.music import MusicManager
 from src.sounds import SoundManager
@@ -18,10 +20,6 @@ PROJECT_ROOT = pathlib.Path(__file__).parent
 
 
 class Server:
-    STATE_SCENE_SELECTION = 0
-    STATE_SOUND_SELECTION = 1
-
-    SLEEP_TIME = 0.01
 
     def __init__(self, config_path):
         mixer.init()
@@ -46,15 +44,11 @@ class Server:
         Initializes the web application.
         """
         app = web.Application()
+        app['websockets'] = {}
         app.on_shutdown.append(self._shutdown_app)
         aiohttp_jinja2.setup(
             app, loader=jinja2.PackageLoader('src', 'templates'))
         app.router.add_get('/', self.index)
-        app.router.add_post('/music/play/', self.play_music)
-        app.router.add_post('/music/stop/', self.stop_music)
-        app.router.add_post('/music/volume/', self.set_music_volume)
-        app.router.add_post('/sound/play/', self.play_sound)
-        app.router.add_post('/sound/volume/', self.set_sound_volume)
         app.router.add_static('/static/',
                               path=PROJECT_ROOT / 'static',
                               name='static')
@@ -64,11 +58,13 @@ class Server:
         """
         Called when the app shut downs. Perform clean-up.
         """
-        pass
+        for ws in app['websockets'].values():
+            await ws.close()
+        app['websockets'].clear()
 
-    async def index(self, request):
+    def _get_page(self, request):
         """
-        Handles the client connection.
+        Returns the index page.
         """
         context = {
             "music": {
@@ -83,40 +79,86 @@ class Server:
         }
         return aiohttp_jinja2.render_template('index.html', request, context)
 
-    async def play_music(self, request):
-        post_dict = await request.post()
-        if "groupIndex" in post_dict and "trackListIndex" in post_dict:
-            group_index = int(post_dict["groupIndex"])
-            track_list_index = int(post_dict["trackListIndex"])
-            await self.music.play_track_list(group_index, track_list_index)
-            return Response(status=200)
-        return Response(status=400)
+    async def index(self, request):
+        """
+        Handles the client connection.
+        """
+        ws_current = web.WebSocketResponse()
+        ws_ready = ws_current.can_prepare(request)
+        if not ws_ready.ok:
+            return self._get_page(request)
+        await ws_current.prepare(request)
 
-    async def stop_music(self, request):
+        ws_identifier = str(uuid.uuid4())
+        request.app['websockets'][ws_identifier] = ws_current
+        logging.info(f"Client {ws_identifier} connected.")
+        try:
+            while True:
+                msg = await ws_current.receive()
+                if msg.type == aiohttp.WSMsgType.text:
+                    data_dict = json.loads(msg.data)
+                    if "action" in data_dict:
+                        if data_dict["action"] == "playMusic":
+                            if "groupIndex" in data_dict and "trackListIndex" in data_dict:
+                                group_index = int(data_dict["groupIndex"])
+                                track_list_index = int(data_dict["trackListIndex"])
+                                await self._play_music(request, group_index, track_list_index)
+                        elif data_dict["action"] == "stopMusic":
+                            await self._stop_music(request)
+                        elif data_dict["action"] == "setMusicVolume":
+                            if "volume" in data_dict:
+                                volume = float(data_dict["volume"])
+                                await self._set_music_volume(request, volume)
+                        elif data_dict["action"] == "playSound":
+                            if "groupIndex" in data_dict and "soundIndex" in data_dict:
+                                group_index = int(data_dict["groupIndex"])
+                                sound_index = int(data_dict["soundIndex"])
+                                await self._play_sound(group_index, sound_index)
+                        elif data_dict["action"] == "setSoundVolume":
+                            if "volume" in data_dict:
+                                volume = float(data_dict["volume"])
+                                await self._set_sound_volume(request, volume)
+        except RuntimeError:
+            logging.info(f"Client {ws_identifier} disconnected.")
+            del request.app['websockets'][ws_identifier]
+            return ws_current
+
+    async def _play_music(self, request, group_index, track_list_index):
+        """
+        Starts to play the music and notifies all connected web sockets.
+        """
+        await self.music.play_track_list(group_index, track_list_index)
+        for ws in request.app['websockets'].values():
+            await ws.send_json(
+                    {'action': 'nowPlaying', 'groupIndex': group_index,
+                     "trackListIndex": track_list_index})
+
+    async def _stop_music(self, request):
+        """
+        Stops the music and notifies all connected web sockets.
+        """
         await self.music.cancel()
-        return Response(status=200)
+        for ws in request.app['websockets'].values():
+            await ws.send_json({'action': 'musicStopped'})
 
-    async def set_music_volume(self, request):
-        post_dict = await request.post()
-        if "volume" in post_dict:
-            volume = float(post_dict["volume"])
-            await self.music.set_volume(volume)
-            return Response(status=200)
-        return Response(status=400)
+    async def _set_music_volume(self, request, volume):
+        """
+        Sets the music volume and notifies all connected web sockets.
+        """
+        await self.music.set_volume(volume)
+        for ws in request.app['websockets'].values():
+            await ws.send_json({'action': 'setMusicVolume', 'volume': volume})
 
-    async def play_sound(self, request):
-        post_dict = await request.post()
-        if "groupIndex" in post_dict and "soundIndex" in post_dict:
-            group_index = int(post_dict["groupIndex"])
-            sound_index = int(post_dict["soundIndex"])
-            await self.sound.play_sound(group_index, sound_index)
-            return Response(status=200)
-        return Response(status=400)
+    async def _play_sound(self, group_index, sound_index):
+        """
+        Plays the sound.
+        """
+        await self.sound.play_sound(group_index, sound_index)
 
-    async def set_sound_volume(self, request):
-        post_dict = await request.post()
-        if "volume" in post_dict:
-            volume = float(post_dict["volume"])
-            self.sound.set_volume(volume)
-            return Response(status=200)
-        return Response(status=400)
+    async def _set_sound_volume(self, request, volume):
+        """
+        Sets the sound volume and notifies all connected web sockets.
+        """
+        self.sound.set_volume(volume)
+        for ws in request.app['websockets'].values():
+            await ws.send_json({'action': 'setSoundVolume', 'volume': volume})

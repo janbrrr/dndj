@@ -1,26 +1,25 @@
 function playSound(groupIndex, soundIndex) {
-    const xhr = new XMLHttpRequest();
-    const url = "sound/play/";
-    xhr.onreadystatechange = function() {
-        if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
-            console.log("Error attempting to play sound at index " + index);
-        }
+    if (conn === null) {
+        console.log("No connection established!");
+        return;
+    }
+    const toSend = {
+        "action": "playSound",
+        "groupIndex": groupIndex,
+        "soundIndex": soundIndex,
     };
-    xhr.open("POST", url);
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.send("groupIndex=" + groupIndex + "&soundIndex=" + soundIndex);
+    conn.send(JSON.stringify(toSend));
 }
 
 function setSoundVolume() {
     const volume = $("#sound-volume").val();
-    const xhr = new XMLHttpRequest();
-    const url = "sound/volume/";
-    xhr.onreadystatechange = function() {
-        if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
-            console.log("Error attempting to set sound volume with value " + volume);
-        }
+    if (conn === null) {
+        console.log("No connection established!");
+        return;
+    }
+    const toSend = {
+        "action": "setSoundVolume",
+        "volume": volume,
     };
-    xhr.open("POST", url);
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.send("volume=" + volume);
+    conn.send(JSON.stringify(toSend));
 }

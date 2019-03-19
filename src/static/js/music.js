@@ -1,64 +1,37 @@
-let musicRequestInProgress = false;
-
 function playMusic(groupIndex, trackListIndex) {
-    if (musicRequestInProgress) {
-        console.log("Error: music request already in progress.");
+    if (conn === null) {
+        console.log("No connection established!");
         return;
     }
-    musicRequestInProgress = true;
-    const xhr = new XMLHttpRequest();
-    const url = "music/play/";
-    xhr.onreadystatechange = function() {
-        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            $(".playing").removeClass("playing");
-            $("#music-" + groupIndex + "-" + trackListIndex).addClass("playing");
-            musicRequestInProgress = false;
-        } else if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
-            console.log("Error attempting to play music in group " + groupIndex + " at index " + trackListIndex);
-        }
+    const toSend = {
+        "action": "playMusic",
+        "groupIndex": groupIndex,
+        "trackListIndex": trackListIndex,
     };
-    xhr.open("POST", url);
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.send("groupIndex=" + groupIndex + "&trackListIndex=" + trackListIndex);
+    conn.send(JSON.stringify(toSend));
 }
 
+
 function stopMusic() {
-    if (musicRequestInProgress) {
-        console.log("Error: music request already in progress.");
+    if (conn === null) {
+        console.log("No connection established!");
         return;
     }
-    musicRequestInProgress = true;
-    const xhr = new XMLHttpRequest();
-    const url = "music/stop/";
-    xhr.onreadystatechange = function() {
-        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            $(".playing").removeClass("playing");
-            musicRequestInProgress = false;
-        } else if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
-            console.log("Error attempting to stop music");
-        }
+    const toSend = {
+        "action": "stopMusic",
     };
-    xhr.open("POST", url);
-    xhr.send();
+    conn.send(JSON.stringify(toSend));
 }
 
 function setMusicVolume() {
-    if (musicRequestInProgress) {
-        console.log("Error: music request already in progress.");
+    const volume = $("#music-volume").val();
+    if (conn === null) {
+        console.log("No connection established!");
         return;
     }
-    musicRequestInProgress = true;
-    const volume = $("#music-volume").val();
-    const xhr = new XMLHttpRequest();
-    const url = "music/volume/";
-    xhr.onreadystatechange = function() {
-        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
-            musicRequestInProgress = false;
-        } else if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
-            console.log("Error attempting to set music volume with value " + volume);
-        }
+    const toSend = {
+        "action": "setMusicVolume",
+        "volume": volume,
     };
-    xhr.open("POST", url);
-    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.send("volume=" + volume);
+    conn.send(JSON.stringify(toSend));
 }
