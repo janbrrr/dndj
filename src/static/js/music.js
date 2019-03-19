@@ -1,10 +1,18 @@
+let musicRequestInProgress = false;
+
 function playMusic(groupIndex, trackListIndex) {
+    if (musicRequestInProgress) {
+        console.log("Error: music request already in progress.");
+        return;
+    }
+    musicRequestInProgress = true;
     const xhr = new XMLHttpRequest();
     const url = "music/play/";
     xhr.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             $(".playing").removeClass("playing");
             $("#music-" + groupIndex + "-" + trackListIndex).addClass("playing");
+            musicRequestInProgress = false;
         } else if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
             console.log("Error attempting to play music in group " + groupIndex + " at index " + trackListIndex);
         }
@@ -15,11 +23,17 @@ function playMusic(groupIndex, trackListIndex) {
 }
 
 function stopMusic() {
+    if (musicRequestInProgress) {
+        console.log("Error: music request already in progress.");
+        return;
+    }
+    musicRequestInProgress = true;
     const xhr = new XMLHttpRequest();
     const url = "music/stop/";
     xhr.onreadystatechange = function() {
         if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
             $(".playing").removeClass("playing");
+            musicRequestInProgress = false;
         } else if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
             console.log("Error attempting to stop music");
         }
@@ -29,11 +43,18 @@ function stopMusic() {
 }
 
 function setMusicVolume() {
+    if (musicRequestInProgress) {
+        console.log("Error: music request already in progress.");
+        return;
+    }
+    musicRequestInProgress = true;
     const volume = $("#music-volume").val();
     const xhr = new XMLHttpRequest();
     const url = "music/volume/";
     xhr.onreadystatechange = function() {
-        if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+            musicRequestInProgress = false;
+        } else if (this.readyState === XMLHttpRequest.DONE && this.status !== 200) {
             console.log("Error attempting to set music volume with value " + volume);
         }
     };

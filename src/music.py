@@ -118,10 +118,12 @@ class MusicManager:
         """
         group = self.groups[group_index]
         track_list = group.track_lists[track_list_index]
+        logging.debug(f"Received request to play music from group {group_index} at index {track_list_index} ({track_list.name})")
         await self.cancel()
         loop = asyncio.get_event_loop()
         self.currently_playing = CurrentlyPlaying(track_list,
                                                   loop.create_task(self._play_track_list(group, track_list_index)))
+        logging.debug(f"Created a task to play '{track_list.name}'")
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
 
     async def _play_track_list(self, group: MusicGroup, track_list_index: int):
@@ -129,31 +131,34 @@ class MusicManager:
         Plays the track list at the given index from the given group.
         """
         track_list = group.track_lists[track_list_index]
-        logging.debug(f"Loading '{track_list.name}'")
-        while True:
-            tracks = list(track_list.tracks)  # Copy since random will shuffle in place
-            if track_list.shuffle:
-                random.shuffle(tracks)
-            for track in tracks:
-                self.music_mixer.load(os.path.join(group.directory, track.file))
-                self.music_mixer.set_volume(0)
-                self.music_mixer.play()
-                if track.start_at is not None:
-                    self.music_mixer.set_pos(track.start_at)
-                logging.info(f"Now Playing: {track.file}")
-                await self.set_volume(self.volume, set_global=False)
-                while self.music_mixer.get_busy():
-                    try:
-                        await asyncio.sleep(self.SLEEP_TIME)
-                    except asyncio.CancelledError:
-                        await self.set_volume(0, set_global=False)
-                        self.music_mixer.stop()
-                        self.currently_playing = None
-                        logging.info(f"Stopped {track.file}")
-                        raise
-                logging.info(f"Finished playing: {track.file}")
-            if not track_list.loop:
-                break
+        try:
+            logging.info(f"Loading '{track_list.name}'")
+            while True:
+                tracks = list(track_list.tracks)  # Copy since random will shuffle in place
+                if track_list.shuffle:
+                    random.shuffle(tracks)
+                for track in tracks:
+                    self.music_mixer.load(os.path.join(group.directory, track.file))
+                    self.music_mixer.set_volume(0)
+                    self.music_mixer.play()
+                    if track.start_at is not None:
+                        self.music_mixer.set_pos(track.start_at)
+                    logging.info(f"Now Playing: {track.file}")
+                    await self.set_volume(self.volume, set_global=False)
+                    while self.music_mixer.get_busy():
+                        try:
+                            await asyncio.sleep(self.SLEEP_TIME)
+                        except asyncio.CancelledError:
+                            await self.set_volume(0, set_global=False)
+                            raise
+                    logging.info(f"Finished playing: {track.file}")
+                if not track_list.loop:
+                    break
+        except asyncio.CancelledError:
+            self.music_mixer.stop()
+            self.currently_playing = None
+            logging.info(f"Cancelled '{track_list.name}'")
+            raise
 
     async def set_volume(self, volume, set_global=True, smooth=True, n_steps=20, seconds=2):
         """
