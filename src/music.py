@@ -43,6 +43,7 @@ class TrackList:
 
         The `dict` parameter is expected to be a dictionary with the following keys:
         - "name": the name of the track list
+        - "directory": the directory where the files for this track list are (Optional)
         - "loop": bool indicating whether to loop once all tracks have been played
         - "shuffle": bool indicating whether to shuffle the tracks
         - "tracks": a list of track configs. See `Track` class for more information.
@@ -50,6 +51,7 @@ class TrackList:
         :param config: `dict`
         """
         self.name = config["name"]
+        self.directory = config["directory"] if "directory" in config else None
         self.loop = config["loop"]
         self.shuffle = config["shuffle"]
         tracks = [Track(track_config) for track_config in config["tracks"]]
@@ -67,13 +69,13 @@ class MusicGroup:
 
         The `config` parameter is expected to be a dictionary with the following keys:
         - "name": a descriptive name for the music group
-        - "directory": the directory where the files for this group are
+        - "directory": the directory where the files for this group are (Optional)
         - "track_lists": a list of configs for `TrackList` instances. See `TrackList` class for more information
 
         :param config: `dict`
         """
         self.name = config["name"]
-        self.directory = config["directory"]
+        self.directory = config["directory"] if "directory" in config else None
         track_lists = [TrackList(track_list_config) for track_list_config in config["track_lists"]]
         self.track_lists = tuple(track_lists)
 
@@ -138,7 +140,8 @@ class MusicManager:
                 if track_list.shuffle:
                     random.shuffle(tracks)
                 for track in tracks:
-                    self.music_mixer.load(os.path.join(group.directory, track.file))
+                    directory = track_list.directory if track_list.directory is not None else group.directory
+                    self.music_mixer.load(os.path.join(directory, track.file))
                     self.music_mixer.set_volume(0)
                     self.music_mixer.play()
                     if track.start_at is not None:
