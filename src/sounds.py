@@ -26,8 +26,8 @@ class Sound:
         self.name = config["name"]
         self.files = tuple(config["files"])
         for file in self.files:
-            if not file.endswith(".wav"):
-                raise TypeError("Sound files must use the `.wav` format.")
+            if not file.endswith(".wav") and not file.endswith(".ogg"):
+                raise TypeError("Sound files must use the `.wav` or `.ogg` format.")
 
 
 class SoundGroup:
