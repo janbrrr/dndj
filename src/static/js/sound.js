@@ -11,8 +11,7 @@ function playSound(groupIndex, soundIndex) {
     conn.send(JSON.stringify(toSend));
 }
 
-function setSoundVolume() {
-    const volume = $("#sound-volume").val();
+function setSoundVolume(volume) {
     if (conn === null) {
         console.log("No connection established!");
         return;

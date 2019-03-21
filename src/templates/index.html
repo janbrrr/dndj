@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.1/css/bootstrap-slider.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="/static/css/base.css">
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.1/bootstrap-slider.min.js" crossorigin="anonymous"></script>
     <script src="/static/js/webSocket.js/"></script>
     <script src="/static/js/music.js/"></script>
     <script src="/static/js/sound.js/"></script>
+    <script src="/static/js/slider.js/"></script>
   </head>
   <body>
     <h1>D&D Music Manager</h1>
@@ -23,9 +26,9 @@
         </button>
       </p>
       <p>
-        Volume:
-        <input id="music-volume" type="number" value="{{ music.volume }}"
-               min="0" max="1" step="0.05" onfocusout="setMusicVolume()"/>
+        Volume 0
+        <input id="music-volume" type="text" data-slider-min="0" data-slider-max="1"
+               data-slider-step="0.05" data-slider-value="{{ music.volume }}"/> 1
       </p>
       <div>
         {% for group in music.groups %}
@@ -57,9 +60,9 @@
     <div id="sound">
       <h3>Sounds</h3>
       <p>
-        Volume:
-        <input id="sound-volume" type="number" value="{{ sound.volume }}"
-               min="0" max="1" step="0.05" onfocusout="setSoundVolume()"/>
+        Volume 0
+        <input id="sound-volume" type="text" data-slider-min="0" data-slider-max="1"
+               data-slider-step="0.05" data-slider-value="{{ sound.volume }}"/> 1
       </p>
       <div>
         {% for group in sound.groups %}

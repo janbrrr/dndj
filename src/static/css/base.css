@@ -2,3 +2,12 @@
     background-color: lightgray;
     border-color: lightgray;
 }
+
+.slider {
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+.slider-selection {
+	background: #BABABA;
+}

@@ -23,8 +23,7 @@ function stopMusic() {
     conn.send(JSON.stringify(toSend));
 }
 
-function setMusicVolume() {
-    const volume = $("#music-volume").val();
+function setMusicVolume(volume) {
     if (conn === null) {
         console.log("No connection established!");
         return;
