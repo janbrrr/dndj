@@ -13,7 +13,6 @@ class CustomLoader(yaml.SafeLoader):
         Loads another YAML file. Write '!include path/to/file.yaml'.
         """
         filename = os.path.join(self._root, self.construct_scalar(node))
-        print(os.path.split(filename))
         with open(filename, 'r') as f:
             return yaml.load(f, Loader=CustomLoader)
 
