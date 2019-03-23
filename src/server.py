@@ -12,6 +12,7 @@ import jinja2
 import aiohttp_jinja2
 from aiohttp import web
 
+from src.loader import CustomLoader
 from src.music import MusicManager
 from src.sounds import SoundManager
 
@@ -25,7 +26,7 @@ class Server:
     def __init__(self, config_path):
         mixer.init()
         with open(config_path) as config_file:
-            config = yaml.safe_load(config_file)
+            config = yaml.load(config_file, Loader=CustomLoader)
         self.music = MusicManager(config["music"], mixer.music)
         self.sound = SoundManager(config["sound"], mixer)
         self.app = None
