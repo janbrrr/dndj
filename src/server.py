@@ -2,6 +2,7 @@ import uuid
 
 import aiohttp
 import json
+import yaml
 import logging
 import pathlib
 
@@ -24,7 +25,7 @@ class Server:
     def __init__(self, config_path):
         mixer.init()
         with open(config_path) as config_file:
-            config = json.load(config_file)
+            config = yaml.safe_load(config_file)
         self.music = MusicManager(config["music"], mixer.music)
         self.sound = SoundManager(config["sound"], mixer)
         self.app = None
