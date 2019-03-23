@@ -70,6 +70,7 @@ class MusicGroup:
         The `config` parameter is expected to be a dictionary with the following keys:
         - "name": a descriptive name for the music group
         - "directory": the directory where the files for this group are (Optional)
+        - "sort": whether to sort the track lists alphabetically (Optional, default=True)
         - "track_lists": a list of configs for `TrackList` instances. See `TrackList` class for more information
 
         :param config: `dict`
@@ -77,6 +78,8 @@ class MusicGroup:
         self.name = config["name"]
         self.directory = config["directory"] if "directory" in config else None
         track_lists = [TrackList(track_list_config) for track_list_config in config["track_lists"]]
+        if "sort" not in config or ("sort" in config and config["sort"]):
+            track_lists = sorted(track_lists, key=lambda x: x.name)
         self.track_lists = tuple(track_lists)
 
 
@@ -93,6 +96,7 @@ class MusicManager:
 
         The `config` parameter is expected to be a dictionary with the following keys:
         - "volume": a value between 0 (mute) and 1 (max)
+        - "sort": whether to sort the groups alphabetically (Optional, default=True)
         - "groups": a list of configs for `MusicGroup` instances. See `MusicGroup` class for more information
 
         :param config: `dict`
@@ -101,6 +105,8 @@ class MusicManager:
         self.music_mixer = music_mixer
         self.volume = float(config["volume"])
         groups = [MusicGroup(group_config) for group_config in config["groups"]]
+        if "sort" not in config or ("sort" in config and config["sort"]):
+            groups = sorted(groups, key=lambda x: x.name)
         self.groups = tuple(groups)
         self.currently_playing = None
 

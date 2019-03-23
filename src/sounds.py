@@ -41,6 +41,7 @@ class SoundGroup:
         The `config` parameter is expected to be a dictionary with the following keys:
         - "name": a descriptive name for the sound group
         - "directory": the directory where the files for this group are
+        - "sort": whether to sort the sounds alphabetically (Optional, default=True)
         - "sounds": a list of configs for `Sound` instances. See `Sound` class for more information
 
         :param config: `dict`
@@ -48,6 +49,8 @@ class SoundGroup:
         self.name = config["name"]
         self.directory = config["directory"]
         sounds = [Sound(sound_config) for sound_config in config["sounds"]]
+        if "sort" not in config or ("sort" in config and config["sort"]):
+            sounds = sorted(sounds, key=lambda x: x.name)
         self.sounds = tuple(sounds)
 
 
@@ -61,6 +64,7 @@ class SoundManager:
 
         The `config` parameter is expected to be a dictionary with the following keys:
         - "volume": a value between 0 and 1 where 1 is maximum volume and 0 is no volume
+        - "sort": whether to sort the groups alphabetically (Optional, default=True)
         - "groups": a list of configs for `SoundGroup` instances. See `SoundGroup` class for more information
 
         :param config: `dict`
@@ -69,6 +73,8 @@ class SoundManager:
         self.mixer = mixer
         self.volume = float(config["volume"])
         groups = [SoundGroup(sound_group_config) for sound_group_config in config["groups"]]
+        if "sort" not in config or ("sort" in config and config["sort"]):
+            groups = sorted(groups, key=lambda x: x.name)
         self.groups = tuple(groups)
 
     async def play_sound(self, group_index, sound_index):
