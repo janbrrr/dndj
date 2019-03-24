@@ -23,23 +23,23 @@ PROJECT_ROOT = pathlib.Path(__file__).parent
 
 class Server:
 
-    def __init__(self, config_path):
+    def __init__(self, config_path, host, port):
         mixer.init()
         with open(config_path) as config_file:
             config = yaml.load(config_file, Loader=CustomLoader)
         self.music = MusicManager(config["music"], mixer.music)
         self.sound = SoundManager(config["sound"], mixer)
         self.app = None
+        self.host = host
+        self.port = port
 
     def start(self):
         """
         Starts the web server.
         """
-        host = "127.0.0.1"
-        port = 8080
         self.app = self._init_app()
-        logging.info(f'Server started on http://{host}:{port}')
-        web.run_app(self.app, host=host, port=port)
+        logging.info(f'Server started on http://{self.host}:{self.port}')
+        web.run_app(self.app, host=self.host, port=self.port)
 
     async def _init_app(self):
         """
