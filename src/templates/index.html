@@ -22,6 +22,7 @@
     <script src="/static/js/music.js/"></script>
     <script src="/static/js/sound.js/"></script>
     <script src="/static/js/slider.js/"></script>
+    <script src="/static/js/collapse.js/"></script>
 </head>
 <body>
 <h1>D&D Music Manager</h1>
@@ -53,9 +54,9 @@
             {% for group in music.groups %}
             {% set outer_loop = loop %}
             <div>
-                <a class="btn" data-toggle="collapse" href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
+                <a class="btn collapse-btn" data-toggle="collapse" href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
                    aria-expanded="false" aria-controls="collapseMusicGroup{{outer_loop.index0}}">
-                    <h5>{{ group.name }}</h5>
+                    <h5>{{ group.name }}<i class="collapse-icon fas fa-plus fa-xs"></i></h5>
                 </a>
                 <div class="collapse" id="collapseMusicGroup{{outer_loop.index0}}">
                     <ul class="list-group">
@@ -90,9 +91,9 @@
             {% for group in sound.groups %}
             {% set outer_loop = loop %}
             <div>
-                <a class="btn" data-toggle="collapse" href="#collapseSoundGroup{{outer_loop.index0}}" role="button"
+                <a class="btn collapse-btn" data-toggle="collapse" href="#collapseSoundGroup{{outer_loop.index0}}" role="button"
                    aria-expanded="false" aria-controls="collapseSoundGroup{{outer_loop.index0}}">
-                    <h5>{{ group.name }}</h5>
+                    <h5>{{ group.name }}<i class="collapse-icon fas fa-plus fa-xs"></i></h5>
                 </a>
                 <div class="collapse" id="collapseSoundGroup{{outer_loop.index0}}">
                     <ul class="list-group">
