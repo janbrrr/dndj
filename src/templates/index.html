@@ -25,95 +25,103 @@
     <script src="/static/js/collapse.js/"></script>
 </head>
 <body>
-<h1>D&D Music Manager</h1>
-<ul class="nav nav-tabs" role="tablist">
-    <li class="nav-item">
-        <a class="nav-link active" id="music-tab" data-toggle="tab" href="#music" role="tab" aria-controls="music"
-           aria-selected="true">Music</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" id="sound-tab" data-toggle="tab" href="#sound" role="tab" aria-controls="sound"
-           aria-selected="false">Sound</a>
-    </li>
-</ul>
-<div class="tab-content">
-    <div class="tab-pane fade show active" id="music" role="tabpanel" aria-labelledby="music-tab">
-        <h3>Music</h3>
-        <p>
-            Stop the Music
-            <button type="button" class="btn" onclick="stopMusic()">
-                <i class="fas fa-stop"></i>
-            </button>
-        </p>
-        <p>
-            Volume 0
-            <input id="music-volume" type="text" data-slider-min="0" data-slider-max="1"
-                   data-slider-step="0.05" data-slider-value="{{ music.volume }}"/> 1
-        </p>
-        <div>
-            {% for group in music.groups %}
-            {% set outer_loop = loop %}
-            <div>
-                <a class="btn collapse-btn" data-toggle="collapse" href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
-                   aria-expanded="false" aria-controls="collapseMusicGroup{{outer_loop.index0}}">
-                    <h5>{{ group.name }}<i class="collapse-icon fas fa-plus fa-xs"></i></h5>
-                </a>
-                <div class="collapse" id="collapseMusicGroup{{outer_loop.index0}}">
-                    <ul class="list-group">
-                        {% if group.track_lists %}
-                        {% for _track_list in group.track_lists %}
-                        <li id="music-{{ outer_loop.index0 }}-{{ loop.index0 }}"
-                            class="list-group-item {% if music.currently_playing and music.currently_playing.0.name == _track_list.name %}playing{% endif %}">
-                            <button type="button" class="btn"
-                                    onclick="playMusic({{ outer_loop.index0 }}, {{ loop.index0 }})">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            {{ _track_list.name }}
-                        </li>
-                        {% endfor %}
-                        {% else %}
-                        <li class="list-group-item">No track lists available.</li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+<div class="container">
+    <div class="headline">
+        <h1 class="text-center">D&D Music Manager</h1>
     </div>
-    <div class="tab-pane fade" id="sound" role="tabpanel" aria-labelledby="sound-tab">
-        <h3>Sounds</h3>
-        <p>
-            Volume 0
-            <input id="sound-volume" type="text" data-slider-min="0" data-slider-max="1"
-                   data-slider-step="0.05" data-slider-value="{{ sound.volume }}"/> 1
-        </p>
-        <div>
-            {% for group in sound.groups %}
-            {% set outer_loop = loop %}
+    <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item col-6">
+                <a class="nav-link active" id="music-tab" data-toggle="tab" href="#music" role="tab" aria-controls="music"
+                   aria-selected="true">Music</a>
+            </li>
+            <li class="nav-item col-6">
+                <a class="nav-link" id="sound-tab" data-toggle="tab" href="#sound" role="tab" aria-controls="sound"
+                   aria-selected="false">Sound</a>
+            </li>
+        </ul>
+    </div>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="music" role="tabpanel" aria-labelledby="music-tab">
+            <p>
+                Stop the Music
+                <button type="button" class="btn" onclick="stopMusic()">
+                    <i class="fas fa-stop"></i>
+                </button>
+            </p>
+            <p>
+                Volume
+                <input id="music-volume" type="text" data-slider-min="0" data-slider-max="1"
+                       data-slider-step="0.05" data-slider-value="{{ music.volume }}"/>
+            </p>
+            <hr class="row">
             <div>
-                <a class="btn collapse-btn" data-toggle="collapse" href="#collapseSoundGroup{{outer_loop.index0}}" role="button"
-                   aria-expanded="false" aria-controls="collapseSoundGroup{{outer_loop.index0}}">
-                    <h5>{{ group.name }}<i class="collapse-icon fas fa-plus fa-xs"></i></h5>
-                </a>
-                <div class="collapse" id="collapseSoundGroup{{outer_loop.index0}}">
-                    <ul class="list-group">
-                        {% if group.sounds %}
-                        {% for _sound in group.sounds %}
-                        <li class="list-group-item">
-                            <button type="button" class="btn"
-                                    onclick="playSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            {{ _sound.name }}
-                        </li>
-                        {% endfor %}
-                        {% else %}
-                        <li class="list-group-item">No sounds available</li>
-                        {% endif %}
-                    </ul>
+                {% for group in music.groups %}
+                {% set outer_loop = loop %}
+                <div>
+                    <a class="row btn collapse-btn" data-toggle="collapse" href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
+                       aria-expanded="false" aria-controls="collapseMusicGroup{{outer_loop.index0}}">
+                        <h5><i class="collapse-icon fas fa-plus fa-xs"></i>{{ group.name }}</h5>
+                    </a>
+                    <div class="collapse" id="collapseMusicGroup{{outer_loop.index0}}">
+                        <div class="row">
+                            {% if group.track_lists %}
+                            {% for _track_list in group.track_lists %}
+                            <div class="col-12 col-sm-6 col-xl-4 group-item">
+                                <button type="button" class="btn {% if music.currently_playing and music.currently_playing.0.name == _track_list.name %}playing{% endif %}"
+                                        id="btn-music-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                                        onclick="playMusic({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                                    <i class="fas fa-play play-icon"></i>
+                                    {{ _track_list.name }}
+                                </button>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="list-group-item">No track lists available.</div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
+                <hr class="row">
+                {% endfor %}
             </div>
-            {% endfor %}
+        </div>
+        <div class="tab-pane fade" id="sound" role="tabpanel" aria-labelledby="sound-tab">
+            <p>
+                Volume
+                <input id="sound-volume" type="text" data-slider-min="0" data-slider-max="1"
+                       data-slider-step="0.05" data-slider-value="{{ sound.volume }}"/>
+            </p>
+            <hr class="row">
+            <div>
+                {% for group in sound.groups %}
+                {% set outer_loop = loop %}
+                <div>
+                    <a class="row btn collapse-btn" data-toggle="collapse" href="#collapseSoundGroup{{outer_loop.index0}}" role="button"
+                       aria-expanded="false" aria-controls="collapseSoundGroup{{outer_loop.index0}}">
+                        <h5><i class="collapse-icon fas fa-plus fa-xs"></i>{{ group.name }}</h5>
+                    </a>
+                    <div class="collapse" id="collapseSoundGroup{{outer_loop.index0}}">
+                        <div class="row">
+                            {% if group.sounds %}
+                            {% for _sound in group.sounds %}
+                            <div class="col-12 col-sm-6 col-xl-4 group-item">
+                                <button type="button" class="btn"
+                                        onclick="playSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                                    <i class="fas fa-play play-icon"></i>
+                                </button>
+                                {{ _sound.name }}
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="list-group-item">No sounds available</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <hr class="row">
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>

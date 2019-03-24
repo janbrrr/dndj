@@ -1,6 +1,9 @@
 .playing {
-    background-color: lightgray;
-    border-color: lightgray;
+    color: #007AFF;
+}
+
+.playing:hover {
+    color: #007AFF;
 }
 
 .slider {
@@ -13,5 +16,31 @@
 }
 
 .collapse-icon {
-    margin-left: 15px;
+    margin-right: 15px;
+}
+
+.collapse-btn {
+    width: 100%;
+    text-align: left;
+}
+
+.tab-content {
+    margin-top: 15px;
+}
+
+.group-item {
+    padding: .75rem 1.25rem;
+}
+
+.play-icon {
+    padding: .375rem .75rem;
+}
+
+.nav {
+    width: 100%;
+}
+
+.headline {
+    margin-bottom: 2rem;
+    margin-top: 1rem;
 }

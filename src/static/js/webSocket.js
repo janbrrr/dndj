@@ -20,7 +20,7 @@ function connect() {
         switch (data.action) {
             case "nowPlaying":
                 $(".playing").removeClass("playing");
-                $("#music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
+                $("#btn-music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
                 console.log("Now playing from group " + data.groupIndex + " at index " + data.trackListIndex);
                 break;
             case "musicStopped":
