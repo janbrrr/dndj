@@ -147,6 +147,10 @@ class MusicManager:
                     random.shuffle(tracks)
                 for track in tracks:
                     directory = track_list.directory if track_list.directory is not None else group.directory
+                    file_path = os.path.join(directory, track.file)
+                    if not os.path.isfile(file_path):
+                        logging.error(f"File {file_path} does not exist")
+                        raise asyncio.CancelledError()
                     self.music_mixer.load(os.path.join(directory, track.file))
                     self.music_mixer.set_volume(0)
                     self.music_mixer.play()
