@@ -30,12 +30,12 @@ function connect() {
                 displayToast("Music", "Stopped the music.");
                 break;
             case "setMusicVolume":
-                $("#music-volume").val(data.volume);
+                $("#music-volume").slider('setValue', data.volume);
                 console.log("Music volume set to " + data.volume);
                 displayToast("Music", "Set volume to <strong>" + data.volume + "</strong>.");
                 break;
             case "setSoundVolume":
-                $("#sound-volume").val(data.volume);
+                $("#sound-volume").slider('setValue', data.volume);
                 console.log("Sound volume set to " + data.volume);
                 displayToast("Sound", "Set volume to <strong>" + data.volume + "</strong>.");
                 break;
