@@ -129,13 +129,15 @@ class Server:
         """
         Starts to play the music and notifies all connected web sockets.
         """
-        music_name = self.music.groups[group_index].track_lists[track_list_index].name
+        group = self.music.groups[group_index]
+        group_name = group.name
+        track_name = group.track_lists[track_list_index].name
         await self.music.play_track_list(group_index, track_list_index)
         for ws in request.app["websockets"].values():
             await ws.send_json(
                     {"action": "nowPlaying", "groupIndex": group_index,
                      "trackListIndex": track_list_index,
-                     "name": music_name})
+                     "groupName": group_name, "trackName": track_name})
 
     async def _stop_music(self, request):
         """

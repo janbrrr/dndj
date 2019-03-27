@@ -83,7 +83,7 @@ class MusicGroup:
         self.track_lists = tuple(track_lists)
 
 
-CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["track_list", "task"])
+CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["group", "track_list", "task"])
 
 
 class MusicManager:
@@ -129,7 +129,7 @@ class MusicManager:
         logging.debug(f"Received request to play music from group {group_index} at index {track_list_index} ({track_list.name})")
         await self.cancel()
         loop = asyncio.get_event_loop()
-        self.currently_playing = CurrentlyPlaying(track_list,
+        self.currently_playing = CurrentlyPlaying(group, track_list,
                                                   loop.create_task(self._play_track_list(group, track_list_index)))
         logging.debug(f"Created a task to play '{track_list.name}'")
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task

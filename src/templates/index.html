@@ -46,6 +46,18 @@
     <div class="tab-content">
         <div class="tab-pane fade show active" id="music" role="tabpanel" aria-labelledby="music-tab">
             <p>
+                Now Playing
+                <strong>
+                    <span id="now-playing" class="ml-2">
+                        {% if music.currently_playing %}
+                            {{ music.currently_playing.0.name }} > {{ music.currently_playing.1.name }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </span>
+                </strong>
+            </p>
+            <p>
                 Stop the Music
                 <button type="button" class="btn" onclick="stopMusic()">
                     <i class="fas fa-stop"></i>
@@ -70,7 +82,9 @@
                             {% if group.track_lists %}
                             {% for _track_list in group.track_lists %}
                             <div class="col-12 col-sm-6 col-xl-4 group-item">
-                                <button type="button" class="btn {% if music.currently_playing and music.currently_playing.0.name == _track_list.name %}playing{% endif %}"
+                                <button type="button" class="btn {% if music.currently_playing
+                                and music.currently_playing.0.name == group.name
+                                and music.currently_playing.1.name == _track_list.name %}playing{% endif %}"
                                         id="btn-music-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                                         onclick="playMusic({{ outer_loop.index0 }}, {{ loop.index0 }})">
                                     <i class="fas fa-play play-icon"></i>

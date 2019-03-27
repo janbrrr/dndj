@@ -21,8 +21,9 @@ function connect() {
             case "nowPlaying":
                 $(".playing").removeClass("playing");
                 $("#btn-music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
-                console.log("Now playing " + data.name + " (group " + data.groupIndex + " at index " + data.trackListIndex + ")");
-                displayToast("Music", "Now playing <strong>" + data.name + "</strong>.");
+                $("#now-playing").text(`${data.groupName} > ${data.trackName}`);
+                console.log("Now playing " + data.trackName + " (group " + data.groupIndex + " at index " + data.trackListIndex + ")");
+                displayToast("Music", "Now playing <strong>" + data.trackName + "</strong>.");
                 break;
             case "musicStopped":
                 $(".playing").removeClass("playing");
