@@ -122,34 +122,36 @@ class Server:
                                 await self._set_sound_volume(request, volume)
         except RuntimeError:
             logging.info(f"Client {ws_identifier} disconnected.")
-            del request.app['websockets'][ws_identifier]
+            del request.app["websockets"][ws_identifier]
             return ws_current
 
     async def _play_music(self, request, group_index, track_list_index):
         """
         Starts to play the music and notifies all connected web sockets.
         """
+        music_name = self.music.groups[group_index].track_lists[track_list_index].name
         await self.music.play_track_list(group_index, track_list_index)
-        for ws in request.app['websockets'].values():
+        for ws in request.app["websockets"].values():
             await ws.send_json(
-                    {'action': 'nowPlaying', 'groupIndex': group_index,
-                     "trackListIndex": track_list_index})
+                    {"action": "nowPlaying", "groupIndex": group_index,
+                     "trackListIndex": track_list_index,
+                     "name": music_name})
 
     async def _stop_music(self, request):
         """
         Stops the music and notifies all connected web sockets.
         """
         await self.music.cancel()
-        for ws in request.app['websockets'].values():
-            await ws.send_json({'action': 'musicStopped'})
+        for ws in request.app["websockets"].values():
+            await ws.send_json({"action": "musicStopped"})
 
     async def _set_music_volume(self, request, volume):
         """
         Sets the music volume and notifies all connected web sockets.
         """
         await self.music.set_volume(volume)
-        for ws in request.app['websockets'].values():
-            await ws.send_json({'action': 'setMusicVolume', 'volume': volume})
+        for ws in request.app["websockets"].values():
+            await ws.send_json({"action": "setMusicVolume", "volume": volume})
 
     async def _play_sound(self, group_index, sound_index):
         """
@@ -162,5 +164,5 @@ class Server:
         Sets the sound volume and notifies all connected web sockets.
         """
         self.sound.set_volume(volume)
-        for ws in request.app['websockets'].values():
-            await ws.send_json({'action': 'setSoundVolume', 'volume': volume})
+        for ws in request.app["websockets"].values():
+            await ws.send_json({"action": "setSoundVolume", "volume": volume})

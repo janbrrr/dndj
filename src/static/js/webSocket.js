@@ -21,19 +21,23 @@ function connect() {
             case "nowPlaying":
                 $(".playing").removeClass("playing");
                 $("#btn-music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
-                console.log("Now playing from group " + data.groupIndex + " at index " + data.trackListIndex);
+                console.log("Now playing " + data.name + " (group " + data.groupIndex + " at index " + data.trackListIndex + ")");
+                displayToast("Music", "Now playing <strong>" + data.name + "</strong>.");
                 break;
             case "musicStopped":
                 $(".playing").removeClass("playing");
                 console.log("Music stopped playing");
+                displayToast("Music", "Stopped the music.");
                 break;
             case "setMusicVolume":
                 $("#music-volume").val(data.volume);
                 console.log("Music volume set to " + data.volume);
+                displayToast("Music", "Set volume to <strong>" + data.volume + "</strong>.");
                 break;
             case "setSoundVolume":
                 $("#sound-volume").val(data.volume);
                 console.log("Sound volume set to " + data.volume);
+                displayToast("Sound", "Set volume to <strong>" + data.volume + "</strong>.");
                 break;
         }
     };
@@ -48,4 +52,30 @@ function disconnect() {
        conn.close();
        conn = null;
    }
+}
+
+function displayToast(title, message) {
+    const min = 1;
+    const max = 1000;
+    const randomNumber = Math.floor(Math.random() * (max - min)) + min;
+    const randomId= "toast-" + randomNumber;
+    const toast = `
+        <div id="${randomId}" class="toast" role="status" aria-live="polite" aria-atomic="true" data-delay="5000" data-autohide="true">
+          <div class="toast-header">
+            <strong class="mr-auto">${title}</strong>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="toast-body">
+            ${message}
+          </div>
+        </div>
+    `;
+    $("#toast-container").append(toast);
+    const toastSelector = $(`#${randomId}`);
+    toastSelector.on('hidden.bs.toast', function () {
+        $(this).remove();
+    });
+    toastSelector.toast("show");
 }
