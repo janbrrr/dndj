@@ -19,11 +19,13 @@ class Sound:
 
         The `config` parameter is expected to be a dictionary with the following keys:
         - "name": a descriptive name for the sound
+        - "directory": the directory where the files for this sound are (Optional)
         - "files": a list of files associated with this sound
 
         :param config: `dict`
         """
         self.name = config["name"]
+        self.directory = config["directory"] if "directory" in config else None
         self.files = tuple(config["files"])
         for file in self.files:
             if not file.endswith(".wav") and not file.endswith(".ogg"):
@@ -47,9 +49,7 @@ class SoundGroup:
         :param config: `dict`
         """
         self.name = config["name"]
-        self.directory = None
-        if "directory" in config:
-            self.directory = config["directory"]
+        self.directory = config["directory"] if "directory" in config else None
         sounds = [Sound(sound_config) for sound_config in config["sounds"]]
         if "sort" not in config or ("sort" in config and config["sort"]):
             sounds = sorted(sounds, key=lambda x: x.name)
@@ -66,7 +66,7 @@ class SoundManager:
 
         The `config` parameter is expected to be a dictionary with the following keys:
         - "volume": a value between 0 and 1 where 1 is maximum volume and 0 is no volume
-        - "directory": the default directory where the files are in case group has no directory (Optional)
+        - "directory": the default directory to use if no directory is further specified (Optional)
         - "sort": whether to sort the groups alphabetically (Optional, default=True)
         - "groups": a list of configs for `SoundGroup` instances. See `SoundGroup` class for more information
 
@@ -75,9 +75,7 @@ class SoundManager:
         """
         self.mixer = mixer
         self.volume = float(config["volume"])
-        self.directory = None
-        if "directory" in config:
-            self.directory = config["directory"]
+        self.directory = config["directory"] if "directory" in config else None
         groups = [SoundGroup(sound_group_config) for sound_group_config in config["groups"]]
         if "sort" not in config or ("sort" in config and config["sort"]):
             groups = sorted(groups, key=lambda x: x.name)
@@ -99,10 +97,11 @@ class SoundManager:
         """
         logging.debug(f"Loading '{sound.name}'")
         file = random.choice(sound.files)
-        root_directory = group.directory if group.directory is not None else self.directory
-        if root_directory is None:
+        try:
+            root_directory = self._get_sound_root_directory(group, sound)
+        except ValueError:
             logging.error(f"Failed to play '{sound.name}'. "
-                          f"You have to specify the directory on either the global level or individual group level.")
+                          f"You have to specify the directory on either the global level, group level or sound level.")
             return
         sound = self.mixer.Sound(os.path.join(root_directory, file))
         sound.set_volume(self.volume)
@@ -110,6 +109,23 @@ class SoundManager:
         logging.info(f"Now Playing: {file}")
         await asyncio.sleep(sound.get_length())
         logging.info(f"Finished playing: {file}")
+
+    def _get_sound_root_directory(self, group: SoundGroup, sound: Sound) -> str:
+        """
+        Returns the root directory of the sound.
+
+        Lookup order:
+        1. the directory specified directly on the sound
+        2. the directory specified on the group
+        3. the global directory specified
+
+        If none of the above exists, raise a ValueError.
+        """
+        root_directory = sound.directory if sound.directory is not None else group.directory
+        root_directory = root_directory if root_directory is not None else self.directory
+        if root_directory is None:
+            raise ValueError("Missing directory")
+        return root_directory
 
     def set_volume(self, volume):
         """
