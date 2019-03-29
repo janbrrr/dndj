@@ -1,0 +1,37 @@
+---
+music:
+  volume: 0.2
+  groups:
+  - name: Scene 1 - Travel
+    directory: "example/music/scene-1"
+    track_lists:
+    - name: Forest Music
+      tracks:
+      - 153_Secret_Garden.mp3
+      - 161_Forest_Day.mp3
+    - name: Battle Music
+      tracks:
+      - 157_Field_of_Heroes.mp3
+  - name: Scene 2 - Arrival
+    directory: "example/music/scene-2"
+    track_lists:
+    - name: City Music
+      tracks:
+      - 56_Medieval_Town.mp3
+    - name: Tavern Music
+      tracks:
+      - 23_The_Slaughtered_Ox.mp3
+sound:
+  volume: 1
+  directory: "example/sounds"
+  groups:
+    - name: Footsteps
+      sounds:
+      - name: Footsteps on Dry Leaves
+        files:
+        - file: footsteps-dry-leaves.wav
+          end_at: 0:0:4
+      - name: Footsteps on Wood Branches
+        files:
+        - file: steps-on-a-wood-branch.ogg
+          end_at: 0:0:5
