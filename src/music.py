@@ -96,6 +96,7 @@ class MusicManager:
 
         The `config` parameter is expected to be a dictionary with the following keys:
         - "volume": a value between 0 (mute) and 1 (max)
+        - "directory": the default directory to use if no directory is further specified (Optional)
         - "sort": whether to sort the groups alphabetically (Optional, default=True)
         - "groups": a list of configs for `MusicGroup` instances. See `MusicGroup` class for more information
 
@@ -104,6 +105,7 @@ class MusicManager:
         """
         self.music_mixer = music_mixer
         self.volume = float(config["volume"])
+        self.directory = config["directory"] if "directory" in config else None
         groups = [MusicGroup(group_config) for group_config in config["groups"]]
         if "sort" not in config or ("sort" in config and config["sort"]):
             groups = sorted(groups, key=lambda x: x.name)
@@ -130,15 +132,14 @@ class MusicManager:
         await self.cancel()
         loop = asyncio.get_event_loop()
         self.currently_playing = CurrentlyPlaying(group, track_list,
-                                                  loop.create_task(self._play_track_list(group, track_list_index)))
+                                                  loop.create_task(self._play_track_list(group, track_list)))
         logging.debug(f"Created a task to play '{track_list.name}'")
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
 
-    async def _play_track_list(self, group: MusicGroup, track_list_index: int):
+    async def _play_track_list(self, group: MusicGroup, track_list: TrackList):
         """
-        Plays the track list at the given index from the given group.
+        Plays the given track list from the given group.
         """
-        track_list = group.track_lists[track_list_index]
         try:
             logging.info(f"Loading '{track_list.name}'")
             while True:
@@ -146,12 +147,18 @@ class MusicManager:
                 if track_list.shuffle:
                     random.shuffle(tracks)
                 for track in tracks:
-                    directory = track_list.directory if track_list.directory is not None else group.directory
-                    file_path = os.path.join(directory, track.file)
+                    try:
+                        root_directory = self._get_track_list_root_directory(group, track_list)
+                    except ValueError:
+                        logging.error(f"Failed to play '{track_list.name}'. "
+                                      f"You have to specify the directory on either the global level, "
+                                      f"group level or track list level.")
+                        raise asyncio.CancelledError()
+                    file_path = os.path.join(root_directory, track.file)
                     if not os.path.isfile(file_path):
                         logging.error(f"File {file_path} does not exist")
                         raise asyncio.CancelledError()
-                    self.music_mixer.load(os.path.join(directory, track.file))
+                    self.music_mixer.load(file_path)
                     self.music_mixer.set_volume(0)
                     self.music_mixer.play()
                     if track.start_at is not None:
@@ -172,6 +179,23 @@ class MusicManager:
             self.currently_playing = None
             logging.info(f"Cancelled '{track_list.name}'")
             raise
+
+    def _get_track_list_root_directory(self, group: MusicGroup, track_list: TrackList) -> str:
+        """
+        Returns the root directory of the track list.
+
+        Lookup order:
+        1. the directory specified directly on the track list
+        2. the directory specified on the group
+        3. the global directory specified
+
+        If none of the above exists, raise a ValueError.
+        """
+        root_directory = track_list.directory if track_list.directory is not None else group.directory
+        root_directory = root_directory if root_directory is not None else self.directory
+        if root_directory is None:
+            raise ValueError("Missing directory")
+        return root_directory
 
     async def set_volume(self, volume, set_global=True, smooth=True, n_steps=20, seconds=2):
         """
