@@ -2,7 +2,34 @@ import asyncio
 import logging
 import random
 import os
-from typing import Dict
+import time
+from typing import Dict, Union
+
+
+class SoundFile:
+
+    def __init__(self, config: Union[str, Dict]):
+        """
+        Initializes a `SoundFile` instance.
+
+        The `config` parameter is either a `str` containing the filename or a dictionary with the following keys:
+        - "file": the filename
+        - "end_at": time at which the sound should end in the %H:%M:%S format (Optional)
+
+        :param config: String containing the filename or a dictionary containing the config
+        """
+        if isinstance(config, str):
+            self.file = config
+            self.end_at = None
+        else:
+            self.file = config["file"]
+            end_at = config["end_at"] if "end_at" in config else None
+            if end_at is not None:
+                time_struct = time.strptime(end_at, "%H:%M:%S")
+                self.end_at = (time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 60 * 60) \
+                              * 1000  # in ms
+        if not self.file.endswith(".wav") and not self.file.endswith(".ogg"):
+            raise TypeError("Sound files must use the `.wav` or `.ogg` format.")
 
 
 class Sound:
@@ -20,16 +47,14 @@ class Sound:
         The `config` parameter is expected to be a dictionary with the following keys:
         - "name": a descriptive name for the sound
         - "directory": the directory where the files for this sound are (Optional)
-        - "files": a list of files associated with this sound
+        - "files": a list of files (or `SoundFile` configs) associated with this sound
 
         :param config: `dict`
         """
         self.name = config["name"]
         self.directory = config["directory"] if "directory" in config else None
-        self.files = tuple(config["files"])
-        for file in self.files:
-            if not file.endswith(".wav") and not file.endswith(".ogg"):
-                raise TypeError("Sound files must use the `.wav` or `.ogg` format.")
+        files = [SoundFile(sound_file) for sound_file in config["files"]]
+        self.files = tuple(files)
 
 
 class SoundGroup:
@@ -57,7 +82,6 @@ class SoundGroup:
 
 
 class SoundManager:
-
     SLEEP_TIME = 0.01
 
     def __init__(self, config: Dict, mixer):
@@ -96,19 +120,24 @@ class SoundManager:
         Plays the given sound.
         """
         logging.debug(f"Loading '{sound.name}'")
-        file = random.choice(sound.files)
+        sound_file = random.choice(sound.files)
         try:
             root_directory = self._get_sound_root_directory(group, sound)
         except ValueError:
             logging.error(f"Failed to play '{sound.name}'. "
                           f"You have to specify the directory on either the global level, group level or sound level.")
             return
-        sound = self.mixer.Sound(os.path.join(root_directory, file))
-        sound.set_volume(self.volume)
-        sound.play()
-        logging.info(f"Now Playing: {file}")
-        await asyncio.sleep(sound.get_length())
-        logging.info(f"Finished playing: {file}")
+        pygame_sound = self.mixer.Sound(os.path.join(root_directory, sound_file.file))
+        pygame_sound.set_volume(self.volume)
+        if sound_file.end_at is not None:
+            pygame_sound.play(maxtime=sound_file.end_at)
+            logging.info(f"Now Playing: {sound.name}")
+            await asyncio.sleep(sound_file.end_at / 1000)
+        else:
+            pygame_sound.play()
+            logging.info(f"Now Playing: {sound.name}")
+            await asyncio.sleep(pygame_sound.get_length())
+        logging.info(f"Finished playing: {sound.name}")
 
     def _get_sound_root_directory(self, group: SoundGroup, sound: Sound) -> str:
         """
