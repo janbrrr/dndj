@@ -34,6 +34,11 @@ class Track:
         else:
             self.start_at = None
 
+    def __eq__(self, other):
+        if isinstance(other, Track):
+            return self.file == other.file and self.start_at == other.start_at
+        return False
+
 
 class TrackList:
 
@@ -56,6 +61,20 @@ class TrackList:
         self.shuffle = config["shuffle"] if "shuffle" in config else True
         tracks = [Track(track_config) for track_config in config["tracks"]]
         self.tracks = tuple(tracks)  # immutable
+
+    def __eq__(self, other):
+        if isinstance(other, TrackList):
+            attrs_are_the_same = self.name == other.name and self.directory == other.directory \
+                                 and self.loop == other.loop and self.shuffle == other.shuffle
+            if not attrs_are_the_same:
+                return False
+            if len(self.tracks) != len(other.tracks):
+                return False
+            for my_track, other_track in zip(self.tracks, other.tracks):
+                if my_track != other_track:
+                    return False
+            return True
+        return False
 
 
 class MusicGroup:
@@ -81,6 +100,19 @@ class MusicGroup:
         if "sort" not in config or ("sort" in config and config["sort"]):
             track_lists = sorted(track_lists, key=lambda x: x.name)
         self.track_lists = tuple(track_lists)
+
+    def __eq__(self, other):
+        if isinstance(other, MusicGroup):
+            attrs_are_the_same = self.name == other.name and self.directory == other.directory
+            if not attrs_are_the_same:
+                return False
+            if len(self.track_lists) != len(other.track_lists):
+                return False
+            for my_track_list, other_track_list in zip(self.track_lists, other.track_lists):
+                if my_track_list != other_track_list:
+                    return False
+            return True
+        return False
 
 
 CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["group", "track_list", "task"])
@@ -128,7 +160,8 @@ class MusicManager:
         """
         group = self.groups[group_index]
         track_list = group.track_lists[track_list_index]
-        logging.debug(f"Received request to play music from group {group_index} at index {track_list_index} ({track_list.name})")
+        logging.debug(f"Received request to play music from group {group_index} at index "
+                      f"{track_list_index} ({track_list.name})")
         await self.cancel()
         loop = asyncio.get_event_loop()
         self.currently_playing = CurrentlyPlaying(group, track_list,
