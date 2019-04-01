@@ -125,8 +125,8 @@
                                 <button type="button" class="btn"
                                         onclick="playSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
                                     <i class="fas fa-play play-icon"></i>
+                                    {{ _sound.name }}
                                 </button>
-                                {{ _sound.name }}
                             </div>
                             {% endfor %}
                             {% else %}
