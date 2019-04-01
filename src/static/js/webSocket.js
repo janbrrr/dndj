@@ -27,6 +27,7 @@ function connect() {
                 break;
             case "musicStopped":
                 $(".playing").removeClass("playing");
+                $("#now-playing").text("-");
                 console.log("Music stopped playing");
                 displayToast("Music", "Stopped the music.");
                 break;
