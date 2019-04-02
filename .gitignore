@@ -9,3 +9,7 @@ __pycache__/
 # Environments
 env/
 venv/
+
+# Coverage
+.coverage
+coverage_html/

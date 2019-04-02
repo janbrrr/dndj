@@ -1,0 +1,15 @@
+[run]
+source =
+    .
+omit =
+    ./venv/*
+
+[report]
+omit =
+    */tests/*
+    *__init__.py
+exclude_lines =
+    if __name__ == .__main__.:
+	
+[html]
+directory = coverage_html
