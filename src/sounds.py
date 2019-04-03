@@ -28,8 +28,15 @@ class SoundFile:
                 time_struct = time.strptime(end_at, "%H:%M:%S")
                 self.end_at = (time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 60 * 60) \
                               * 1000  # in ms
+            else:
+                self.end_at = None
         if not self.file.endswith(".wav") and not self.file.endswith(".ogg"):
             raise TypeError("Sound files must use the `.wav` or `.ogg` format.")
+
+    def __eq__(self, other):
+        if isinstance(other, SoundFile):
+            return self.file == other.file and self.end_at == other.end_at
+        return False
 
 
 class Sound:
@@ -56,6 +63,19 @@ class Sound:
         files = [SoundFile(sound_file) for sound_file in config["files"]]
         self.files = tuple(files)
 
+    def __eq__(self, other):
+        if isinstance(other, Sound):
+            attrs_are_the_same = self.name == other.name and self.directory == other.directory
+            if not attrs_are_the_same:
+                return False
+            if len(self.files) != len(other.files):
+                return False
+            for my_file, other_file in zip(self.files, other.files):
+                if my_file != other_file:
+                    return False
+            return True
+        return False
+
 
 class SoundGroup:
 
@@ -79,6 +99,19 @@ class SoundGroup:
         if "sort" not in config or ("sort" in config and config["sort"]):
             sounds = sorted(sounds, key=lambda x: x.name)
         self.sounds = tuple(sounds)
+
+    def __eq__(self, other):
+        if isinstance(other, SoundGroup):
+            attrs_are_the_same = self.name == other.name and self.directory == other.directory
+            if not attrs_are_the_same:
+                return False
+            if len(self.sounds) != len(other.sounds):
+                return False
+            for my_sound, other_sound in zip(self.sounds, other.sounds):
+                if my_sound != other_sound:
+                    return False
+            return True
+        return False
 
 
 class SoundManager:
