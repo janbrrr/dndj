@@ -1,8 +1,18 @@
+import json
+
 import pytest
 
 from src.music import MusicManager
 from src.server import Server
 from src.sounds import SoundManager
+
+
+async def do_nothing_async(*args, **kwargs):
+    pass
+
+
+def do_nothing(*args, **kwargs):
+    pass
 
 
 class TestServer:
@@ -29,6 +39,31 @@ class TestServer:
             port=8080
         )
 
+    @pytest.fixture
+    async def minimal_client(self, minimal_server, aiohttp_client):
+        app = await minimal_server._init_app()
+        client = await aiohttp_client(app)
+        return client
+
+    @pytest.fixture
+    def patched_example_server(self, monkeypatch):
+        monkeypatch.setattr(MusicManager, "play_track_list", do_nothing_async)
+        monkeypatch.setattr(MusicManager, "cancel", do_nothing_async)
+        monkeypatch.setattr(MusicManager, "set_volume", do_nothing_async)
+        monkeypatch.setattr(SoundManager, "play_sound", do_nothing_async)
+        monkeypatch.setattr(SoundManager, "set_volume", do_nothing)
+        return Server(
+            config_path="example/config.yaml",
+            host="127.0.0.1",
+            port=8080
+        )
+
+    @pytest.fixture
+    async def patched_example_client(self, patched_example_server, aiohttp_client):
+        app = await patched_example_server._init_app()
+        client = await aiohttp_client(app)
+        return client
+
     def test_minimal_server_configures_music(self, minimal_server):
         minimal_music_config = {
             "volume": 0.2,
@@ -45,13 +80,62 @@ class TestServer:
         assert minimal_server.sound == SoundManager(minimal_sound_config,
                                                     mixer=minimal_server.sound.mixer)
 
-    async def test_minimal_server_app_runs(self, minimal_server, aiohttp_server):
-        app = await minimal_server._init_app()
-        server = await aiohttp_server(app)
-        await server.close()
-
-    async def test_client_can_connect_to_minimal_server_app(self, minimal_server, aiohttp_client):
-        app = await minimal_server._init_app()
-        client = await aiohttp_client(app)
-        resp = await client.get('/')
+    async def test_client_can_access_index(self, minimal_client):
+        resp = await minimal_client.get('/')
         assert resp.status == 200
+
+    async def test_client_can_connect_via_websocket_to_server(self, minimal_client):
+        ws_resp = await minimal_client.ws_connect("/")
+        assert ws_resp.closed is False
+
+    async def test_client_can_request_music_to_play(self, patched_example_client):
+        ws_resp = await patched_example_client.ws_connect("/")
+        play_music_request = {
+            "action": "playMusic",
+            "groupIndex": 0,
+            "trackListIndex": 1
+        }
+        await ws_resp.send_str(json.dumps(play_music_request))
+        resp = await ws_resp.receive()
+        assert json.loads(resp.data) == {"action": "nowPlaying", "groupIndex": 0,
+                                         "trackListIndex": 1, "groupName": "Scene 1 - Travel",
+                                         "trackName": "Forest Music"}
+
+    async def test_client_can_request_music_to_stop(self, patched_example_client):
+        ws_resp = await patched_example_client.ws_connect("/")
+        stop_music_request = {
+            "action": "stopMusic"
+        }
+        await ws_resp.send_str(json.dumps(stop_music_request))
+        resp = await ws_resp.receive()
+        assert json.loads(resp.data) == {"action": "musicStopped"}
+
+    async def test_client_can_set_music_volume(self, patched_example_client):
+        ws_resp = await patched_example_client.ws_connect("/")
+        set_music_volume_request = {
+            "action": "setMusicVolume",
+            "volume": 0.75
+        }
+        await ws_resp.send_str(json.dumps(set_music_volume_request))
+        resp = await ws_resp.receive()
+        assert json.loads(resp.data) == {"action": "setMusicVolume", "volume": 0.75}
+
+    async def test_client_can_request_sound_to_play(self, patched_example_client):
+        ws_resp = await patched_example_client.ws_connect("/")
+        play_sound_request = {
+            "action": "playSound",
+            "groupIndex": 0,
+            "soundIndex": 0
+        }
+        await ws_resp.send_str(json.dumps(play_sound_request))
+        await ws_resp.close()
+
+    async def test_client_can_set_sound_volume(self, patched_example_client):
+        ws_resp = await patched_example_client.ws_connect("/")
+        set_sound_volume_request = {
+            "action": "setSoundVolume",
+            "volume": 0.25
+        }
+        await ws_resp.send_str(json.dumps(set_sound_volume_request))
+        resp = await ws_resp.receive()
+        assert json.loads(resp.data) == {"action": "setSoundVolume", "volume": 0.25}
