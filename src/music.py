@@ -144,6 +144,21 @@ class MusicManager:
         self.groups = tuple(groups)
         self.currently_playing = None
 
+    def __eq__(self, other):
+        if isinstance(other, MusicManager):
+            attrs_are_the_same = self.music_mixer == other.music_mixer and self.volume == other.volume \
+                                 and self.directory == other.directory \
+                                 and self.currently_playing == other.currently_playing
+            if not attrs_are_the_same:
+                return False
+            if len(self.groups) != len(other.groups):
+                return False
+            for my_group, other_group in zip(self.groups, other.groups):
+                if my_group != other_group:
+                    return False
+            return True
+        return False
+
     async def cancel(self):
         """
         If a track is currently being played, the replay will be cancelled.

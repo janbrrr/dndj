@@ -138,6 +138,20 @@ class SoundManager:
             groups = sorted(groups, key=lambda x: x.name)
         self.groups = tuple(groups)
 
+    def __eq__(self, other):
+        if isinstance(other, SoundManager):
+            attrs_are_the_same = self.mixer == other.mixer and self.volume == other.volume \
+                                 and self.directory == other.directory
+            if not attrs_are_the_same:
+                return False
+            if len(self.groups) != len(other.groups):
+                return False
+            for my_group, other_group in zip(self.groups, other.groups):
+                if my_group != other_group:
+                    return False
+            return True
+        return False
+
     async def play_sound(self, group_index, sound_index):
         """
         Creates an asynchronous task to play the sound from the given group at the given index.
