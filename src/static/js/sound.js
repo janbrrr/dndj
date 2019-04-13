@@ -1,6 +1,6 @@
 function playSound(groupIndex, soundIndex) {
     if (conn === null) {
-        console.log("No connection established!");
+        onNotConnected();
         return;
     }
     const toSend = {
@@ -13,7 +13,7 @@ function playSound(groupIndex, soundIndex) {
 
 function setSoundVolume(volume) {
     if (conn === null) {
-        console.log("No connection established!");
+        onNotConnected();
         return;
     }
     const toSend = {

@@ -56,6 +56,11 @@ function disconnect() {
    }
 }
 
+function onNotConnected(){
+    console.log("No connection established!");
+    displayToast("Not Connected", "Please reload the page");
+}
+
 function displayToast(title, message) {
     const min = 1;
     const max = 1000;

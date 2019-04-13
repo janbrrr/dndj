@@ -1,6 +1,6 @@
 function playMusic(groupIndex, trackListIndex) {
     if (conn === null) {
-        console.log("No connection established!");
+        onNotConnected();
         return;
     }
     const toSend = {
@@ -14,7 +14,7 @@ function playMusic(groupIndex, trackListIndex) {
 
 function stopMusic() {
     if (conn === null) {
-        console.log("No connection established!");
+        onNotConnected();
         return;
     }
     const toSend = {
@@ -25,7 +25,7 @@ function stopMusic() {
 
 function setMusicVolume(volume) {
     if (conn === null) {
-        console.log("No connection established!");
+        onNotConnected();
         return;
     }
     const toSend = {
