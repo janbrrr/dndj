@@ -299,7 +299,7 @@ play the sound of footsteps on leaves.
 
 ## <a name="scripts-format"/>Audio Format Converter
 
-The only supported format for music is `.mp3`. For sound files the supported formats are `.wav` and `.ogg`.
+For sound files the only supported formats are `.wav` and `.ogg`.
 
 If you happen to have a different format or simply want to convert your audio files into a different format,
 you can use the `convert_file.py` script. This script uses [pydub](https://pydub.com/) to perform the conversion.
