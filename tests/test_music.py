@@ -43,10 +43,6 @@ class TestTrack:
         track = Track(config)
         assert track.end_at == end_at_in_ms
 
-    def test_non_mp3_raises_type_error(self):
-        with pytest.raises(TypeError):
-            Track("some-filename.notmp3")
-
 
 class TestTrackList:
 

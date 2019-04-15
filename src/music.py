@@ -31,8 +31,6 @@ class Track:
             self.file = config["file"]
             start_at = None if "start_at" not in config else config["start_at"]
             end_at = None if "end_at" not in config else config["end_at"]
-        if not self.file.endswith(".mp3"):
-            raise TypeError("Music files must use the `.mp3` format.")
         self.start_at = self._convert_formatted_time_to_ms(start_at) if start_at is not None else None
         self.end_at = self._convert_formatted_time_to_ms(end_at) if end_at is not None else None
 
@@ -47,7 +45,7 @@ class Track:
 
     def __eq__(self, other):
         if isinstance(other, Track):
-            return self.file == other.file and self.start_at == other.start_at
+            return self.file == other.file and self.start_at == other.start_at and self.end_at == other.end_at
         return False
 
 

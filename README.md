@@ -135,8 +135,7 @@ music:
 ```
 
 Finally, a `track` refers to a music file. In the simplest case it is only a filename,
-but you can further configure it. Note that only `.mp3` files are supported.
-
+but you can further configure it. Every file type that the VLC media player supports should work.
 ```yaml
 music:
   # ...
