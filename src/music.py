@@ -19,22 +19,31 @@ class Track:
         Else it is expected to be a dictionary with the following keys:
         - "file": the filename (only the filename, excluding the directory)
         - "start_at": time at which the track should start in the %H:%M:%S format (Optional)
+        - "end_at": time at which the track should end in the %H:%M:%S format (Optional)
 
         :param config: `str` or `dict`
         """
         if isinstance(config, str):
             self.file = config
             start_at = None
+            end_at = None
         else:
             self.file = config["file"]
             start_at = None if "start_at" not in config else config["start_at"]
+            end_at = None if "end_at" not in config else config["end_at"]
         if not self.file.endswith(".mp3"):
             raise TypeError("Music files must use the `.mp3` format.")
-        if start_at is not None:
-            time_struct = time.strptime(start_at, "%H:%M:%S")
-            self.start_at = (time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 3600) * 1000  # in ms
-        else:
-            self.start_at = None
+        self.start_at = self._convert_formatted_time_to_ms(start_at) if start_at is not None else None
+        self.end_at = self._convert_formatted_time_to_ms(end_at) if end_at is not None else None
+
+    def _convert_formatted_time_to_ms(self, formatted_time: str) -> int:
+        """
+        Converts a string in the format %H:%M:%S to the corresponding number of milliseconds.
+
+        :param formatted_time: string in the format %H:%M:%S
+        """
+        time_struct = time.strptime(formatted_time, "%H:%M:%S")
+        return (time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 3600) * 1000
 
     def __eq__(self, other):
         if isinstance(other, Track):
@@ -220,6 +229,8 @@ class MusicManager:
                     await self.set_volume(self.volume, set_global=False)
                     while self.current_player.is_playing():
                         try:
+                            if track.end_at is not None and self.current_player.get_time() >= track.end_at:
+                                self.current_player.stop()
                             await asyncio.sleep(self.SLEEP_TIME)
                         except asyncio.CancelledError:
                             logging.debug(f"Received cancellation request for {track.file}")

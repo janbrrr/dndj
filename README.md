@@ -150,6 +150,7 @@ music:
       - forest_ambience_1.mp3        # can either be a filename
       - file: forest_ambience_2.mp3  # or a more specific config
         start_at: 0:0:10  # (Optional) the format is %H:%M:%S
+        end_at: 0:0:20    # (Optional) the format is %H:%M:%S
 ```
 
 ### Sound

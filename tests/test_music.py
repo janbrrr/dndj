@@ -34,6 +34,15 @@ class TestTrack:
         track = Track(config)
         assert track.start_at == start_at_in_ms
 
+    def test_end_at_is_computed_correctly(self):
+        config = {
+            "file": "some-filename.mp3",
+            "end_at": "1:10:42"
+        }
+        end_at_in_ms = (42 + 10*60 + 1*60*60) * 1000
+        track = Track(config)
+        assert track.end_at == end_at_in_ms
+
     def test_non_mp3_raises_type_error(self):
         with pytest.raises(TypeError):
             Track("some-filename.notmp3")
