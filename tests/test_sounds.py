@@ -1,5 +1,8 @@
 import pytest
+import yaml
+from pygame import mixer
 
+from src.loader import CustomLoader
 from src.sounds import SoundFile, Sound, SoundGroup, SoundManager
 
 
@@ -171,6 +174,13 @@ class TestSoundManager:
             "groups": []
         }
 
+    @pytest.fixture
+    def example_sound_manager(self):
+        with open("example/config.yaml") as config_file:
+            config = yaml.load(config_file, Loader=CustomLoader)
+            mixer.init()
+            return SoundManager(config=config["sound"], mixer=mixer)
+
     def test_minimal_dict_as_config(self, minimal_sound_manager_config):
         sound_manager = SoundManager(minimal_sound_manager_config, mixer=None)
         assert sound_manager.volume == 1
@@ -241,3 +251,55 @@ class TestSoundManager:
     def test_sound_groups_use_tuple_instead_of_list(self, minimal_sound_manager_config):
         sound_manager = SoundManager(minimal_sound_manager_config, mixer=None)
         assert isinstance(sound_manager.groups, tuple)
+
+    def test_get_sound_root_directory_returns_global_directory(self, example_sound_manager):
+        """
+        The example sound manager specifies a directory at the global level and no further directories
+        on a group or individual level. Therefore this method should return the global directory.
+        """
+        example_sound_manager.directory = "global/dir"
+        first_group = example_sound_manager.groups[0]
+        first_sound_in_first_group = first_group.sounds[0]
+        directory = example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
+        assert directory == "global/dir"
+
+    def test_get_sound_root_directory_returns_group_directory(self, example_sound_manager):
+        """
+        When a directory is specified for a SoundGroup and no directory is specified for the Sound, the
+        group directory should be returned (not the global directory).
+        """
+        example_sound_manager.directory = "global/dir"
+        first_group = example_sound_manager.groups[0]
+        first_group.directory = "group/dir"
+        first_sound_in_first_group = first_group.sounds[0]
+        directory = example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
+        assert directory == "group/dir"
+
+    def test_get_sound_root_directory_returns_sound_directory(self, example_sound_manager):
+        """
+        When a directory is specified for a Sound, it should be returned (not the global or group directory).
+        """
+        example_sound_manager.directory = "global/dir"
+        first_group = example_sound_manager.groups[0]
+        first_group.directory = "group/dir"
+        first_sound_in_first_group = first_group.sounds[0]
+        first_sound_in_first_group.directory = "sound/dir"
+        directory = example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
+        assert directory == "sound/dir"
+
+    def test_get_sound_root_directory_raises_value_error_if_no_directory_on_any_level(self, example_sound_manager):
+        """
+        If no directory is specified at all (neither the global, group or sound level), then raise a ValueError.
+        """
+        example_sound_manager.directory = None
+        first_group = example_sound_manager.groups[0]
+        first_group.directory = None
+        first_sound_in_first_group = first_group.sounds[0]
+        first_sound_in_first_group.directory = None
+        with pytest.raises(ValueError):
+            example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
+
+    def test_set_volume(self, example_sound_manager):
+        example_sound_manager.volume = 1
+        example_sound_manager.set_volume(0)
+        assert example_sound_manager.volume == 0
