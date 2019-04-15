@@ -179,7 +179,7 @@ class TestSoundManager:
         with open("example/config.yaml") as config_file:
             config = yaml.load(config_file, Loader=CustomLoader)
             mixer.init()
-            return SoundManager(config=config["sound"], mixer=mixer)
+            return SoundManager(config=config["sound"])
 
     def test_minimal_dict_as_config(self, minimal_sound_manager_config):
         sound_manager = SoundManager(minimal_sound_manager_config)
