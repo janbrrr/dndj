@@ -6,7 +6,6 @@ import yaml
 import logging
 import pathlib
 
-import pygame.mixer as mixer
 import jinja2
 
 import aiohttp_jinja2
@@ -24,11 +23,10 @@ PROJECT_ROOT = pathlib.Path(__file__).parent
 class Server:
 
     def __init__(self, config_path, host, port):
-        mixer.init()
         with open(config_path) as config_file:
             config = yaml.load(config_file, Loader=CustomLoader)
-        self.music = MusicManager(config["music"], mixer.music)
-        self.sound = SoundManager(config["sound"], mixer)
+        self.music = MusicManager(config["music"])
+        self.sound = SoundManager(config["sound"])
         self.app = None
         self.host = host
         self.port = port
@@ -151,7 +149,7 @@ class Server:
         """
         Sets the music volume and notifies all connected web sockets.
         """
-        await self.music.set_volume(volume)
+        await self.music.set_volume(volume, seconds=1)
         for ws in request.app["websockets"].values():
             await ws.send_json({"action": "setMusicVolume", "volume": volume})
 

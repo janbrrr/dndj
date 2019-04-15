@@ -6,6 +6,8 @@ import os
 from collections import namedtuple
 from typing import Union, Dict
 
+import vlc
+
 
 class Track:
 
@@ -30,7 +32,7 @@ class Track:
             raise TypeError("Music files must use the `.mp3` format.")
         if start_at is not None:
             time_struct = time.strptime(start_at, "%H:%M:%S")
-            self.start_at = time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 60 * 60  # in sec
+            self.start_at = (time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 3600) * 1000  # in ms
         else:
             self.start_at = None
 
@@ -122,31 +124,30 @@ class MusicManager:
 
     SLEEP_TIME = 0.01
 
-    def __init__(self, config: Dict, music_mixer):
+    def __init__(self, config: Dict):
         """
         Initializes a `MusicManager` instance.
 
         The `config` parameter is expected to be a dictionary with the following keys:
-        - "volume": a value between 0 (mute) and 1 (max)
+        - "volume": an integer between 0 (mute) and 100 (max)
         - "directory": the default directory to use if no directory is further specified (Optional)
         - "sort": whether to sort the groups alphabetically (Optional, default=True)
         - "groups": a list of configs for `MusicGroup` instances. See `MusicGroup` class for more information
 
         :param config: `dict`
-        :param music_mixer: reference to `pygame.mixer.music` after it has been initialized
         """
-        self.music_mixer = music_mixer
-        self.volume = float(config["volume"])
+        self.volume = int(config["volume"])
         self.directory = config["directory"] if "directory" in config else None
         groups = [MusicGroup(group_config) for group_config in config["groups"]]
         if "sort" not in config or ("sort" in config and config["sort"]):
             groups = sorted(groups, key=lambda x: x.name)
         self.groups = tuple(groups)
         self.currently_playing = None
+        self.current_player = None
 
     def __eq__(self, other):
         if isinstance(other, MusicManager):
-            attrs_are_the_same = self.music_mixer == other.music_mixer and self.volume == other.volume \
+            attrs_are_the_same = self.volume == other.volume \
                                  and self.directory == other.directory \
                                  and self.currently_playing == other.currently_playing
             if not attrs_are_the_same:
@@ -206,25 +207,32 @@ class MusicManager:
                     if not os.path.isfile(file_path):
                         logging.error(f"File {file_path} does not exist")
                         raise asyncio.CancelledError()
-                    self.music_mixer.load(file_path)
-                    self.music_mixer.set_volume(0)
-                    self.music_mixer.play()
+                    self.current_player = vlc.MediaPlayer(vlc.Instance(), file_path)
+                    self.current_player.audio_set_volume(0)
+                    success = self.current_player.play()
+                    if success == -1:
+                        logging.error(f"Failed to play {file_path}")
+                        raise asyncio.CancelledError
                     if track.start_at is not None:
-                        self.music_mixer.set_pos(track.start_at)
+                        self.current_player.set_time(track.start_at)
                     logging.info(f"Now Playing: {track.file}")
+                    await asyncio.sleep(0.1)  # Give the media player time to start playing
                     await self.set_volume(self.volume, set_global=False)
-                    while self.music_mixer.get_busy():
+                    while self.current_player.is_playing():
                         try:
                             await asyncio.sleep(self.SLEEP_TIME)
                         except asyncio.CancelledError:
+                            logging.debug(f"Received cancellation request for {track.file}")
                             await self.set_volume(0, set_global=False)
                             raise
                     logging.info(f"Finished playing: {track.file}")
                 if not track_list.loop:
                     break
         except asyncio.CancelledError:
-            self.music_mixer.stop()
+            if self.current_player is not None:
+                self.current_player.stop()
             self.currently_playing = None
+            self.current_player = None
             logging.info(f"Cancelled '{track_list.name}'")
             raise
 
@@ -249,20 +257,22 @@ class MusicManager:
         """
         Sets the volume for the music.
 
-        :param volume: new volume, a value between 0 (mute) and 1 (max)
+        :param volume: new volume, a value between 0 (mute) and 100 (max)
         :param set_global: whether to set this as the new global volume
         :param smooth: whether to do a smooth transitions
         :param n_steps: how many steps the transitions incorporates
         :param seconds: the time in which the transitions takes place
         """
-        if not smooth:
-            self.music_mixer.set_volume(volume)
-        else:
-            current_volume = self.music_mixer.get_volume()
-            step_size = (current_volume - volume) / n_steps
-            for i in range(n_steps):
-                self.music_mixer.set_volume(current_volume - (i + 1) * step_size)
-                await asyncio.sleep(seconds / n_steps)
+        if self.current_player is not None:
+            if not smooth:
+                self.current_player.audio_set_volume(volume)
+            else:
+                current_volume = self.current_player.audio_get_volume()
+                step_size = (current_volume - volume) / n_steps
+                for i in range(n_steps):
+                    new_volume = int(current_volume - (i + 1) * step_size)
+                    self.current_player.audio_set_volume(new_volume)
+                    await asyncio.sleep(seconds / n_steps)
         if set_global:
             self.volume = volume
             logging.debug(f"Changed music volume to {volume}")

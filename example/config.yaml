@@ -1,5 +1,5 @@
 music:
-  volume: 0.2
+  volume: 20
   groups:
   - name: Scene 1 - Travel
     directory: "example/music/scene-1"

@@ -172,7 +172,7 @@ class TestSoundManager:
         }
 
     def test_minimal_dict_as_config(self, minimal_sound_manager_config):
-        sound_manager = SoundManager(minimal_sound_manager_config, mixer=None)
+        sound_manager = SoundManager(minimal_sound_manager_config)
         assert sound_manager.volume == 1
         assert len(sound_manager.groups) == 0
 
@@ -189,18 +189,18 @@ class TestSoundManager:
             sound_group_1_config,
             sound_group_2_config
         ]
-        sound_manager = SoundManager(minimal_sound_manager_config, mixer=None)
+        sound_manager = SoundManager(minimal_sound_manager_config)
         assert len(sound_manager.groups) == 2
         assert sound_manager.groups[0] == SoundGroup(sound_group_1_config)
         assert sound_manager.groups[1] == SoundGroup(sound_group_2_config)
 
     def test_directory_is_none_by_default(self, minimal_sound_manager_config):
-        sound_manager = SoundManager(minimal_sound_manager_config, mixer=None)
+        sound_manager = SoundManager(minimal_sound_manager_config)
         assert sound_manager.directory is None
 
     def test_directory_in_config(self, minimal_sound_manager_config):
         minimal_sound_manager_config["directory"] = "/some/dir/"
-        sound_manager = SoundManager(minimal_sound_manager_config, mixer=None)
+        sound_manager = SoundManager(minimal_sound_manager_config)
         assert sound_manager.directory == "/some/dir/"
 
     def test_groups_are_sorted_by_name_by_default(self, minimal_sound_manager_config):
@@ -216,7 +216,7 @@ class TestSoundManager:
             name_starts_with_n_config,
             name_starts_with_a_config
         ]
-        sound_manager = SoundManager(minimal_sound_manager_config, mixer=None)
+        sound_manager = SoundManager(minimal_sound_manager_config)
         assert sound_manager.groups[0] == SoundGroup(name_starts_with_a_config)
         assert sound_manager.groups[1] == SoundGroup(name_starts_with_n_config)
 
@@ -234,10 +234,10 @@ class TestSoundManager:
             name_starts_with_n_config,
             name_starts_with_a_config
         ]
-        sound_manager = SoundManager(minimal_sound_manager_config, mixer=None)
+        sound_manager = SoundManager(minimal_sound_manager_config)
         assert sound_manager.groups[0] == SoundGroup(name_starts_with_n_config)
         assert sound_manager.groups[1] == SoundGroup(name_starts_with_a_config)
 
     def test_sound_groups_use_tuple_instead_of_list(self, minimal_sound_manager_config):
-        sound_manager = SoundManager(minimal_sound_manager_config, mixer=None)
+        sound_manager = SoundManager(minimal_sound_manager_config)
         assert isinstance(sound_manager.groups, tuple)
