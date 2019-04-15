@@ -69,16 +69,14 @@ class TestServer:
             "volume": 0.2,
             "groups": []
         }
-        assert minimal_server.music == MusicManager(minimal_music_config,
-                                                    music_mixer=minimal_server.music.music_mixer)
+        assert minimal_server.music == MusicManager(minimal_music_config)
 
     def test_minimal_server_configures_sound(self, minimal_server):
         minimal_sound_config = {
             "volume": 1,
             "groups": []
         }
-        assert minimal_server.sound == SoundManager(minimal_sound_config,
-                                                    mixer=minimal_server.sound.mixer)
+        assert minimal_server.sound == SoundManager(minimal_sound_config)
 
     async def test_client_can_access_index(self, minimal_client):
         resp = await minimal_client.get('/')

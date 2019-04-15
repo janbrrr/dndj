@@ -24,7 +24,7 @@ will be notified when a change occurs.
 
 The web page shows the clients the preconfigured music and sounds that are available and allows them to request to
 play a music track, stop the music, change the volume or play sounds. The server will receive these requests
-and fulfill them using [pygame](https://github.com/pygame/pygame) as a media player library.
+and fulfill them using [python-vlc](https://github.com/oaubert/python-vlc) for the music and [pygame](https://github.com/pygame/pygame) for the sounds.
 
 # Table Of Contents
 - [Getting Started](#getting-started)
@@ -56,6 +56,8 @@ Next, set up a virtual environment.
 4. Install the requirements with `pip install -r requirements.txt`
 
 Whenever you want to execute the program from the terminal, make sure the virtual environment is active.
+
+This project uses the [VLC media player](https://www.videolan.org/vlc/) to play the music, so make sure to have it installed as well.
 
 ## <a name="example"/>Running the Example
 
@@ -94,7 +96,7 @@ and a list of `groups` that will be used.
 
 ```yaml
 music:
-  volume: 0.2  # value from 0 (mute) to 1 (max)
+  volume: 20  # value from 0 (mute) to 100 (max)
   directory: path/to/dir  # (Optional) used if all files are in the same dir
   sort: true  # (Optional, default=true) whether to sort the groups alphabetically
   groups: []  # a list of groups

@@ -3,6 +3,7 @@ import logging
 import random
 import os
 import time
+import pygame.mixer
 from typing import Dict, Union
 
 
@@ -117,7 +118,7 @@ class SoundGroup:
 class SoundManager:
     SLEEP_TIME = 0.01
 
-    def __init__(self, config: Dict, mixer):
+    def __init__(self, config: Dict):
         """
         Initializes a `SoundManager` instance.
 
@@ -128,9 +129,9 @@ class SoundManager:
         - "groups": a list of configs for `SoundGroup` instances. See `SoundGroup` class for more information
 
         :param config: `dict`
-        :param mixer: reference to `pygame.mixer` after it has been initialized
         """
-        self.mixer = mixer
+        pygame.mixer.init()
+        self.mixer = pygame.mixer
         self.volume = float(config["volume"])
         self.directory = config["directory"] if "directory" in config else None
         groups = [SoundGroup(sound_group_config) for sound_group_config in config["groups"]]
