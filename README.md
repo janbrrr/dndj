@@ -6,7 +6,7 @@ The idea is to prepare the music and sounds you want to use for specific scenes 
 able to play them without much hassle.
 
 First, you prepare a configuration file where you group and specify all the music and sound files you want to use.
-It is a requirement that you have the music/sounds as files available, no streaming.
+In this case a music file can also be the link to a YouTube video.
 Then you connect your computer (notebook, ...) to the speakers and start the server with the configuration file.
 
 Now you can use your phone or any other (or the same) device to connect to the server by entering the url in the browser.
@@ -15,7 +15,7 @@ That is assuming that the client device is in the same network as the device tha
 Think of the server as a music player that you can control from any other device by visiting the web page it hosts. 
 From there you can choose to play music, change the volume, stop the music and play sounds.
 
-How does it work under the hood?
+*How does it work under the hood?*
 
 The server is an asynchronous server that uses [aiohttp](https://github.com/aio-libs/aiohttp/). 
 Clients can connect to the server via the hosted web page and they then connect via websockets. 
@@ -24,7 +24,11 @@ will be notified when a change occurs.
 
 The web page shows the clients the preconfigured music and sounds that are available and allows them to request to
 play a music track, stop the music, change the volume or play sounds. The server will receive these requests
-and fulfill them using [python-vlc](https://github.com/oaubert/python-vlc) for the music and [pygame](https://github.com/pygame/pygame) for the sounds.
+and fulfill them using [python-vlc](https://github.com/oaubert/python-vlc) for the music and 
+[pygame](https://github.com/pygame/pygame) for the sounds.
+
+If the music is a link to a YouTube video, [pafy](https://github.com/mps-youtube/pafy) will get the link to
+the audio stream and pass it to the VLC media player.
 
 # Table Of Contents
 - [Getting Started](#getting-started)
@@ -134,7 +138,7 @@ music:
       tracks: []  # a list of tracks
 ```
 
-Finally, a `track` refers to a music file. In the simplest case it is only a filename,
+Finally, a `track` refers to a music file or YouTube link. In the simplest case it is only a filename (link),
 but you can further configure it. Every file type that the VLC media player supports should work.
 ```yaml
 music:
@@ -146,8 +150,9 @@ music:
     - name: Forest Ambience
       # ...
       tracks:
-      - forest_ambience_1.mp3        # can either be a filename
-      - file: forest_ambience_2.mp3  # or a more specific config
+      - forest_ambience_1.mp3                          # can either be a filename
+      - https://www.youtube.com/watch?v=HAw37tUHcOo    # or a YouTube video
+      - file: forest_ambience_2.mp3                    # or a more specific config (`file` can be a filename or link)
         start_at: 0:0:10  # (Optional) the format is %H:%M:%S
         end_at: 0:0:20    # (Optional) the format is %H:%M:%S
 ```

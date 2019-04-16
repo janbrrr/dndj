@@ -1,12 +1,13 @@
+import vlc
+import pafy
 import asyncio
+import re
 import time
 import logging
 import random
 import os
 from collections import namedtuple
 from typing import Union, Dict
-
-import vlc
 
 
 class Track:
@@ -15,9 +16,9 @@ class Track:
         """
         Initializes a `Track` instance.
 
-        If the `config` parameter is a `str`, it is expected to be the file name.
+        If the `config` parameter is a `str`, it is expected to be the filename.
         Else it is expected to be a dictionary with the following keys:
-        - "file": the filename (only the filename, excluding the directory)
+        - "file": the filename (only the filename, excluding the directory) (can be a link to a YouTube video)
         - "start_at": time at which the track should start in the %H:%M:%S format (Optional)
         - "end_at": time at which the track should end in the %H:%M:%S format (Optional)
 
@@ -152,6 +153,8 @@ class MusicManager:
         self.currently_playing = None
         self.current_player = None
 
+        self.youtube_regex = re.compile(r"^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+")
+
     def __eq__(self, other):
         if isinstance(other, MusicManager):
             attrs_are_the_same = self.volume == other.volume \
@@ -204,21 +207,15 @@ class MusicManager:
                     random.shuffle(tracks)
                 for track in tracks:
                     try:
-                        root_directory = self._get_track_list_root_directory(group, track_list)
+                        path = self._get_track_path(group, track_list, track)
                     except ValueError:
-                        logging.error(f"Failed to play '{track_list.name}'. "
-                                      f"You have to specify the directory on either the global level, "
-                                      f"group level or track list level.")
+                        logging.error(f"Failed to play '{track_list.name}'.")
                         raise asyncio.CancelledError()
-                    file_path = os.path.join(root_directory, track.file)
-                    if not os.path.isfile(file_path):
-                        logging.error(f"File {file_path} does not exist")
-                        raise asyncio.CancelledError()
-                    self.current_player = vlc.MediaPlayer(vlc.Instance(), file_path)
+                    self.current_player = vlc.MediaPlayer(vlc.Instance(), path)
                     self.current_player.audio_set_volume(0)
                     success = self.current_player.play()
                     if success == -1:
-                        logging.error(f"Failed to play {file_path}")
+                        logging.error(f"Failed to play {path}")
                         raise asyncio.CancelledError
                     if track.start_at is not None:
                         self.current_player.set_time(track.start_at)
@@ -244,6 +241,39 @@ class MusicManager:
             self.current_player = None
             logging.info(f"Cancelled '{track_list.name}'")
             raise
+
+    def _get_track_path(self, group: MusicGroup, track_list: TrackList, track: Track) -> str:
+        """
+        Returns the path of the `Track` instance that should be played.
+
+        If the `file` attribute is a link to a YouTube video, get the corresponding
+        URL for the best audio stream and return it.
+
+        Otherwise assume that the `file` attribute refers to a file location. Return the file path.
+        Raises a `ValueError` if the file path is not valid.
+
+        :param group: `MusicGroup` where the `track_list` is in
+        :param track_list: `TrackList` where the `track` is in
+        :param track: the `Track` instance that should be played
+        :return: path to the `track` location that the VLC player can understand
+        """
+        if self.youtube_regex.match(track.file) is not None:
+            youtube_video = pafy.new(track.file)
+            best_audio_stream = youtube_video.getbestaudio()
+            return best_audio_stream.url
+        else:  # is regular file
+            try:
+                root_directory = self._get_track_list_root_directory(group, track_list)
+            except ValueError:
+                logging.error(f"Unknown directory for {track.file}. "
+                              f"You have to specify the directory on either the global level, "
+                              f"group level or track list level.")
+                raise ValueError
+            file_path = os.path.join(root_directory, track.file)
+            if not os.path.isfile(file_path):
+                logging.error(f"File {file_path} does not exist")
+                raise ValueError
+            return file_path
 
     def _get_track_list_root_directory(self, group: MusicGroup, track_list: TrackList) -> str:
         """
