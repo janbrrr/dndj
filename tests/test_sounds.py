@@ -1,6 +1,8 @@
+import os
 import pytest
 import yaml
-from pygame import mixer
+from unittest.mock import MagicMock
+from asynctest import CoroutineMock
 
 from src.loader import CustomLoader
 from src.sounds import SoundFile, Sound, SoundGroup, SoundManager
@@ -178,8 +180,7 @@ class TestSoundManager:
     def example_sound_manager(self):
         with open("example/config.yaml") as config_file:
             config = yaml.load(config_file, Loader=CustomLoader)
-            mixer.init()
-            return SoundManager(config=config["sound"])
+        return SoundManager(config=config["sound"])
 
     def test_minimal_dict_as_config(self, minimal_sound_manager_config):
         sound_manager = SoundManager(minimal_sound_manager_config)
@@ -251,6 +252,66 @@ class TestSoundManager:
     def test_sound_groups_use_tuple_instead_of_list(self, minimal_sound_manager_config):
         sound_manager = SoundManager(minimal_sound_manager_config)
         assert isinstance(sound_manager.groups, tuple)
+
+    async def test_play_sound_uses_correct_file_path(self, example_sound_manager, monkeypatch):
+        """
+        Test that the `_play_sound()` method instantiates the `pygame.mixer.Sound` with the file path of the sound file
+        """
+        sound_class_mock = MagicMock()
+        monkeypatch.setattr("src.sounds.pygame.mixer.Sound", sound_class_mock)
+        monkeypatch.setattr("src.sounds.asyncio.sleep", CoroutineMock())
+        group = example_sound_manager.groups[0]
+        sound = group.sounds[0]
+        assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
+        sound_file = sound.files[0]
+        await example_sound_manager._play_sound(group, sound)
+        sound_class_mock.assert_called_once_with(
+            os.path.join(example_sound_manager._get_sound_root_directory(group, sound), sound_file.file)
+        )
+
+    async def test_play_sound_sets_volume_and_plays(self, example_sound_manager, monkeypatch):
+        """
+        Test that the `_play_sound()` method sets the volume on the `pygame.mixer.Sound` instance with the
+        configured volume and that it starts to play the sound.
+
+        The sounds from the example use the `end_at` attribute, so make sure to remove it.
+        """
+        sound_instance_mock = MagicMock()
+        sound_instance_mock.get_length.return_value = 42
+        sleep_mock = CoroutineMock()
+        monkeypatch.setattr("src.sounds.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
+        monkeypatch.setattr("src.sounds.asyncio.sleep", sleep_mock)
+        group = example_sound_manager.groups[0]
+        sound = group.sounds[0]
+        assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
+        sound_file = sound.files[0]
+        sound_file.end_at = None  # Test without end_at
+        await example_sound_manager._play_sound(group, sound)
+        sound_instance_mock.set_volume.assert_called_once_with(example_sound_manager.volume)
+        sound_instance_mock.play.assert_called_once_with()
+        sound_instance_mock.get_length.assert_called_once()
+        sleep_mock.assert_called_once_with(42)  # same as sound_instance.get_length()
+
+    async def test_play_sound_sets_volume_and_plays_with_end_at(self, example_sound_manager, monkeypatch):
+        """
+        Test that the `_play_sound()` method sets the volume on the `pygame.mixer.Sound` instance with the
+        configured volume and that it starts to play the sound.
+
+        The sounds from the example use the `end_at` attribute, so make sure the `play()` method is called
+        appropriately and the method should sleep for the same amount of time.
+        """
+        sound_instance_mock = MagicMock()
+        sleep_mock = CoroutineMock()
+        monkeypatch.setattr("src.sounds.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
+        monkeypatch.setattr("src.sounds.asyncio.sleep", sleep_mock)
+        group = example_sound_manager.groups[0]
+        sound = group.sounds[0]
+        assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
+        sound_file = sound.files[0]
+        await example_sound_manager._play_sound(group, sound)
+        sound_instance_mock.set_volume.assert_called_once_with(example_sound_manager.volume)
+        sound_instance_mock.play.assert_called_once_with(maxtime=sound_file.end_at)
+        sleep_mock.assert_called_once_with(sound_file.end_at / 1000)  # in seconds
 
     def test_get_sound_root_directory_returns_global_directory(self, example_sound_manager):
         """

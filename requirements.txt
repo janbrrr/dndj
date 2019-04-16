@@ -6,6 +6,7 @@ pyyaml==5.1
 pytest==4.4.0
 coverage==4.5.3
 pytest-aiohttp==0.3.0
+asynctest==0.12.3
 python-vlc==3.0.6109
 pafy==0.5.4
 youtube-dl==2019.4.7

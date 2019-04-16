@@ -1,18 +1,11 @@
 import json
-
 import pytest
+from unittest.mock import MagicMock
+from asynctest import CoroutineMock
 
 from src.music import MusicManager
 from src.server import Server
 from src.sounds import SoundManager
-
-
-async def do_nothing_async(*args, **kwargs):
-    pass
-
-
-def do_nothing(*args, **kwargs):
-    pass
 
 
 class TestServer:
@@ -47,11 +40,11 @@ class TestServer:
 
     @pytest.fixture
     def patched_example_server(self, monkeypatch):
-        monkeypatch.setattr(MusicManager, "play_track_list", do_nothing_async)
-        monkeypatch.setattr(MusicManager, "cancel", do_nothing_async)
-        monkeypatch.setattr(MusicManager, "set_volume", do_nothing_async)
-        monkeypatch.setattr(SoundManager, "play_sound", do_nothing_async)
-        monkeypatch.setattr(SoundManager, "set_volume", do_nothing)
+        monkeypatch.setattr(MusicManager, "play_track_list", CoroutineMock())
+        monkeypatch.setattr(MusicManager, "cancel", CoroutineMock())
+        monkeypatch.setattr(MusicManager, "set_volume", CoroutineMock())
+        monkeypatch.setattr(SoundManager, "play_sound", CoroutineMock())
+        monkeypatch.setattr(SoundManager, "set_volume", MagicMock())
         return Server(
             config_path="example/config.yaml",
             host="127.0.0.1",

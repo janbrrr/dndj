@@ -131,7 +131,6 @@ class SoundManager:
         :param config: `dict`
         """
         pygame.mixer.init()
-        self.mixer = pygame.mixer
         self.volume = float(config["volume"])
         self.directory = config["directory"] if "directory" in config else None
         groups = [SoundGroup(sound_group_config) for sound_group_config in config["groups"]]
@@ -141,8 +140,7 @@ class SoundManager:
 
     def __eq__(self, other):
         if isinstance(other, SoundManager):
-            attrs_are_the_same = self.mixer == other.mixer and self.volume == other.volume \
-                                 and self.directory == other.directory
+            attrs_are_the_same = self.volume == other.volume and self.directory == other.directory
             if not attrs_are_the_same:
                 return False
             if len(self.groups) != len(other.groups):
@@ -175,7 +173,7 @@ class SoundManager:
             logging.error(f"Failed to play '{sound.name}'. "
                           f"You have to specify the directory on either the global level, group level or sound level.")
             return
-        pygame_sound = self.mixer.Sound(os.path.join(root_directory, sound_file.file))
+        pygame_sound = pygame.mixer.Sound(os.path.join(root_directory, sound_file.file))
         pygame_sound.set_volume(self.volume)
         if sound_file.end_at is not None:
             pygame_sound.play(maxtime=sound_file.end_at)
