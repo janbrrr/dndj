@@ -1,4 +1,4 @@
-# D&D Music Manager
+# D&DJ
 
 This project was created to help dungeon masters incorporate music and sounds into their storytelling.
 
