@@ -122,12 +122,13 @@ class MusicManager:
                 if not track_list.loop:
                     break
         except asyncio.CancelledError:
+            logging.info(f"Cancelled '{track_list.name}'")
+            raise
+        finally:
             if self.current_player is not None:
                 self.current_player.stop()
             self.currently_playing = None
             self.current_player = None
-            logging.info(f"Cancelled '{track_list.name}'")
-            raise
 
     def _get_track_path(self, group: MusicGroup, track_list: TrackList, track: Track) -> str:
         """
