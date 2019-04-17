@@ -1,6 +1,6 @@
 import pytest
 
-from src.sounds import SoundFile, Sound
+from src.sound import SoundFile, Sound
 
 
 class TestSound:

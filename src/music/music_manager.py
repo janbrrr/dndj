@@ -2,128 +2,15 @@ import vlc
 import pafy
 import asyncio
 import re
-import time
 import logging
 import random
 import os
 from collections import namedtuple
-from typing import Union, Dict
+from typing import Dict
 
-
-class Track:
-
-    def __init__(self, config: Union[str, Dict]):
-        """
-        Initializes a `Track` instance.
-
-        If the `config` parameter is a `str`, it is expected to be the filename.
-        Else it is expected to be a dictionary with the following keys:
-        - "file": the filename (only the filename, excluding the directory) (can be a link to a YouTube video)
-        - "start_at": time at which the track should start in the %H:%M:%S format (Optional)
-        - "end_at": time at which the track should end in the %H:%M:%S format (Optional)
-
-        :param config: `str` or `dict`
-        """
-        if isinstance(config, str):
-            self.file = config
-            start_at = None
-            end_at = None
-        else:
-            self.file = config["file"]
-            start_at = None if "start_at" not in config else config["start_at"]
-            end_at = None if "end_at" not in config else config["end_at"]
-        self.start_at = self._convert_formatted_time_to_ms(start_at) if start_at is not None else None
-        self.end_at = self._convert_formatted_time_to_ms(end_at) if end_at is not None else None
-
-    def _convert_formatted_time_to_ms(self, formatted_time: str) -> int:
-        """
-        Converts a string in the format %H:%M:%S to the corresponding number of milliseconds.
-
-        :param formatted_time: string in the format %H:%M:%S
-        """
-        time_struct = time.strptime(formatted_time, "%H:%M:%S")
-        return (time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 3600) * 1000
-
-    def __eq__(self, other):
-        if isinstance(other, Track):
-            return self.file == other.file and self.start_at == other.start_at and self.end_at == other.end_at
-        return False
-
-
-class TrackList:
-
-    def __init__(self, config: Dict):
-        """
-        Initializes a `TrackList` instance.
-
-        The `dict` parameter is expected to be a dictionary with the following keys:
-        - "name": the name of the track list
-        - "directory": the directory where the files for this track list are (Optional)
-        - "loop": bool indicating whether to loop once all tracks have been played (Optional, default=True)
-        - "shuffle": bool indicating whether to shuffle the tracks (Optional, default=True)
-        - "tracks": a list of track configs. See `Track` class for more information.
-
-        :param config: `dict`
-        """
-        self.name = config["name"]
-        self.directory = config["directory"] if "directory" in config else None
-        self.loop = config["loop"] if "loop" in config else True
-        self.shuffle = config["shuffle"] if "shuffle" in config else True
-        tracks = [Track(track_config) for track_config in config["tracks"]]
-        self.tracks = tuple(tracks)  # immutable
-
-    def __eq__(self, other):
-        if isinstance(other, TrackList):
-            attrs_are_the_same = self.name == other.name and self.directory == other.directory \
-                                 and self.loop == other.loop and self.shuffle == other.shuffle
-            if not attrs_are_the_same:
-                return False
-            if len(self.tracks) != len(other.tracks):
-                return False
-            for my_track, other_track in zip(self.tracks, other.tracks):
-                if my_track != other_track:
-                    return False
-            return True
-        return False
-
-
-class MusicGroup:
-
-    def __init__(self, config: Dict):
-        """
-        Initializes a `MusicGroup` instance.
-
-        A ``MusicGroup`` groups multiple `TrackList` instances.
-        For more information have a look at the `TrackList` class.
-
-        The `config` parameter is expected to be a dictionary with the following keys:
-        - "name": a descriptive name for the music group
-        - "directory": the directory where the files for this group are (Optional)
-        - "sort": whether to sort the track lists alphabetically (Optional, default=True)
-        - "track_lists": a list of configs for `TrackList` instances. See `TrackList` class for more information
-
-        :param config: `dict`
-        """
-        self.name = config["name"]
-        self.directory = config["directory"] if "directory" in config else None
-        track_lists = [TrackList(track_list_config) for track_list_config in config["track_lists"]]
-        if "sort" not in config or ("sort" in config and config["sort"]):
-            track_lists = sorted(track_lists, key=lambda x: x.name)
-        self.track_lists = tuple(track_lists)
-
-    def __eq__(self, other):
-        if isinstance(other, MusicGroup):
-            attrs_are_the_same = self.name == other.name and self.directory == other.directory
-            if not attrs_are_the_same:
-                return False
-            if len(self.track_lists) != len(other.track_lists):
-                return False
-            for my_track_list, other_track_list in zip(self.track_lists, other.track_lists):
-                if my_track_list != other_track_list:
-                    return False
-            return True
-        return False
-
+from src.music.music_group import MusicGroup
+from src.music.track import Track
+from src.music.track_list import TrackList
 
 CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["group", "track_list", "task"])
 

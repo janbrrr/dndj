@@ -5,7 +5,7 @@ from asynctest import CoroutineMock
 
 from src.music import MusicManager
 from src.server import Server
-from src.sounds import SoundManager
+from src.sound import SoundManager
 
 
 class TestServer:

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from asynctest import CoroutineMock
 
 from src.loader import CustomLoader
-from src.sounds import SoundGroup, SoundManager
+from src.sound import SoundGroup, SoundManager
 
 
 class TestSoundManager:
@@ -99,8 +99,8 @@ class TestSoundManager:
         Test that the `_play_sound()` method instantiates the `pygame.mixer.Sound` with the file path of the sound file
         """
         sound_class_mock = MagicMock()
-        monkeypatch.setattr("src.sounds.pygame.mixer.Sound", sound_class_mock)
-        monkeypatch.setattr("src.sounds.asyncio.sleep", CoroutineMock())
+        monkeypatch.setattr("src.sound.sound_manager.pygame.mixer.Sound", sound_class_mock)
+        monkeypatch.setattr("src.sound.sound_manager.asyncio.sleep", CoroutineMock())
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
@@ -120,8 +120,8 @@ class TestSoundManager:
         sound_instance_mock = MagicMock()
         sound_instance_mock.get_length.return_value = 42
         sleep_mock = CoroutineMock()
-        monkeypatch.setattr("src.sounds.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
-        monkeypatch.setattr("src.sounds.asyncio.sleep", sleep_mock)
+        monkeypatch.setattr("src.sound.sound_manager.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
+        monkeypatch.setattr("src.sound.sound_manager.asyncio.sleep", sleep_mock)
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
@@ -143,8 +143,8 @@ class TestSoundManager:
         """
         sound_instance_mock = MagicMock()
         sleep_mock = CoroutineMock()
-        monkeypatch.setattr("src.sounds.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
-        monkeypatch.setattr("src.sounds.asyncio.sleep", sleep_mock)
+        monkeypatch.setattr("src.sound.sound_manager.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
+        monkeypatch.setattr("src.sound.sound_manager.asyncio.sleep", sleep_mock)
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random

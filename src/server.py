@@ -13,7 +13,7 @@ from aiohttp import web
 
 from src.loader import CustomLoader
 from src.music import MusicManager
-from src.sounds import SoundManager
+from src.sound import SoundManager
 
 logging.basicConfig(format='%(levelname)-6s: %(message)s', level=logging.DEBUG)
 
