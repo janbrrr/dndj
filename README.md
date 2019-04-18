@@ -69,7 +69,7 @@ Run the example by typing `python start_server.py example/config.yaml`.
 
 Now you can visit `127.0.0.1:8080` in your browser and start playing around with it.
 
-Credits to [Tabletop Audio](https://tabletopaudio.com/) for the music/ambience in the example.
+Credits to [Tabletop Audio](https://tabletopaudio.com/) for some of the music/ambience in the example.
 The audio is licensed under
 [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 
@@ -140,6 +140,9 @@ music:
 
 Finally, a `track` refers to a music file or YouTube link. In the simplest case it is only a filename (link),
 but you can further configure it. Every file type that the VLC media player supports should work.
+
+Keep in mind that streaming the audio from YouTube will introduce a delay of a second or two to build up the
+connection etc.
 ```yaml
 music:
   # ...
@@ -152,7 +155,7 @@ music:
       tracks:
       - forest_ambience_1.mp3                          # can either be a filename
       - https://www.youtube.com/watch?v=HAw37tUHcOo    # or a YouTube video
-      - file: forest_ambience_2.mp3                    # or a more specific config (`file` can be a filename or link)
+      - file: forest_ambience_2.mp3                    # or more specific (`file` can be a filename or link)
         start_at: 0:0:10  # (Optional) the format is %H:%M:%S
         end_at: 0:0:20    # (Optional) the format is %H:%M:%S
 ```

@@ -10,16 +10,16 @@ music:
       - 161_Forest_Day.mp3
     - name: Battle Music
       tracks:
-      - 157_Field_of_Heroes.mp3
+      - https://www.youtube.com/watch?v=jIxas0a-KgM  # Strength of a Thousand Men
+      - https://www.youtube.com/watch?v=U6K-ZeqpO8k  # Victory
   - name: Scene 2 - Arrival
-    directory: "example/music/scene-2"
     track_lists:
     - name: City Music
       tracks:
-      - 56_Medieval_Town.mp3
+      - https://www.youtube.com/watch?v=_52K0E_gNY0  # Medieval City
     - name: Tavern Music
       tracks:
-      - 23_The_Slaughtered_Ox.mp3
+      - https://www.youtube.com/watch?v=uaX-2RMzVvQ  # Heroes Inn
 sound:
   volume: 1
   directory: "example/sounds"
