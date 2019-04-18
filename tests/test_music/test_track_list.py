@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from src.music import Track, TrackList
@@ -22,6 +24,7 @@ class TestTrackList:
             "some-filename.mp3",
             "other-filename.mp3"
         ]
+        minimal_track_list_config["shuffle"] = False  # shuffle is True by default and this would mess with the test
         track_list = TrackList(minimal_track_list_config)
         assert len(track_list.tracks) == 2
         assert track_list.tracks[0] == Track("some-filename.mp3")
@@ -54,6 +57,29 @@ class TestTrackList:
         track_list = TrackList(minimal_track_list_config)
         assert track_list.shuffle is False
 
+    def test_tracks_are_shuffled_if_shuffle_is_set(self, minimal_track_list_config, monkeypatch):
+        minimal_track_list_config["tracks"] = [
+            "some-filename.mp3",
+            "other-filename.mp3"
+        ]
+        random_mock = MagicMock()
+        monkeypatch.setattr("src.music.track_list.random", random_mock)
+        track_list = TrackList(minimal_track_list_config)
+        assert len(track_list.tracks) == 2
+        random_mock.shuffle.assert_called_once()
+
+    def test_tracks_are_not_shuffled_if_shuffle_unset(self, minimal_track_list_config, monkeypatch):
+        minimal_track_list_config["tracks"] = [
+            "some-filename.mp3",
+            "other-filename.mp3"
+        ]
+        minimal_track_list_config["shuffle"] = False
+        random_mock = MagicMock()
+        monkeypatch.setattr("src.music.track_list.random", random_mock)
+        track_list = TrackList(minimal_track_list_config)
+        assert len(track_list.tracks) == 2
+        random_mock.shuffle.assert_not_called()
+
     def test_tracks_use_tuple_instead_of_list(self, minimal_track_list_config):
         track_list = TrackList(minimal_track_list_config)
-        assert isinstance(track_list.tracks, tuple)
+        assert isinstance(track_list._tracks, tuple)

@@ -3,7 +3,6 @@ import pafy
 import asyncio
 import re
 import logging
-import random
 import os
 from collections import namedtuple
 from typing import Dict
@@ -89,36 +88,8 @@ class MusicManager:
         try:
             logging.info(f"Loading '{track_list.name}'")
             while True:
-                tracks = list(track_list.tracks)  # Copy since random will shuffle in place
-                if track_list.shuffle:
-                    random.shuffle(tracks)
-                for track in tracks:
-                    try:
-                        path = self._get_track_path(group, track_list, track)
-                    except ValueError:
-                        logging.error(f"Failed to play '{track_list.name}'.")
-                        raise asyncio.CancelledError()
-                    self.current_player = vlc.MediaPlayer(vlc.Instance(), path)
-                    self.current_player.audio_set_volume(0)
-                    success = self.current_player.play()
-                    if success == -1:
-                        logging.error(f"Failed to play {path}")
-                        raise asyncio.CancelledError
-                    if track.start_at is not None:
-                        self.current_player.set_time(track.start_at)
-                    logging.info(f"Now Playing: {track.file}")
-                    await asyncio.sleep(0.1)  # Give the media player time to start playing
-                    await self.set_volume(self.volume, set_global=False)
-                    while self.current_player.is_playing():
-                        try:
-                            if track.end_at is not None and self.current_player.get_time() >= track.end_at:
-                                self.current_player.stop()
-                            await asyncio.sleep(self.SLEEP_TIME)
-                        except asyncio.CancelledError:
-                            logging.debug(f"Received cancellation request for {track.file}")
-                            await self.set_volume(0, set_global=False)
-                            raise
-                    logging.info(f"Finished playing: {track.file}")
+                for track in track_list.tracks:
+                    await self._play_track(group, track_list, track)
                 if not track_list.loop:
                     break
         except asyncio.CancelledError:
@@ -129,6 +100,37 @@ class MusicManager:
                 self.current_player.stop()
             self.currently_playing = None
             self.current_player = None
+
+    async def _play_track(self, group: MusicGroup, track_list: TrackList, track: Track):
+        """
+        Plays the given track from the given track list and group.
+        """
+        try:
+            path = self._get_track_path(group, track_list, track)
+        except ValueError:
+            logging.error(f"Failed to play '{track.file}'.")
+            raise asyncio.CancelledError()
+        self.current_player = vlc.MediaPlayer(vlc.Instance(), path)
+        self.current_player.audio_set_volume(0)
+        success = self.current_player.play()
+        if success == -1:
+            logging.error(f"Failed to play {path}")
+            raise asyncio.CancelledError
+        if track.start_at is not None:
+            self.current_player.set_time(track.start_at)
+        logging.info(f"Now Playing: {track.file}")
+        await asyncio.sleep(0.1)  # Give the media player time to start playing
+        await self.set_volume(self.volume, set_global=False)
+        while self.current_player.is_playing():
+            try:
+                if track.end_at is not None and self.current_player.get_time() >= track.end_at:
+                    self.current_player.stop()
+                await asyncio.sleep(self.SLEEP_TIME)
+            except asyncio.CancelledError:
+                logging.debug(f"Received cancellation request for {track.file}")
+                await self.set_volume(0, set_global=False)
+                raise
+        logging.info(f"Finished playing: {track.file}")
 
     def _get_track_path(self, group: MusicGroup, track_list: TrackList, track: Track) -> str:
         """

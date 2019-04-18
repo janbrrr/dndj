@@ -1,4 +1,5 @@
-from typing import Dict
+import random
+from typing import Dict, List
 
 from src.music.track import Track
 
@@ -23,7 +24,17 @@ class TrackList:
         self.loop = config["loop"] if "loop" in config else True
         self.shuffle = config["shuffle"] if "shuffle" in config else True
         tracks = [Track(track_config) for track_config in config["tracks"]]
-        self.tracks = tuple(tracks)  # immutable
+        self._tracks = tuple(tracks)  # immutable
+
+    @property
+    def tracks(self) -> List[Track]:
+        """
+        Returns the tracks for this instance. This list is shuffled, if `shuffle` is set.
+        """
+        tracks = list(self._tracks)  # Copy since random will shuffle in place
+        if self.shuffle:
+            random.shuffle(tracks)
+        return tracks
 
     def __eq__(self, other):
         if isinstance(other, TrackList):
@@ -31,9 +42,9 @@ class TrackList:
                                  and self.loop == other.loop and self.shuffle == other.shuffle
             if not attrs_are_the_same:
                 return False
-            if len(self.tracks) != len(other.tracks):
+            if len(self._tracks) != len(other._tracks):
                 return False
-            for my_track, other_track in zip(self.tracks, other.tracks):
+            for my_track, other_track in zip(self._tracks, other._tracks):
                 if my_track != other_track:
                     return False
             return True
