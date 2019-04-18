@@ -40,3 +40,11 @@ class TestTrack:
         end_at_in_ms = (42 + 10*60 + 1*60*60) * 1000
         track = Track(config)
         assert track.end_at == end_at_in_ms
+
+    def test_is_youtube_link_returns_true_for_a_youtube_link(self):
+        track = Track("https://www.youtube.com/watch?v=jIxas0a-KgM")
+        assert track.is_youtube_link is True
+
+    def test_is_youtube_link_returns_false_for_a_file(self):
+        track = Track("some-file.mp3")
+        assert track.is_youtube_link is False

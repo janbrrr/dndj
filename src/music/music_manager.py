@@ -1,7 +1,6 @@
 import vlc
 import pafy
 import asyncio
-import re
 import logging
 import os
 from collections import namedtuple
@@ -38,8 +37,6 @@ class MusicManager:
         self.groups = tuple(groups)
         self.currently_playing = None
         self.current_player = None
-
-        self.youtube_regex = re.compile(r"^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+")
 
     def __eq__(self, other):
         if isinstance(other, MusicManager):
@@ -119,7 +116,7 @@ class MusicManager:
         if track.start_at is not None:
             self.current_player.set_time(track.start_at)
         logging.info(f"Now Playing: {track.file}")
-        await asyncio.sleep(0.1)  # Give the media player time to start playing
+        await asyncio.sleep(1 if track.is_youtube_link else 0.1)  # Give the media player time to start playing
         await self.set_volume(self.volume, set_global=False)
         while self.current_player.is_playing():
             try:
@@ -147,7 +144,7 @@ class MusicManager:
         :param track: the `Track` instance that should be played
         :return: path to the `track` location that the VLC player can understand
         """
-        if self.youtube_regex.match(track.file) is not None:
+        if track.is_youtube_link:
             youtube_video = pafy.new(track.file)
             best_audio_stream = youtube_video.getbestaudio()
             return best_audio_stream.url

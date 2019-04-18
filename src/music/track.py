@@ -1,9 +1,12 @@
+import re
 import time
 
 from typing import Union, Dict
 
 
 class Track:
+
+    youtube_regex = re.compile(r"^(http(s)?:\/\/)?((w){3}.)?youtu(be|.be)?(\.com)?\/.+")
 
     def __init__(self, config: Union[str, Dict]):
         """
@@ -36,6 +39,10 @@ class Track:
         """
         time_struct = time.strptime(formatted_time, "%H:%M:%S")
         return (time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 3600) * 1000
+
+    @property
+    def is_youtube_link(self):
+        return self.youtube_regex.match(self.file) is not None
 
     def __eq__(self, other):
         if isinstance(other, Track):
