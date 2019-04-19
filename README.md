@@ -1,30 +1,34 @@
 # D&DJ
 
-This project was created to help dungeon masters incorporate music and sounds into their storytelling.
-
-The idea is to prepare the music and sounds you want to use for specific scenes in advance and then being
+*D&DJ* was created to help dungeon masters incorporate music and sounds into their storytelling. The idea is to prepare the music and sounds you want to use for specific scenes in advance and then being
 able to play them without much hassle.
 
-First, you prepare a configuration file where you group and specify all the music and sound files you want to use.
-In this case a music file can also be the link to a YouTube video.
-Then you connect your computer (notebook, ...) to the speakers and start the server with the configuration file.
+### Overview
 
-Now you can use your phone or any other (or the same) device to connect to the server by entering the url in the browser.
-That is assuming that the client device is in the same network as the device that hosts the server.
+- Prepare a configuration file defining the music and sounds you want to use
+  - Supports links to YouTube videos (music)
+  - Supports `start_at` and `end_at` parameters
+- Start the server with the config (and connect the server to the speakers)
+  - The server acts as the media player
+- Visit the hosted web page from a device in the same network (e.g., phone)
+  - The web page displays the available music and sounds (as specified in the config)
+  - Play music, stop the music, change the volume or play sounds
 
-Think of the server as a music player that you can control from any other device by visiting the web page it hosts. 
-From there you can choose to play music, change the volume, stop the music and play sounds.
+Desktop View             |  Mobile View
+:-------------------------:|:-------------------------:
+![Desktop View](docs/_static/example_page_desktop.jpg "Desktop View")  |  ![Mobile View](docs/_static/example_page_mobile.jpg "Mobile View")
 
-*How does it work under the hood?*
+
+### How does it work under the hood?
 
 The server is an asynchronous server that uses [aiohttp](https://github.com/aio-libs/aiohttp/). 
-Clients can connect to the server via the hosted web page and they then connect via websockets. 
+Clients can connect to the server via the hosted web page and they then connect via *websockets*. 
 Every connected client will always know what music is currently being played, what the volume is and 
 will be notified when a change occurs.
 
-The web page shows the clients the preconfigured music and sounds that are available and allows them to request to
+The web page shows the clients the preconfigured music and sounds (YAML format) that are available and allows them to request to
 play a music track, stop the music, change the volume or play sounds. The server will receive these requests
-and fulfill them using [python-vlc](https://github.com/oaubert/python-vlc) for the music and 
+and fulfill them using [python-vlc](https://github.com/oaubert/python-vlc) (VLC media player bindings) for the music and 
 [pygame](https://github.com/pygame/pygame) for the sounds.
 
 If the music is a link to a YouTube video, [pafy](https://github.com/mps-youtube/pafy) will get the link to
