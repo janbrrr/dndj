@@ -15,7 +15,7 @@ from src.loader import CustomLoader
 from src.music import MusicManager
 from src.sound import SoundManager
 
-logging.basicConfig(format='%(levelname)-6s: %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(levelname)-6s: %(message)s', level=logging.INFO)
 
 PROJECT_ROOT = pathlib.Path(__file__).parent
 
