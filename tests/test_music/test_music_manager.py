@@ -1,12 +1,13 @@
 import asyncio
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, PropertyMock
 
 import pytest
 import yaml
 from asynctest import CoroutineMock
 
 from src.loader import CustomLoader
-from src.music import MusicGroup, MusicManager
+from src.music import MusicGroup, MusicManager, Track
+from src.music.music_manager import CurrentlyPlaying
 
 
 class TestMusicManager:
@@ -94,6 +95,122 @@ class TestMusicManager:
     def test_music_groups_use_tuple_instead_of_list(self, minimal_music_manager_config):
         music_manager = MusicManager(minimal_music_manager_config)
         assert isinstance(music_manager.groups, tuple)
+
+    async def test_cancel_cancels_currently_playing(self, example_music_manager, monkeypatch):
+        """
+        Calling cancel() will cancel whatever is currently_playing and wait for it to reset the state.
+        """
+        def reset(x):
+            example_music_manager.currently_playing = None
+        # asyncio.sleep() will take over the task of resetting
+        monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock(side_effect=reset))
+        currently_playing_mock = MagicMock()
+        example_music_manager.currently_playing = currently_playing_mock
+        await example_music_manager.cancel()
+        assert example_music_manager.currently_playing is None
+        currently_playing_mock.task.cancel.assert_called_once()
+
+    async def test_play_track_list_creates_a_task_to_play_the_track_list(self, example_music_manager, monkeypatch):
+        """
+        Calling play_track_list() should create a task for running _play_track_list() and set the currently_playing
+        attribute.
+        """
+        cancel_mock = CoroutineMock()
+        play_track_list_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
+        monkeypatch.setattr("src.music.music_manager.MusicManager.cancel", cancel_mock)
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track_list", play_track_list_mock)
+        assert example_music_manager.currently_playing is None
+        await example_music_manager.play_track_list(0, 0)
+        cancel_mock.assert_awaited()
+        assert example_music_manager.currently_playing is not None
+        assert isinstance(example_music_manager.currently_playing, CurrentlyPlaying)
+        assert example_music_manager.currently_playing.group == example_music_manager.groups[0]
+        assert example_music_manager.currently_playing.track_list == example_music_manager.groups[0].track_lists[0]
+        assert isinstance(example_music_manager.currently_playing.task, asyncio.Task)
+
+    async def test_play_track_list_plays_all_tracks_once_if_no_loop(self, example_music_manager, monkeypatch):
+        """
+        The _play_track_list() method should call _play_track() for every track in it.
+        """
+        play_track_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track", play_track_mock)
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
+        track_list.loop = False
+        await example_music_manager._play_track_list(group=group, track_list=track_list)
+        assert play_track_mock.await_count == 2
+        play_track_mock.assert_has_awaits([call(group, track_list, track_list._tracks[0]),
+                                           call(group, track_list, track_list._tracks[1])], any_order=True)
+
+    async def test_play_track_list_loops(self, example_music_manager, monkeypatch):
+        """
+        The _play_track_list() method should call _play_track() for every track in it. If all tracks have been played
+        and the `loop` attribute is set on the track_list, repeat.
+        """
+        play_track_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track", play_track_mock)
+        group = example_music_manager.groups[0]
+        track_list = MagicMock()
+        track_list.tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
+        loop_property = PropertyMock(side_effect=[True, False])
+        type(track_list).loop = loop_property
+        await example_music_manager._play_track_list(group=group, track_list=track_list)
+        assert play_track_mock.await_count == 4  # loops once again over two tracks
+        assert loop_property.call_count == 2
+
+    async def test_play_track_list_raises_cancelled_error_if_playing_a_track_is_cancelled(self, example_music_manager,
+                                                                                          monkeypatch):
+        """
+        The _play_track_list() calls _play_track() for every track in it. If _play_track() raises a CancelledError,
+        re-raise it.
+        """
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track",
+                            CoroutineMock(side_effect=asyncio.CancelledError))
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
+        with pytest.raises(asyncio.CancelledError):
+            await example_music_manager._play_track_list(group=group, track_list=track_list)
+
+    async def test_play_track_list_resets_state_after_playing(self, example_music_manager, monkeypatch):
+        """
+        After finishing playing the tracks in the track_list, reset the state:
+        - Stop the music
+        - Set currently_playing to None
+        - Set current_player to None
+        """
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track", CoroutineMock())
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track_list.loop = False
+        track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
+        example_music_manager.currently_playing = True
+        current_player_mock = MagicMock()
+        example_music_manager.current_player = current_player_mock
+        await example_music_manager._play_track_list(group=group, track_list=track_list)
+        current_player_mock.stop.assert_called_once()
+        assert example_music_manager.currently_playing is None
+        assert example_music_manager.current_player is None
+
+    async def test_play_track_list_resets_state_if_cancelled(self, example_music_manager, monkeypatch):
+        """
+        If the task is cancelled, reset the state.
+        """
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track",
+                            CoroutineMock(side_effect=asyncio.CancelledError))
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
+        example_music_manager.currently_playing = True
+        current_player_mock = MagicMock()
+        example_music_manager.current_player = current_player_mock
+        with pytest.raises(asyncio.CancelledError):
+            await example_music_manager._play_track_list(group=group, track_list=track_list)
+        current_player_mock.stop.assert_called_once()
+        assert example_music_manager.currently_playing is None
+        assert example_music_manager.current_player is None
 
     async def test_play_track_cancels_if_get_path_raises_value_error(self, example_music_manager, monkeypatch):
         """
