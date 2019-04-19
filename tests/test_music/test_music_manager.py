@@ -1,5 +1,11 @@
-import pytest
+import asyncio
+from unittest.mock import MagicMock, call
 
+import pytest
+import yaml
+from asynctest import CoroutineMock
+
+from src.loader import CustomLoader
 from src.music import MusicGroup, MusicManager
 
 
@@ -11,6 +17,12 @@ class TestMusicManager:
             "volume": 50,
             "groups": []
         }
+
+    @pytest.fixture
+    def example_music_manager(self):
+        with open("example/config.yaml") as config_file:
+            config = yaml.load(config_file, Loader=CustomLoader)
+        return MusicManager(config=config["music"])
 
     def test_minimal_dict_as_config(self, minimal_music_manager_config):
         music_manager = MusicManager(minimal_music_manager_config)
@@ -78,3 +90,274 @@ class TestMusicManager:
         music_manager = MusicManager(minimal_music_manager_config)
         assert music_manager.groups[0] == MusicGroup(name_starts_with_n_config)
         assert music_manager.groups[1] == MusicGroup(name_starts_with_a_config)
+
+    def test_music_groups_use_tuple_instead_of_list(self, minimal_music_manager_config):
+        music_manager = MusicManager(minimal_music_manager_config)
+        assert isinstance(music_manager.groups, tuple)
+
+    async def test_play_track_cancels_if_get_path_raises_value_error(self, example_music_manager, monkeypatch):
+        """
+        The _get_track_path() method will raise a ValueError, if it fails. In that case raise a CancelledError.
+        """
+        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(side_effect=ValueError))
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        with pytest.raises(asyncio.CancelledError):
+            await example_music_manager._play_track(group=group, track_list=track_list, track=track)
+
+    async def test_play_track_cancels_if_play_returns_error(self, example_music_manager, monkeypatch):
+        """
+        If calling the play() method on the media player returns an error code (-1), raise a CancelledError.
+        """
+        media_player_mock = MagicMock()
+        media_player_mock.play.return_value = -1
+        monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
+        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        with pytest.raises(asyncio.CancelledError):
+            await example_music_manager._play_track(group=group, track_list=track_list, track=track)
+
+    async def test_play_track_cancels_if_cancelled_error_is_raised_while_playing(self, example_music_manager,
+                                                                                 monkeypatch):
+        """
+        If a CancelledError is raised while the music is playing, catch it, set the volume to zero and
+        re-raise it.
+        """
+        media_player_mock = MagicMock()
+        media_player_mock.is_playing.return_value = True
+        media_player_mock.get_time = MagicMock(side_effect=asyncio.CancelledError)  # some method in the try block
+        set_volume_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
+        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", set_volume_mock)
+        monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        track.end_at = 1000
+        with pytest.raises(asyncio.CancelledError):
+            await example_music_manager._play_track(group=group, track_list=track_list, track=track)
+        media_player_mock.get_time.assert_called_once()  # this raised the CancelledError which got re-raised
+        set_volume_mock.assert_awaited_with(0, set_global=False)
+
+    async def test_play_track_plays_the_track(self, example_music_manager, monkeypatch):
+        """
+        When a track is requested to be played, perform the following steps:
+        - Get the path (url or file path) for the track
+        - Create a MediaPlayer instance
+        - Call the play() method on the media player
+        - Set the volume with set_volume()
+        - While the media player is_playing(), wait
+        """
+        media_player_mock = MagicMock()
+        is_playing_mock = MagicMock(side_effect=[True, True, False])  # Return True on 1st/2nd call, False on 3rd
+        media_player_mock.is_playing = is_playing_mock
+        get_track_path_mock = MagicMock(return_value="url")
+        sleep_mock = CoroutineMock()
+        set_volume_mock = CoroutineMock()  # necessary because it will use asyncio.sleep and mess up the numbers
+        monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
+        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", get_track_path_mock)
+        monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", set_volume_mock)
+        monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
+        example_music_manager.volume = 55
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        await example_music_manager._play_track(group=group, track_list=track_list, track=track)
+        get_track_path_mock.assert_called_once()
+        media_player_mock.play.assert_called_once()
+        set_volume_mock.assert_awaited_once_with(example_music_manager.volume, set_global=False)
+        assert is_playing_mock.call_count == 3  # 1st/2nd time is playing, 3rd time not, so stop
+        assert sleep_mock.await_count == 3  # one time for initial sleep, two times for waiting while player is playing
+
+    async def test_play_track_sets_start_time(self, example_music_manager, monkeypatch):
+        """
+        If a `Track` has the `start_at` attribute, the media player should skip to it.
+        """
+        media_player_mock = MagicMock()
+        media_player_mock.is_playing.return_value = False
+        monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
+        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", CoroutineMock())
+        monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        track.start_at = 1000
+        await example_music_manager._play_track(group=group, track_list=track_list, track=track)
+        media_player_mock.set_time.assert_called_once_with(1000)
+
+    async def test_play_track_stops_at_end_time(self, example_music_manager, monkeypatch):
+        """
+        If a `Track` has the `end_at` attribute, the media player should stop if it is reached.
+        """
+        media_player_mock = MagicMock()
+        media_player_mock.is_playing.return_value = True  # Can only exit if stop() is called
+        def set_is_playing_to_false():
+            media_player_mock.is_playing.return_value = False
+        media_player_mock.get_time.return_value = 1000
+        media_player_mock.stop = MagicMock(side_effect=set_is_playing_to_false)
+        monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
+        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", CoroutineMock())
+        monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        track.end_at = 1000
+        await example_music_manager._play_track(group=group, track_list=track_list, track=track)
+        media_player_mock.get_time.assert_called_once()      # Compares get_time with track.end_at and
+        assert media_player_mock.is_playing.call_count == 2  # immediately exits next step due to get_time >= end_at
+        media_player_mock.stop.assert_called_once()          # and calls stop()
+
+    def test_get_track_path_returns_audio_url_if_track_is_youtube_link(self, example_music_manager, monkeypatch):
+        """
+        If the `file` attribute of a `Track` is the link to a YouTube video, return the url of its audio stream.
+        """
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        track.file = "https://www.youtube.com/watch?v=jIxas0a-KgM"
+        pafy_mock = MagicMock()
+        youtube_video_mock = MagicMock()
+        audio_stream_mock = MagicMock()
+        audio_stream_mock.url = "some-url"
+        pafy_mock.new.return_value = youtube_video_mock
+        youtube_video_mock.getbestaudio.return_value = audio_stream_mock
+        monkeypatch.setattr("src.music.music_manager.pafy", pafy_mock)
+        path = example_music_manager._get_track_path(group, track_list, track)
+        assert path == "some-url"
+
+    def test_get_track_path_returns_file_path_if_track_is_file(self, example_music_manager, monkeypatch):
+        """
+        If the `file` attribute of a `Track` is not the link to a YouTube video, return the file path.
+        """
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        track.file = "file.mp3"
+        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_list_root_directory",
+                            MagicMock(return_value="root/dir/"))
+        monkeypatch.setattr("src.music.music_manager.os.path.isfile", lambda x: True)
+        path = example_music_manager._get_track_path(group, track_list, track)
+        assert path == "root/dir/file.mp3"
+
+    def test_get_track_path_raises_value_error_if_root_directory_unknown(self, example_music_manager, monkeypatch):
+        """
+        If the `file` attribute of a `Track` is not the link to a YouTube video, return the file path. The file path
+        consists of the root directory combined with the filename. If there is no root directory, raise a `ValueError`.
+        """
+        example_music_manager.directory = None
+        group = example_music_manager.groups[0]
+        group.directory = None
+        track_list = group.track_lists[0]
+        track_list.directory = None
+        track = track_list.tracks[0]
+        track.file = "file.mp3"
+        with pytest.raises(ValueError):
+            example_music_manager._get_track_path(group, track_list, track)
+
+    def test_get_track_path_raises_value_error_if_path_is_not_existing_file(self, example_music_manager, monkeypatch):
+        """
+        If the `file` attribute of a `Track` is not the link to a YouTube video, return the file path. But if the file
+        path does not refer to an existing file, raise a `ValueError`.
+        """
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        track.file = "file.mp3"
+        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_list_root_directory",
+                            MagicMock(return_value="root/dir/"))  # non-existing dir
+        with pytest.raises(ValueError):
+            example_music_manager._get_track_path(group, track_list, track)
+
+    def test_get_track_list_root_directory_returns_global_directory(self, example_music_manager):
+        """
+        If a directory is specified at the global level and no other level, return the global directory.
+        """
+        example_music_manager.directory = "global/dir"
+        first_group = example_music_manager.groups[0]
+        first_group.directory = None
+        first_track_list_in_first_group = first_group.track_lists[0]
+        first_track_list_in_first_group.directory = None
+        directory = example_music_manager._get_track_list_root_directory(group=first_group,
+                                                                         track_list=first_track_list_in_first_group)
+        assert directory == "global/dir"
+
+    def test_get_track_list_root_directory_returns_group_directory(self, example_music_manager):
+        """
+        If a directory is specified at the MusicGroup level and not the TrackList level, return the MusicGroup directory
+        (even if there is a global directory specified).
+        """
+        example_music_manager.directory = "global/dir"
+        first_group = example_music_manager.groups[0]
+        first_group.directory = "group/dir"
+        first_track_list_in_first_group = first_group.track_lists[0]
+        first_track_list_in_first_group.directory = None
+        directory = example_music_manager._get_track_list_root_directory(group=first_group,
+                                                                         track_list=first_track_list_in_first_group)
+        assert directory == "group/dir"
+
+    def test_get_track_list_root_directory_returns_track_list_directory(self, example_music_manager):
+        """
+        If a directory is specified at the TrackList, return it (even if there is a global directory and a
+        MusicGroup directory specified).
+        """
+        example_music_manager.directory = "global/dir"
+        first_group = example_music_manager.groups[0]
+        first_group.directory = "group/dir"
+        first_track_list_in_first_group = first_group.track_lists[0]
+        first_track_list_in_first_group.directory = "track/list/dir"
+        directory = example_music_manager._get_track_list_root_directory(group=first_group,
+                                                                         track_list=first_track_list_in_first_group)
+        assert directory == "track/list/dir"
+
+    def test_get_track_list_root_directory_raises_value_error_if_no_directory_on_any_level(self, example_music_manager):
+        """
+        If no directory is specified at all (neither the global, MusicGroup or TrackList level),
+        then raise a ValueError.
+        """
+        example_music_manager.directory = None
+        first_group = example_music_manager.groups[0]
+        first_group.directory = None
+        first_track_list_in_first_group = first_group.track_lists[0]
+        first_track_list_in_first_group.directory = None
+        with pytest.raises(ValueError):
+            example_music_manager._get_track_list_root_directory(group=first_group,
+                                                                 track_list=first_track_list_in_first_group)
+
+    async def test_set_volume_sets_volume_if_global_parameter(self, example_music_manager):
+        example_music_manager.volume = 0
+        await example_music_manager.set_volume(volume=1, set_global=True)
+        assert example_music_manager.volume == 1
+
+    async def test_set_volume_does_not_set_volume_if_no_global_parameter(self, example_music_manager):
+        example_music_manager.volume = 0
+        await example_music_manager.set_volume(volume=1, set_global=False)
+        assert example_music_manager.volume == 0
+
+    async def test_set_volume_instantly_sets_player_volume_if_no_smooth_parameter(self, example_music_manager,
+                                                                                  monkeypatch):
+        sleep_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
+        example_music_manager.current_player = MagicMock()
+        await example_music_manager.set_volume(volume=1, smooth=False)
+        sleep_mock.assert_not_awaited()
+        example_music_manager.current_player.audio_set_volume.assert_called_once_with(1)
+
+    async def test_set_volume_sets_player_volume_in_steps_if_smooth_parameter(self, example_music_manager, monkeypatch):
+        sleep_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
+        example_music_manager.current_player = MagicMock()
+        example_music_manager.current_player.audio_get_volume.return_value = 0
+        n_steps = 10
+        seconds = 10
+        await example_music_manager.set_volume(volume=100, smooth=True, n_steps=n_steps, seconds=seconds)
+        sleep_mock.assert_awaited_with(seconds / n_steps)  # seconds / n_steps
+        step_size = 100 / n_steps  # 1 = |starting_volume - new_volume|
+        example_music_manager.current_player.audio_set_volume.assert_has_calls(
+             [call(int((i + 1) * step_size)) for i in range(n_steps)]  # 10, 20, 30, ..., 100
+        )
