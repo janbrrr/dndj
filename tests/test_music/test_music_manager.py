@@ -2,10 +2,8 @@ import asyncio
 from unittest.mock import MagicMock, call, PropertyMock
 
 import pytest
-import yaml
 from asynctest import CoroutineMock
 
-from src.loader import CustomLoader
 from src.music import MusicGroup, MusicManager, Track
 from src.music.music_manager import CurrentlyPlaying
 
@@ -20,10 +18,8 @@ class TestMusicManager:
         }
 
     @pytest.fixture
-    def example_music_manager(self):
-        with open("example/config.yaml") as config_file:
-            config = yaml.load(config_file, Loader=CustomLoader)
-        return MusicManager(config=config["music"])
+    def example_music_manager(self, example_config):
+        return MusicManager(config=example_config["music"])
 
     def test_minimal_dict_as_config(self, minimal_music_manager_config):
         music_manager = MusicManager(minimal_music_manager_config)

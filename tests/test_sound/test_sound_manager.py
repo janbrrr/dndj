@@ -1,10 +1,8 @@
 import os
 import pytest
-import yaml
 from unittest.mock import MagicMock
 from asynctest import CoroutineMock
 
-from src.loader import CustomLoader
 from src.sound import SoundGroup, SoundManager
 
 
@@ -18,10 +16,8 @@ class TestSoundManager:
         }
 
     @pytest.fixture
-    def example_sound_manager(self):
-        with open("example/config.yaml") as config_file:
-            config = yaml.load(config_file, Loader=CustomLoader)
-        return SoundManager(config=config["sound"])
+    def example_sound_manager(self, example_config):
+        return SoundManager(config=example_config["sound"])
 
     def test_minimal_dict_as_config(self, minimal_sound_manager_config):
         sound_manager = SoundManager(minimal_sound_manager_config)
@@ -113,9 +109,9 @@ class TestSoundManager:
     async def test_play_sound_sets_volume_and_plays(self, example_sound_manager, monkeypatch):
         """
         Test that the `_play_sound()` method sets the volume on the `pygame.mixer.Sound` instance with the
-        configured volume and that it starts to play the sound.
+        configured volume, that it starts to play the sound and waits for it to finish.
 
-        The sounds from the example use the `end_at` attribute, so make sure to remove it.
+        This test assumes no `end_at` attribute on the sound, so make sure to remove it.
         """
         sound_instance_mock = MagicMock()
         sound_instance_mock.get_length.return_value = 42
@@ -136,10 +132,11 @@ class TestSoundManager:
     async def test_play_sound_sets_volume_and_plays_with_end_at(self, example_sound_manager, monkeypatch):
         """
         Test that the `_play_sound()` method sets the volume on the `pygame.mixer.Sound` instance with the
-        configured volume and that it starts to play the sound.
+        configured volume, that it starts to play the sound and waits for it to finish.
 
-        The sounds from the example use the `end_at` attribute, so make sure the `play()` method is called
-        appropriately and the method should sleep for the same amount of time.
+        This test assumes the `end_at` attribute on the sound to be set, so make sure to set it.
+        Make sure the `play()` method is called appropriately and the method should sleep for the correct
+         amount of time.
         """
         sound_instance_mock = MagicMock()
         sleep_mock = CoroutineMock()
@@ -149,6 +146,7 @@ class TestSoundManager:
         sound = group.sounds[0]
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
         sound_file = sound.files[0]
+        sound_file.end_at = 4000
         await example_sound_manager._play_sound(group, sound)
         sound_instance_mock.set_volume.assert_called_once_with(example_sound_manager.volume)
         sound_instance_mock.play.assert_called_once_with(maxtime=sound_file.end_at)
@@ -156,12 +154,13 @@ class TestSoundManager:
 
     def test_get_sound_root_directory_returns_global_directory(self, example_sound_manager):
         """
-        The example sound manager specifies a directory at the global level and no further directories
-        on a group or individual level. Therefore this method should return the global directory.
+        If a directory is specified at the global level and no other level, return the global directory.
         """
         example_sound_manager.directory = "global/dir"
         first_group = example_sound_manager.groups[0]
+        first_group.directory = None
         first_sound_in_first_group = first_group.sounds[0]
+        first_sound_in_first_group.directory = None
         directory = example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
         assert directory == "global/dir"
 
@@ -174,6 +173,7 @@ class TestSoundManager:
         first_group = example_sound_manager.groups[0]
         first_group.directory = "group/dir"
         first_sound_in_first_group = first_group.sounds[0]
+        first_sound_in_first_group.directory = None
         directory = example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
         assert directory == "group/dir"
 

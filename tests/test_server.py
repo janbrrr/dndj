@@ -12,7 +12,7 @@ class TestServer:
 
     @pytest.fixture
     def minimal_server_config_file(self, tmp_path):
-        content = """---
+        content = """
         music:
           volume: 0.2
           groups: []
@@ -39,14 +39,16 @@ class TestServer:
         return client
 
     @pytest.fixture
-    def patched_example_server(self, monkeypatch):
+    def patched_example_server(self, example_config_str, tmp_path, monkeypatch):
+        example_config_file = tmp_path / "config.yaml"
+        example_config_file.write_text(example_config_str)
         monkeypatch.setattr(MusicManager, "play_track_list", CoroutineMock())
         monkeypatch.setattr(MusicManager, "cancel", CoroutineMock())
         monkeypatch.setattr(MusicManager, "set_volume", CoroutineMock())
         monkeypatch.setattr(SoundManager, "play_sound", CoroutineMock())
         monkeypatch.setattr(SoundManager, "set_volume", MagicMock())
         return Server(
-            config_path="example/config.yaml",
+            config_path=example_config_file,
             host="127.0.0.1",
             port=8080
         )

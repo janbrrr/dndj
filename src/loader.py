@@ -5,7 +5,10 @@ import os
 class CustomLoader(yaml.SafeLoader):
 
     def __init__(self, stream):
-        self._root = os.path.split(stream.name)[0]
+        if hasattr(stream, "name"):
+            self._root = os.path.split(stream.name)[0]
+        else:
+            self._root = None
         super().__init__(stream)
 
     def include(self, node):
