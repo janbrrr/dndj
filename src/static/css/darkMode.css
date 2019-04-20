@@ -1,0 +1,33 @@
+body.dark-mode {
+    background-color: #212121;
+    color: #E0E0E0;
+}
+
+body.dark-mode .toast {
+    background-color: rgba(60, 62, 66, 0.8);
+}
+
+body.dark-mode .nav-link {
+    color: #E0E0E0;
+}
+
+body.dark-mode .nav-link:hover {
+    color: #337ab7;
+}
+
+body.dark-mode .nav-link.active {
+    background-color: #212121;
+    color: #E0E0E0;
+}
+
+body.dark-mode .btn {
+    color: #E0E0E0;
+}
+
+body.dark-mode .btn:hover {
+    color: #337ab7;
+}
+
+body.dark-mode .playing {
+    color: #337ab7;
+}

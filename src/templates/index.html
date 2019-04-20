@@ -11,6 +11,7 @@
           href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.1/css/bootstrap-slider.min.css"
           crossorigin="anonymous">
     <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/darkMode.css">
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"
             integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
@@ -23,13 +24,21 @@
     <script src="/static/js/sound.js/"></script>
     <script src="/static/js/slider.js/"></script>
     <script src="/static/js/collapse.js/"></script>
+    <script src="/static/js/darkMode.js/"></script>
 </head>
-<body>
+<body class="dark-mode">
 <div id="toast-container" aria-live="polite" aria-atomic="true" class="position-fixed w-100 d-flex flex-column align-items-center">
 </div>
 <div class="container">
     <div class="headline">
-        <h1 class="text-center">D&DJ</h1>
+        <p class="text-center h1">
+            D&DJ
+        </p>
+    </div>
+    <div class="d-flex">
+        <button type="button" class="btn ml-auto" onclick="toggleDarkMode()">
+            <i class="fas fa-adjust"></i>
+        </button>
     </div>
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">

@@ -1,9 +1,13 @@
+.btn:hover {
+    color: #337ab7;
+}
+
 .playing {
-    color: #007AFF;
+    color: #337ab7;
 }
 
 .playing:hover {
-    color: #007AFF;
+    color: #337ab7;
 }
 
 .slider {
@@ -41,7 +45,6 @@
 }
 
 .headline {
-    margin-bottom: 2rem;
     margin-top: 1rem;
 }
 
