@@ -245,6 +245,8 @@ class TestMusicManager:
         set_volume_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
         monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing",
+                            CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", set_volume_mock)
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         group = example_music_manager.groups[0]
@@ -262,19 +264,21 @@ class TestMusicManager:
         - Get the path (url or file path) for the track
         - Create a MediaPlayer instance
         - Call the play() method on the media player
+        - Wait for it to start playing
         - Set the volume with set_volume()
         - While the media player is_playing(), wait
         """
         media_player_mock = MagicMock()
-        # The first [False, True] are for waiting that the player starts
-        # The last [True, True, False] are checks whether the player still is playing
-        is_playing_mock = MagicMock(side_effect=[False, True, True, True, False])
+        is_playing_mock = MagicMock(side_effect=[True, True, False])  # Only plays for 2 steps
         media_player_mock.is_playing = is_playing_mock
         get_track_path_mock = MagicMock(return_value="url")
         sleep_mock = CoroutineMock()
+        wait_for_start_mock = CoroutineMock()
         set_volume_mock = CoroutineMock()  # necessary because it will use asyncio.sleep and mess up the numbers
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
         monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", get_track_path_mock)
+        monkeypatch.setattr("src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing",
+                            wait_for_start_mock)
         monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", set_volume_mock)
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
         example_music_manager.volume = 55
@@ -284,18 +288,21 @@ class TestMusicManager:
         await example_music_manager._play_track(group=group, track_list=track_list, track=track)
         get_track_path_mock.assert_called_once()
         media_player_mock.play.assert_called_once()
+        wait_for_start_mock.assert_awaited_once()
         set_volume_mock.assert_awaited_once_with(example_music_manager.volume, set_global=False)
-        assert is_playing_mock.call_count == 5  # 5th time it is no longer playing, so stop
-        assert sleep_mock.await_count == 3  # one time for initial wait to start, two times for while player is playing
+        assert is_playing_mock.call_count == 3  # is_playing becomes False at the 3rd call, so stop
+        assert sleep_mock.await_count == 2  # Two times for while player is playing
 
     async def test_play_track_sets_start_time(self, example_music_manager, monkeypatch):
         """
         If a `Track` has the `start_at` attribute, the media player should skip to it.
         """
         media_player_mock = MagicMock()
-        media_player_mock.is_playing = MagicMock(side_effect=[True, False])  # True since it waits for start, then False
+        media_player_mock.is_playing.return_value = False
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
         monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing",
+                            CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         group = example_music_manager.groups[0]
@@ -317,6 +324,8 @@ class TestMusicManager:
         media_player_mock.stop = MagicMock(side_effect=set_is_playing_to_false)
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
         monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing",
+                            CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         group = example_music_manager.groups[0]
@@ -325,9 +334,20 @@ class TestMusicManager:
         track.end_at = 1000
         await example_music_manager._play_track(group=group, track_list=track_list, track=track)
         media_player_mock.get_time.assert_called_once()      # Compares get_time with track.end_at and
-        assert media_player_mock.is_playing.call_count == 3  # immediately exits next step due to get_time >= end_at
-                                                             # (still 3 because it first checks if started)
+        assert media_player_mock.is_playing.call_count == 2  # immediately exits next step due to get_time >= end_at
         media_player_mock.stop.assert_called_once()          # and calls stop()
+
+    async def test_wait_for_current_player_to_be_playing(self, example_music_manager, monkeypatch):
+        """
+        Wait until the current player is playing.
+        """
+        sleep_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
+        example_music_manager.current_player = MagicMock()
+        example_music_manager.current_player.is_playing = MagicMock(side_effect=[False, False, True])
+        await example_music_manager._wait_for_current_player_to_be_playing()
+        assert example_music_manager.current_player.is_playing.call_count == 3
+        assert sleep_mock.await_count == 2
 
     def test_get_track_path_returns_audio_url_if_track_is_youtube_link(self, example_music_manager, monkeypatch):
         """

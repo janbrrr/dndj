@@ -116,8 +116,7 @@ class MusicManager:
         if track.start_at is not None:
             self.current_player.set_time(track.start_at)
         logging.info(f"Now Playing: {track.file}")
-        while not self.current_player.is_playing():  # Wait till the player starts playing
-            await asyncio.sleep(self.SLEEP_TIME)
+        await self._wait_for_current_player_to_be_playing()
         await self.set_volume(self.volume, set_global=False)
         while self.current_player.is_playing():
             try:
@@ -179,6 +178,14 @@ class MusicManager:
         if root_directory is None:
             raise ValueError("Missing directory")
         return root_directory
+
+    async def _wait_for_current_player_to_be_playing(self):
+        """
+        Waits until the `current_player` is playing.
+        """
+        if self.current_player is not None:
+            while not self.current_player.is_playing():
+                await asyncio.sleep(self.SLEEP_TIME)
 
     async def set_volume(self, volume, set_global=True, smooth=True, n_steps=20, seconds=2):
         """
