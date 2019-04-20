@@ -14,7 +14,7 @@ able to play them without much hassle.
   - The web page displays the available music and sounds (as specified in the config)
   - Play music, stop the music, change the volume or play sounds
 
-Desktop View             |  Mobile View
+Desktop View (Light Mode)            |  Mobile (Dark Mode)
 :-------------------------:|:-------------------------:
 ![Desktop View](docs/_static/example_page_desktop.jpg "Desktop View")  |  ![Mobile View](docs/_static/example_page_mobile.jpg "Mobile View")
 
