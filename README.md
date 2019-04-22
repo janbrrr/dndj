@@ -314,7 +314,8 @@ play the sound of footsteps on leaves.
 For sound files the only supported formats are `.wav` and `.ogg`.
 
 If you happen to have a different format or simply want to convert your audio files into a different format,
-you can use the `convert_file.py` script. This script uses [pydub](https://pydub.com/) to perform the conversion.
+you can use the `scripts/convert_file.py` script. This script uses [pydub](https://pydub.com/) to perform the conversion.
+Refer to the official pydub homepage for more information regarding the installation.
 
 `python convert_file.py path/to/file-or-dir format`
 
