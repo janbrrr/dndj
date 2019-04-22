@@ -321,8 +321,19 @@ Refer to the official pydub homepage for more information regarding the installa
 
 - The first argument is the file to convert or a directory (will convert every file in the directory)
 - The second argument is the output format (e.g., `ogg` or `wav`)
+- The following arguments are *optional* and only work for files and not directories
+  - use `--start X` to have the audio start at `X` milliseconds
+  - use `--end X` to have the audio end at `X` milliseconds
+  - use `--out X` to change the output name to `X` (name excludes extension)
 
 The converted file(s) will be in the same directory as the source file(s) and have the same name (except the extension).
+
+*Example:* 
+
+`python convert_file.py --start 5000 --end 8000 --out new_sound path/to/sound.wav ogg` 
+
+This converts `sound.wav` located at `path/to/` to `new_sound.ogg` located at `path/to/`
+and `new_sound.ogg` consists of the part starting at 5000 ms and ending at 8000 ms.
 
 # <a name="resources"/>Resource Recommendations
 
