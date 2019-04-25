@@ -382,5 +382,4 @@ The coverage report will be available in `coverage_html/index.html`.
 
 ### Code Style
 
-In order to check the code against style conventions type the following
-- `pycodestyle --max-line-length=120 --exclude=venv/ ./`
+In order to check the code against style conventions type the command `flake8`.

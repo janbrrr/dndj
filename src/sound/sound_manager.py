@@ -52,7 +52,7 @@ class SoundManager:
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
         loop = asyncio.get_event_loop()
-        playing = loop.create_task(self._play_sound(group, sound))
+        _ = loop.create_task(self._play_sound(group, sound))
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
 
     async def _play_sound(self, group: SoundGroup, sound: Sound):
