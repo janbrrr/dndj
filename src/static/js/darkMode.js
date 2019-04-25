@@ -1,5 +1,6 @@
 $(document).ready(function() {
-    localStorage.getItem("mode") === "dark" ? $("body").addClass("dark-mode") : $("body").removeClass("dark-mode");
+    const currentValue = localStorage.getItem("mode") || "dark";
+    currentValue === "dark" ? $("body").addClass("dark-mode") : $("body").removeClass("dark-mode");
 });
 
 function toggleDarkMode(){
