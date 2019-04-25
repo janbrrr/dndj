@@ -22,15 +22,15 @@ def convert_file(file_path, _format, start=None, end=None, out=None):
 
 if __name__ == "__main__":
     """
-    Converts a file (e.g., mp3) to a different format (e.g., wav, ogg). The converted file will be in the same 
+    Converts a file (e.g., mp3) to a different format (e.g., wav, ogg). The converted file will be in the same
     directory as the original file. Can convert a single file or every file in a directory.
-    
+
     Run this script as follows:
     `python convert_file.py filename-or-directory format`
-    
+
     Example:
-    `python convert_file.py my_sound.wav ogg
-    
+    `python convert_file.py my_sound.wav ogg`
+
     This script supports additional arguments, type `python convert_file.py --help` for more information.
     """
     parser = argparse.ArgumentParser(description="Perform a file conversion")

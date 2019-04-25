@@ -5,7 +5,7 @@ from src.server import Server
 if __name__ == "__main__":
     """
     Starts the server with the provided YAML config file.
-    
+
     Accepts the following optional arguments:
     --host "your.new.host.ip" (default="127.0.0.1")
     --port port_number (default=8080)

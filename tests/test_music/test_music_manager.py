@@ -318,6 +318,7 @@ class TestMusicManager:
         """
         media_player_mock = MagicMock()
         media_player_mock.is_playing.return_value = True  # Can only exit if stop() is called
+
         def set_is_playing_to_false():
             media_player_mock.is_playing.return_value = False
         media_player_mock.get_time.return_value = 1000

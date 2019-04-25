@@ -22,8 +22,7 @@ class SoundFile:
             end_at = config["end_at"] if "end_at" in config else None
             if end_at is not None:
                 time_struct = time.strptime(end_at, "%H:%M:%S")
-                self.end_at = (time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 60 * 60) \
-                              * 1000  # in ms
+                self.end_at = (time_struct.tm_sec + time_struct.tm_min * 60 + time_struct.tm_hour * 3600) * 1000  # ms
             else:
                 self.end_at = None
         if not self.file.endswith(".wav") and not self.file.endswith(".ogg"):
