@@ -1,0 +1,6 @@
+-r requirements.txt
+pytest==4.4.0
+coverage==4.5.3
+pytest-aiohttp==0.3.0
+asynctest==0.12.3
+pycodestyle==2.5.0

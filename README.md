@@ -62,6 +62,7 @@ Next, set up a virtual environment.
     1. On Windows: `venv\Scripts\activate`
     2. On Linux: `source venv/bin/activate`
 4. Install the requirements with `pip install -r requirements.txt`
+    1. Use the `requirements-dev.txt` if you are a developer
 
 Whenever you want to execute the program from the terminal, make sure the virtual environment is active.
 
@@ -371,8 +372,15 @@ If you are a mad scientist, you can also try to extract the sound files from you
 
 In order to run the tests simply type the command `pytest`.
 
+### Coverage
+
 In order to generate a coverage report type the following:
 - `coverage run -m pytest`
 - `coverage html`
 
 The coverage report will be available in `coverage_html/index.html`.
+
+### Code Style
+
+In order to check the code against style conventions type the following
+- `pycodestyle --max-line-length=120 --exclude=venv/ ./`
