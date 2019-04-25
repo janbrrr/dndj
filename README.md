@@ -7,7 +7,7 @@ able to play them without much hassle.
 
 - Prepare a configuration file defining the music and sounds you want to use
   - Supports links to YouTube videos (music)
-  - Supports `start_at` and `end_at` parameters
+  - Supports start_at and end_at parameters
 - Start the server with the config (and connect the server to the speakers)
   - The server acts as the media player
 - Visit the hosted web page from a device in the same network (e.g., phone)
@@ -22,11 +22,11 @@ Desktop View (Light Mode)            |  Mobile (Dark Mode)
 ### How does it work under the hood?
 
 The server is an asynchronous server that uses [aiohttp](https://github.com/aio-libs/aiohttp/). 
-Clients can connect to the server via the hosted web page and they then connect via *websockets*. 
+Clients can connect to the server via the hosted web page and they then connect via websockets. 
 Every connected client will always know what music is currently being played, what the volume is and 
 will be notified when a change occurs.
 
-The web page shows the clients the preconfigured music and sounds (YAML format) that are available and allows them to request to
+The web page shows the clients the preconfigured music and sounds that are available and allows them to request to
 play a music track, stop the music, change the volume or play sounds. The server will receive these requests
 and fulfill them using [python-vlc](https://github.com/oaubert/python-vlc) (VLC media player bindings) for the music and 
 [pygame](https://github.com/pygame/pygame) for the sounds.
