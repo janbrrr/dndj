@@ -20,6 +20,7 @@ function connect() {
         switch (data.action) {
             case "nowPlaying":
                 $(".playing").removeClass("playing");
+                $("#group-music-" + data.groupIndex).addClass("playing");
                 $("#btn-music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
                 $("#now-playing").text(`${data.groupName} > ${data.trackName}`);
                 console.log("Now playing " + data.trackName + " (group " + data.groupIndex + " at index " + data.trackListIndex + ")");

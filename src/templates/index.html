@@ -82,7 +82,11 @@
                 {% for group in music.groups %}
                 {% set outer_loop = loop %}
                 <div>
-                    <a class="row btn collapse-btn" data-toggle="collapse" href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
+                    <a id="group-music-{{ outer_loop.index0 }}"
+                       class="row btn collapse-btn {% if music.currently_playing
+                                and music.currently_playing.0.name == group.name %}playing{% endif %}"
+                       data-toggle="collapse"
+                       href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
                        aria-expanded="false" aria-controls="collapseMusicGroup{{outer_loop.index0}}">
                         <h5><i class="collapse-icon fas fa-plus fa-xs"></i>{{ group.name }}</h5>
                     </a>
