@@ -368,6 +368,18 @@ class TestMusicManager:
         path = example_music_manager._get_track_path(group, track_list, track)
         assert path == "some-url"
 
+    def test_get_track_path_raises_no_exceptions_if_youtube_link(self, example_music_manager):
+        """
+        This test does not use mocking and ensures that `pafy` and `youtube-dl` do not raise any exceptions when
+        `_get_track_path()` is called and the `Track` is a link to a YouTube video.
+        """
+        group = example_music_manager.groups[0]
+        track_list = group.track_lists[0]
+        track = track_list.tracks[0]
+        track.file = "https://www.youtube.com/watch?v=jIxas0a-KgM"
+        path = example_music_manager._get_track_path(group, track_list, track)
+        assert True  # Test is a success if no exception has been raised
+
     def test_get_track_path_returns_file_path_if_track_is_file(self, example_music_manager, monkeypatch):
         """
         If the `file` attribute of a `Track` is not the link to a YouTube video, return the file path.
