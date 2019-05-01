@@ -82,3 +82,72 @@ class TestSoundGroup:
     def test_sounds_use_tuple_instead_of_list(self, minimal_sound_group_config):
         sound_group = SoundGroup(minimal_sound_group_config)
         assert isinstance(sound_group.sounds, tuple)
+
+    def test_equal_if_same_config(self):
+        group_1 = SoundGroup({
+            "name": "Group",
+            "sounds": []
+        })
+        group_2 = SoundGroup({
+            "name": "Group",
+            "sounds": []
+        })
+        assert group_1 == group_2
+        assert group_2 == group_1
+
+    def test_not_equal_if_different_attributes(self):
+        group_1 = SoundGroup({
+            "name": "Unique Group",
+            "sounds": []
+        })
+        group_2 = SoundGroup({
+            "name": "Normal Group",
+            "sounds": []
+        })
+        assert group_1 != group_2
+        assert group_2 != group_1
+
+    def test_not_equal_if_different_number_of_sounds(self):
+        group_1 = SoundGroup({
+            "name": "Group",
+            "sounds": []
+        })
+        group_2 = SoundGroup({
+            "name": "Group",
+            "sounds": [{
+                "name": "Sound",
+                "files": []
+            }]
+        })
+        assert group_1 != group_2
+        assert group_2 != group_1
+
+    def test_not_equal_if_different_sounds(self):
+        group_1 = SoundGroup({
+            "name": "Group",
+            "sounds": [{
+                "name": "Unique Sound",
+                "files": []
+            }]
+        })
+        group_2 = SoundGroup({
+            "name": "Group",
+            "sounds": [{
+                "name": "Other Sound",
+                "files": []
+            }]
+        })
+        assert group_1 != group_2
+        assert group_2 != group_1
+
+    def test_not_equal_if_different_types(self):
+        config = {
+            "name": "Group",
+            "sounds": [{
+                "name": "Sound",
+                "files": []
+            }]
+        }
+        group = SoundGroup(config)
+        assert config != group
+        assert group != config

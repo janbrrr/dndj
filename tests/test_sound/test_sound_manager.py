@@ -90,6 +90,75 @@ class TestSoundManager:
         sound_manager = SoundManager(minimal_sound_manager_config)
         assert isinstance(sound_manager.groups, tuple)
 
+    def test_equal_if_same_config(self):
+        manager_1 = SoundManager({
+            "volume": 1,
+            "groups": []
+        })
+        manager_2 = SoundManager({
+            "volume": 1,
+            "groups": []
+        })
+        assert manager_1 == manager_2
+        assert manager_2 == manager_1
+
+    def test_not_equal_if_different_attributes(self):
+        manager_1 = SoundManager({
+            "volume": 1,
+            "groups": []
+        })
+        manager_2 = SoundManager({
+            "volume": 0.5,
+            "groups": []
+        })
+        assert manager_1 != manager_2
+        assert manager_2 != manager_1
+
+    def test_not_equal_if_different_number_of_groups(self):
+        manager_1 = SoundManager({
+            "volume": 1,
+            "groups": []
+        })
+        manager_2 = SoundManager({
+            "volume": 1,
+            "groups": [{
+                "name": "Group",
+                "sounds": []
+            }]
+        })
+        assert manager_1 != manager_2
+        assert manager_2 != manager_1
+
+    def test_not_equal_if_different_groups(self):
+        manager_1 = SoundManager({
+            "volume": 1,
+            "groups": [{
+                "name": "Unique Group",
+                "sounds": []
+            }]
+        })
+        manager_2 = SoundManager({
+            "volume": 1,
+            "groups": [{
+                "name": "Normal Group",
+                "sounds": []
+            }]
+        })
+        assert manager_1 != manager_2
+        assert manager_2 != manager_1
+
+    def test_not_equal_if_different_types(self):
+        config = {
+            "volume": 1,
+            "groups": [{
+                "name": "Group",
+                "sounds": []
+            }]
+        }
+        manager = SoundManager(config)
+        assert config != manager
+        assert manager != config
+
     async def test_play_sound_uses_correct_file_path(self, example_sound_manager, monkeypatch):
         """
         Test that the `_play_sound()` method instantiates the `pygame.mixer.Sound` with the file path of the sound file

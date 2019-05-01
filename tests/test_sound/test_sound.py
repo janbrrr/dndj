@@ -39,3 +39,60 @@ class TestSound:
     def test_files_use_tuple_instead_of_list(self, minimal_sound_config):
         sound = Sound(minimal_sound_config)
         assert isinstance(sound.files, tuple)
+
+    def test_equal_if_same_config(self):
+        sound_1 = Sound({
+            "name": "Sound",
+            "files": []
+        })
+        sound_2 = Sound({
+            "name": "Sound",
+            "files": []
+        })
+        assert sound_1 == sound_2
+        assert sound_2 == sound_1
+
+    def test_not_equal_if_different_attributes(self):
+        sound_1 = Sound({
+            "name": "Sound 1",
+            "files": []
+        })
+        sound_2 = Sound({
+            "name": "Sound 2",
+            "files": []
+        })
+        assert sound_1 != sound_2
+        assert sound_2 != sound_1
+
+    def test_not_equal_if_different_number_of_files(self):
+        sound_1 = Sound({
+            "name": "Sound",
+            "files": []
+        })
+        sound_2 = Sound({
+            "name": "Sound",
+            "files": ["some-filename.wav"]
+        })
+        assert sound_1 != sound_2
+        assert sound_2 != sound_1
+
+    def test_not_equal_if_different_files(self):
+        sound_1 = Sound({
+            "name": "Sound",
+            "files": ["unique-filename.wav"]
+        })
+        sound_2 = Sound({
+            "name": "Sound",
+            "files": ["some-filename.wav"]
+        })
+        assert sound_1 != sound_2
+        assert sound_2 != sound_1
+
+    def test_not_equal_if_different_types(self):
+        config = {
+            "name": "Sound",
+            "files": []
+        }
+        sound = Sound(config)
+        assert sound != config
+        assert config != sound
