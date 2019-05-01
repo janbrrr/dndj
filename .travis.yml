@@ -15,9 +15,13 @@ before_install:
 
 install:
   - pip install -r requirements-dev.txt
+  - pip install coveralls
 
 before_script:
   - flake8
 
 script:
-  - pytest
+  - coverage run -m pytest
+
+after_success:
+  - coveralls
