@@ -377,7 +377,7 @@ class TestMusicManager:
         track_list = group.track_lists[0]
         track = track_list.tracks[0]
         track.file = "https://www.youtube.com/watch?v=jIxas0a-KgM"
-        path = example_music_manager._get_track_path(group, track_list, track)
+        example_music_manager._get_track_path(group, track_list, track)
         assert True  # Test is a success if no exception has been raised
 
     def test_get_track_path_returns_file_path_if_track_is_file(self, example_music_manager, monkeypatch):
