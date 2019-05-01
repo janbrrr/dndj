@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.com/janbrrr/dndj.svg?branch=master)](https://travis-ci.com/janbrrr/dndj)
+[![Coverage Status](https://coveralls.io/repos/github/janbrrr/dndj/badge.svg?branch=master)](https://coveralls.io/github/janbrrr/dndj?branch=master)
 
 # D&DJ
 
