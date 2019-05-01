@@ -1,0 +1,23 @@
+dist: xenial   # required for Python >= 3.7
+
+language: python
+
+python:
+  - 3.6
+  - 3.7
+  - 3.7-dev
+  - 3.8-dev
+  - nightly
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y vlc
+
+install:
+  - pip install -r requirements-dev.txt
+
+before_script:
+  - flake8
+
+script:
+  - pytest
