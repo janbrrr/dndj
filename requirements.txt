@@ -5,4 +5,4 @@ aiohttp-jinja2==1.1.0
 pyyaml==5.1
 python-vlc==3.0.6109
 pafy==0.5.4
-youtube-dl==2019.4.7
+youtube-dl==2019.4.30
