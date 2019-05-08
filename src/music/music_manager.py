@@ -53,6 +53,22 @@ class MusicManager:
         self._currently_playing = None
         self._current_player = None
         self.on_music_changes_callback = on_music_changes_callback
+        self._check_tracks_are_valid()
+
+    def _check_tracks_are_valid(self):
+        """
+        Iterates through every track and attempts to get its path. Logs any error and re-raises any exception.
+        """
+        logging.info("Checking that tracks point to valid paths...")
+        for group in self.groups:
+            for track_list in group.track_lists:
+                for track in track_list.tracks:
+                    try:
+                        self._get_track_path(group, track_list, track)
+                    except Exception as ex:
+                        logging.error(f"Track '{track.file}' does not point to a valid path.")
+                        raise ex
+        logging.info("Success! All tracks point to valid paths.")
 
     def __eq__(self, other):
         if isinstance(other, MusicManager):

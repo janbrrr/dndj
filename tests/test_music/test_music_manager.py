@@ -18,8 +18,11 @@ class TestMusicManager:
         }
 
     @pytest.fixture
-    def example_music_manager(self, example_config):
-        return MusicManager(config=example_config["music"])
+    def example_music_manager(self, example_config, monkeypatch):
+        with monkeypatch.context() as m:
+            m.setattr("src.music.music_manager.MusicManager._check_tracks_are_valid", MagicMock())
+            manager = MusicManager(config=example_config["music"])
+        return manager
 
     def test_minimal_dict_as_config(self, minimal_music_manager_config):
         music_manager = MusicManager(minimal_music_manager_config)
@@ -160,6 +163,80 @@ class TestMusicManager:
         manager = MusicManager(config)
         assert config != manager
         assert manager != config
+
+    def test_check_tracks_are_valid_is_called_on_initialization(self, monkeypatch):
+        check_tracks_are_valid_mock = MagicMock()
+        monkeypatch.setattr("src.music.music_manager.MusicManager._check_tracks_are_valid", check_tracks_are_valid_mock)
+        _ = MusicManager({
+            "volume": 1,
+            "groups": []
+        })
+        check_tracks_are_valid_mock.assert_called_once()
+
+    def test_check_tracks_are_valid(self, monkeypatch):
+        get_track_path_mock = MagicMock()
+        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", get_track_path_mock)
+        manager = MusicManager({
+            "volume": 1,
+            "groups": [
+                {
+                    "name": "Group 1",
+                    "track_lists": [
+                        {
+                            "name": "Track List 1",
+                            "tracks": [
+                                "track-1.mp3",
+                                "track-2.mp3"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "Group 2",
+                    "track_lists": [
+                        {
+                            "name": "Track List 2",
+                            "tracks": [
+                                "track-3.mp3"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        })
+        group_1 = manager.groups[0]
+        group_2 = manager.groups[1]
+        expected_calls = [
+            call(group_1, group_1.track_lists[0], group_1.track_lists[0]._tracks[0]),
+            call(group_1, group_1.track_lists[0], group_1.track_lists[0]._tracks[1]),
+            call(group_2, group_2.track_lists[0], group_2.track_lists[0]._tracks[0]),
+        ]
+        assert get_track_path_mock.call_count == 3  # There are three tracks in total to check
+        get_track_path_mock.assert_has_calls(expected_calls, any_order=True)
+
+    def test_check_tracks_are_valid_re_raises_exception(self):
+        """
+        Test that `_check_tracks_are_valid()´ re-raises the `ValueError` raised by `_get_track_path()` if the track
+        is not a valid file.
+        """
+        config = {
+            "volume": 1,
+            "groups": [
+                {
+                    "name": "Group 1",
+                    "track_lists": [
+                        {
+                            "name": "Track List 1",
+                            "tracks": [
+                                "file-does-not-exist.mp3"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        with pytest.raises(ValueError):
+            _ = MusicManager(config)
 
     async def test_cancel_cancels_currently_playing(self, example_music_manager, monkeypatch):
         """

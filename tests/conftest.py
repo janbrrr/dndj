@@ -48,6 +48,6 @@ def example_config_str():
     return config
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def example_config(example_config_str):
     return yaml.load(example_config_str, Loader=CustomLoader)

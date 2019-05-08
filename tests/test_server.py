@@ -46,11 +46,14 @@ class TestServer:
         monkeypatch.setattr(MusicManager, "set_volume", CoroutineMock())
         monkeypatch.setattr(SoundManager, "play_sound", CoroutineMock())
         monkeypatch.setattr(SoundManager, "set_volume", MagicMock())
-        return Server(
-            config_path=example_config_file,
-            host="127.0.0.1",
-            port=8080
-        )
+        with monkeypatch.context() as m:
+            m.setattr(MusicManager, "_check_tracks_are_valid", MagicMock())
+            server = Server(
+                config_path=example_config_file,
+                host="127.0.0.1",
+                port=8080
+            )
+        return server
 
     @pytest.fixture
     async def patched_example_client(self, patched_example_server, aiohttp_client):
