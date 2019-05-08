@@ -48,3 +48,32 @@ class TestTrack:
     def test_is_youtube_link_returns_false_for_a_file(self):
         track = Track("some-file.mp3")
         assert track.is_youtube_link is False
+
+    def test_equal_if_same_config(self):
+        track_1 = Track({
+            "file": "some-filename.mp3"
+        })
+        track_2 = Track({
+            "file": "some-filename.mp3"
+        })
+        assert track_1 == track_2
+        assert track_2 == track_1
+
+    def test_not_equal_if_different_attributes(self):
+        track_1 = Track({
+            "file": "some-filename.mp3"
+        })
+        track_2 = Track({
+            "file": "some-filename.mp3",
+            "start_at": "0:0:5"
+        })
+        assert track_1 != track_2
+        assert track_2 != track_1
+
+    def test_not_equal_if_different_types(self):
+        config = {
+            "file": "some-filename.mp3"
+        }
+        track = Track(config)
+        assert track != config
+        assert config != track

@@ -92,6 +92,75 @@ class TestMusicManager:
         music_manager = MusicManager(minimal_music_manager_config)
         assert isinstance(music_manager.groups, tuple)
 
+    def test_equal_if_same_config(self):
+        manager_1 = MusicManager({
+            "volume": 1,
+            "groups": []
+        })
+        manager_2 = MusicManager({
+            "volume": 1,
+            "groups": []
+        })
+        assert manager_1 == manager_2
+        assert manager_2 == manager_1
+
+    def test_not_equal_if_different_attributes(self):
+        manager_1 = MusicManager({
+            "volume": 1,
+            "groups": []
+        })
+        manager_2 = MusicManager({
+            "volume": 0.5,
+            "groups": []
+        })
+        assert manager_1 != manager_2
+        assert manager_2 != manager_1
+
+    def test_not_equal_if_different_number_of_groups(self):
+        manager_1 = MusicManager({
+            "volume": 1,
+            "groups": []
+        })
+        manager_2 = MusicManager({
+            "volume": 1,
+            "groups": [{
+                "name": "Group",
+                "track_lists": []
+            }]
+        })
+        assert manager_1 != manager_2
+        assert manager_2 != manager_1
+
+    def test_not_equal_if_different_groups(self):
+        manager_1 = MusicManager({
+            "volume": 1,
+            "groups": [{
+                "name": "Some Group",
+                "track_lists": []
+            }]
+        })
+        manager_2 = MusicManager({
+            "volume": 1,
+            "groups": [{
+                "name": "Different Group",
+                "track_lists": []
+            }]
+        })
+        assert manager_1 != manager_2
+        assert manager_2 != manager_1
+
+    def test_not_equal_if_different_types(self):
+        config = {
+            "volume": 1,
+            "groups": [{
+                "name": "Some Group",
+                "track_lists": []
+            }]
+        }
+        manager = MusicManager(config)
+        assert config != manager
+        assert manager != config
+
     async def test_cancel_cancels_currently_playing(self, example_music_manager, monkeypatch):
         """
         Calling cancel() will cancel whatever is currently_playing and wait for it to reset the state.

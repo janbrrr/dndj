@@ -83,3 +83,61 @@ class TestTrackList:
     def test_tracks_use_tuple_instead_of_list(self, minimal_track_list_config):
         track_list = TrackList(minimal_track_list_config)
         assert isinstance(track_list._tracks, tuple)
+
+    def test_equal_if_same_config(self):
+        track_list_1 = TrackList({
+            "name": "Same Name",
+            "tracks": []
+        })
+        track_list_2 = TrackList({
+            "name": "Same Name",
+            "tracks": []
+        })
+        assert track_list_1 == track_list_2
+        assert track_list_2 == track_list_1
+
+    def test_not_equal_if_different_attributes(self):
+        track_list_1 = TrackList({
+            "name": "Same Name",
+            "tracks": []
+        })
+        track_list_2 = TrackList({
+            "name": "Same Name",
+            "loop": False,
+            "tracks": []
+        })
+        assert track_list_1 != track_list_2
+        assert track_list_2 != track_list_1
+
+    def test_not_equal_if_different_number_of_tracks(self):
+        track_list_1 = TrackList({
+            "name": "Same Name",
+            "tracks": []
+        })
+        track_list_2 = TrackList({
+            "name": "Same Name",
+            "tracks": ["some-filename.mp3"]
+        })
+        assert track_list_1 != track_list_2
+        assert track_list_2 != track_list_1
+
+    def test_not_equal_if_different_files(self):
+        track_list_1 = TrackList({
+            "name": "Same Name",
+            "tracks": ["some-filename.mp3"]
+        })
+        track_list_2 = TrackList({
+            "name": "Same Name",
+            "tracks": ["different-filename.mp3"]
+        })
+        assert track_list_1 != track_list_2
+        assert track_list_2 != track_list_1
+
+    def test_not_equal_if_different_types(self):
+        config = {
+            "name": "Some Name",
+            "tracks": []
+        }
+        track_list = TrackList(config)
+        assert config != track_list
+        assert track_list != config
