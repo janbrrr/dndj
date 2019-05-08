@@ -32,6 +32,12 @@ function connect() {
                 console.log("Music stopped playing");
                 displayToast("Music", "Stopped the music.");
                 break;
+            case "musicFinished":
+                $(".playing").removeClass("playing");
+                $("#now-playing").text("-");
+                console.log("Music finished playing");
+                displayToast("Music", "Finished playing the music.");
+                break;
             case "setMusicVolume":
                 $("#music-volume").slider('setValue', data.volume);
                 console.log("Music volume set to " + data.volume);

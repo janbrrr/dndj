@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 
 import aiohttp
 import json
@@ -10,9 +11,10 @@ import jinja2
 
 import aiohttp_jinja2
 from aiohttp import web
+from aiohttp.web_request import Request
 
 from src.loader import CustomLoader
-from src.music import MusicManager
+from src.music import MusicManager, MusicManagerAction, MusicInformation
 from src.sound import SoundManager
 
 logging.basicConfig(format='%(levelname)-6s: %(message)s', level=logging.INFO)
@@ -25,7 +27,7 @@ class Server:
     def __init__(self, config_path, host, port):
         with open(config_path) as config_file:
             config = yaml.load(config_file, Loader=CustomLoader)
-        self.music = MusicManager(config["music"])
+        self.music = MusicManager(config["music"], on_music_changes_callback=self.on_music_changes)
         self.sound = SoundManager(config["sound"])
         self.app = None
         self.host = host
@@ -127,23 +129,13 @@ class Server:
         """
         Starts to play the music and notifies all connected web sockets.
         """
-        group = self.music.groups[group_index]
-        group_name = group.name
-        track_name = group.track_lists[track_list_index].name
-        await self.music.play_track_list(group_index, track_list_index)
-        for ws in request.app["websockets"].values():
-            await ws.send_json(
-                    {"action": "nowPlaying", "groupIndex": group_index,
-                     "trackListIndex": track_list_index,
-                     "groupName": group_name, "trackName": track_name})
+        await self.music.play_track_list(request, group_index, track_list_index)
 
     async def _stop_music(self, request):
         """
         Stops the music and notifies all connected web sockets.
         """
-        await self.music.cancel()
-        for ws in request.app["websockets"].values():
-            await ws.send_json({"action": "musicStopped"})
+        await self.music.cancel(request)
 
     async def _set_music_volume(self, request, volume):
         """
@@ -166,3 +158,26 @@ class Server:
         self.sound.set_volume(volume)
         for ws in request.app["websockets"].values():
             await ws.send_json({"action": "setSoundVolume", "volume": volume})
+
+    async def on_music_changes(self, action: MusicManagerAction, request: Request,
+                               currently_playing: Optional[MusicInformation]):
+        """
+        Callback function used by the `MusicManager` at `self.music`.
+
+        Notifies all connected web sockets about the changes.
+        """
+        if action == MusicManagerAction.START:
+            logging.info(f"Music Callback: Start")
+            for ws in request.app["websockets"].values():
+                await ws.send_json(
+                    {"action": "nowPlaying", "groupIndex": currently_playing.group_index,
+                     "trackListIndex": currently_playing.track_list_index,
+                     "groupName": currently_playing.group_name, "trackName": currently_playing.track_list_name})
+        elif action == MusicManagerAction.STOP:
+            logging.info(f"Music Callback: Stop")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "musicStopped"})
+        elif action == MusicManagerAction.FINISH:
+            logging.info(f"Music Callback: Finish")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "musicFinished"})

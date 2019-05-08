@@ -97,13 +97,12 @@ class TestMusicManager:
         Calling cancel() will cancel whatever is currently_playing and wait for it to reset the state.
         """
         def reset(x):
-            example_music_manager.currently_playing = None
-        # asyncio.sleep() will take over the task of resetting
+            example_music_manager._currently_playing = None
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock(side_effect=reset))
         currently_playing_mock = MagicMock()
-        example_music_manager.currently_playing = currently_playing_mock
-        await example_music_manager.cancel()
-        assert example_music_manager.currently_playing is None
+        example_music_manager._currently_playing = currently_playing_mock
+        await example_music_manager.cancel(request=None)
+        assert example_music_manager._currently_playing is None
         currently_playing_mock.task.cancel.assert_called_once()
 
     async def test_play_track_list_creates_a_task_to_play_the_track_list(self, example_music_manager, monkeypatch):
@@ -116,14 +115,14 @@ class TestMusicManager:
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.MusicManager.cancel", cancel_mock)
         monkeypatch.setattr("src.music.music_manager.MusicManager._play_track_list", play_track_list_mock)
-        assert example_music_manager.currently_playing is None
-        await example_music_manager.play_track_list(0, 0)
+        assert example_music_manager._currently_playing is None
+        await example_music_manager.play_track_list(request=None, group_index=0, track_list_index=0)
         cancel_mock.assert_awaited()
-        assert example_music_manager.currently_playing is not None
-        assert isinstance(example_music_manager.currently_playing, CurrentlyPlaying)
-        assert example_music_manager.currently_playing.group == example_music_manager.groups[0]
-        assert example_music_manager.currently_playing.track_list == example_music_manager.groups[0].track_lists[0]
-        assert isinstance(example_music_manager.currently_playing.task, asyncio.Task)
+        assert example_music_manager._currently_playing is not None
+        assert isinstance(example_music_manager._currently_playing, CurrentlyPlaying)
+        assert example_music_manager._currently_playing.group_index == 0
+        assert example_music_manager._currently_playing.track_list_index == 0
+        assert isinstance(example_music_manager._currently_playing.task, asyncio.Task)
 
     async def test_play_track_list_plays_all_tracks_once_if_no_loop(self, example_music_manager, monkeypatch):
         """
@@ -135,7 +134,7 @@ class TestMusicManager:
         track_list = group.track_lists[0]
         track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
         track_list.loop = False
-        await example_music_manager._play_track_list(group=group, track_list=track_list)
+        await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
         assert play_track_mock.await_count == 2
         play_track_mock.assert_has_awaits([call(group, track_list, track_list._tracks[0]),
                                            call(group, track_list, track_list._tracks[1])], any_order=True)
@@ -152,7 +151,8 @@ class TestMusicManager:
         track_list.tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
         loop_property = PropertyMock(side_effect=[True, False])
         type(track_list).loop = loop_property
-        await example_music_manager._play_track_list(group=group, track_list=track_list)
+        group.track_lists = [track_list]
+        await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
         assert play_track_mock.await_count == 4  # loops once again over two tracks
         assert loop_property.call_count == 2
 
@@ -168,7 +168,7 @@ class TestMusicManager:
         track_list = group.track_lists[0]
         track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
         with pytest.raises(asyncio.CancelledError):
-            await example_music_manager._play_track_list(group=group, track_list=track_list)
+            await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
 
     async def test_play_track_list_resets_state_after_playing(self, example_music_manager, monkeypatch):
         """
@@ -182,13 +182,13 @@ class TestMusicManager:
         track_list = group.track_lists[0]
         track_list.loop = False
         track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
-        example_music_manager.currently_playing = True
+        example_music_manager._currently_playing = True
         current_player_mock = MagicMock()
-        example_music_manager.current_player = current_player_mock
-        await example_music_manager._play_track_list(group=group, track_list=track_list)
+        example_music_manager._current_player = current_player_mock
+        await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
         current_player_mock.stop.assert_called_once()
-        assert example_music_manager.currently_playing is None
-        assert example_music_manager.current_player is None
+        assert example_music_manager._currently_playing is None
+        assert example_music_manager._current_player is None
 
     async def test_play_track_list_resets_state_if_cancelled(self, example_music_manager, monkeypatch):
         """
@@ -199,14 +199,14 @@ class TestMusicManager:
         group = example_music_manager.groups[0]
         track_list = group.track_lists[0]
         track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
-        example_music_manager.currently_playing = True
+        example_music_manager._currently_playing = True
         current_player_mock = MagicMock()
-        example_music_manager.current_player = current_player_mock
+        example_music_manager._current_player = current_player_mock
         with pytest.raises(asyncio.CancelledError):
-            await example_music_manager._play_track_list(group=group, track_list=track_list)
+            await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
         current_player_mock.stop.assert_called_once()
-        assert example_music_manager.currently_playing is None
-        assert example_music_manager.current_player is None
+        assert example_music_manager._currently_playing is None
+        assert example_music_manager._current_player is None
 
     async def test_play_track_cancels_if_get_path_raises_value_error(self, example_music_manager, monkeypatch):
         """
@@ -344,10 +344,10 @@ class TestMusicManager:
         """
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
-        example_music_manager.current_player = MagicMock()
-        example_music_manager.current_player.is_playing = MagicMock(side_effect=[False, False, True])
+        example_music_manager._current_player = MagicMock()
+        example_music_manager._current_player.is_playing = MagicMock(side_effect=[False, False, True])
         await example_music_manager._wait_for_current_player_to_be_playing()
-        assert example_music_manager.current_player.is_playing.call_count == 3
+        assert example_music_manager._current_player.is_playing.call_count == 3
         assert sleep_mock.await_count == 2
 
     def test_get_track_path_returns_audio_url_if_track_is_youtube_link(self, example_music_manager, monkeypatch):
@@ -492,21 +492,21 @@ class TestMusicManager:
                                                                                   monkeypatch):
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
-        example_music_manager.current_player = MagicMock()
+        example_music_manager._current_player = MagicMock()
         await example_music_manager.set_volume(volume=1, smooth=False)
         sleep_mock.assert_not_awaited()
-        example_music_manager.current_player.audio_set_volume.assert_called_once_with(1)
+        example_music_manager._current_player.audio_set_volume.assert_called_once_with(1)
 
     async def test_set_volume_sets_player_volume_in_steps_if_smooth_parameter(self, example_music_manager, monkeypatch):
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
-        example_music_manager.current_player = MagicMock()
-        example_music_manager.current_player.audio_get_volume.return_value = 0
+        example_music_manager._current_player = MagicMock()
+        example_music_manager._current_player.audio_get_volume.return_value = 0
         n_steps = 10
         seconds = 10
         await example_music_manager.set_volume(volume=100, smooth=True, n_steps=n_steps, seconds=seconds)
         sleep_mock.assert_awaited_with(seconds / n_steps)  # seconds / n_steps
         step_size = 100 / n_steps  # 1 = |starting_volume - new_volume|
-        example_music_manager.current_player.audio_set_volume.assert_has_calls(
+        example_music_manager._current_player.audio_set_volume.assert_has_calls(
              [call(int((i + 1) * step_size)) for i in range(n_steps)]  # 10, 20, 30, ..., 100
         )

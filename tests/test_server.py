@@ -42,8 +42,7 @@ class TestServer:
     def patched_example_server(self, example_config_str, tmp_path, monkeypatch):
         example_config_file = tmp_path / "config.yaml"
         example_config_file.write_text(example_config_str)
-        monkeypatch.setattr(MusicManager, "play_track_list", CoroutineMock())
-        monkeypatch.setattr(MusicManager, "cancel", CoroutineMock())
+        monkeypatch.setattr(MusicManager, "_play_track", CoroutineMock())
         monkeypatch.setattr(MusicManager, "set_volume", CoroutineMock())
         monkeypatch.setattr(SoundManager, "play_sound", CoroutineMock())
         monkeypatch.setattr(SoundManager, "set_volume", MagicMock())

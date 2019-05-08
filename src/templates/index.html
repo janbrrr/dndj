@@ -59,7 +59,7 @@
                 <strong>
                     <span id="now-playing" class="ml-2">
                         {% if music.currently_playing %}
-                            {{ music.currently_playing.0.name }} > {{ music.currently_playing.1.name }}
+                            {{ music.currently_playing.1 }} > {{ music.currently_playing.3 }}
                         {% else %}
                             -
                         {% endif %}
@@ -84,7 +84,7 @@
                 <div>
                     <a id="group-music-{{ outer_loop.index0 }}"
                        class="row btn collapse-btn {% if music.currently_playing
-                                and music.currently_playing.0.name == group.name %}playing{% endif %}"
+                                and music.currently_playing.1 == group.name %}playing{% endif %}"
                        data-toggle="collapse"
                        href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
                        aria-expanded="false" aria-controls="collapseMusicGroup{{outer_loop.index0}}">
@@ -96,8 +96,8 @@
                             {% for _track_list in group.track_lists %}
                             <div class="col-12 col-sm-6 col-xl-4 group-item">
                                 <button type="button" class="btn {% if music.currently_playing
-                                and music.currently_playing.0.name == group.name
-                                and music.currently_playing.1.name == _track_list.name %}playing{% endif %}"
+                                and music.currently_playing.1 == group.name
+                                and music.currently_playing.3 == _track_list.name %}playing{% endif %}"
                                         id="btn-music-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                                         onclick="playMusic({{ outer_loop.index0 }}, {{ loop.index0 }})">
                                     <i class="fas fa-play play-icon"></i>

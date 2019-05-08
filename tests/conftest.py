@@ -14,6 +14,7 @@ def example_config_str():
         directory: "path/to/scene-1"
         track_lists:
         - name: Forest Music
+          loop: false
           tracks:
           - forest-music-1.mp3
           - forest-music-2.mp3
