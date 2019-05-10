@@ -31,3 +31,7 @@ body.dark-mode .btn:hover {
 body.dark-mode .playing {
     color: #337ab7;
 }
+
+body.dark-mode hr.row {
+    border-color: #3D3D3D;
+}
