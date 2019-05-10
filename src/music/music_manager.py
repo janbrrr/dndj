@@ -132,6 +132,7 @@ class MusicManager:
         """
         group = self.groups[group_index]
         track_list = group.track_lists[track_list_index]
+        cancelled = False
         try:
             logging.info(f"Loading '{track_list.name}'")
             if self.on_music_changes_callback is not None:
@@ -147,13 +148,15 @@ class MusicManager:
                                                          currently_playing=None)
         except asyncio.CancelledError:
             logging.info(f"Cancelled '{track_list.name}'")
+            cancelled = True
             raise
         finally:
             if self._current_player is not None:
                 self._current_player.stop()
             self._currently_playing = None
             self._current_player = None
-            await self._play_next_track_list(request, track_list)
+            if not cancelled and track_list.next is not None:
+                await self._play_next_track_list(request, track_list)
 
     async def _play_track(self, group: MusicGroup, track_list: TrackList, track: Track):
         """
