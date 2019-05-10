@@ -39,7 +39,7 @@ class MusicManager:
         The `on_music_change_callback` is an async function that should accept the following optional keyword arguments:
         - "action": value of type `MusicManagerAction`
         - "request": the request that caused the action
-        - "currently_playing": an instance of `CurrentlyPlaying` (`None` if nothing is being played)
+        - "currently_playing": an instance of `MusicInformation` (`None` if nothing is being played)
 
         :param config: `dict`
         :param on_music_changes_callback: function to call when the active music changes
