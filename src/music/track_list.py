@@ -15,6 +15,7 @@ class TrackList:
         - "directory": the directory where the files for this track list are (Optional)
         - "loop": bool indicating whether to loop once all tracks have been played (Optional, default=True)
         - "shuffle": bool indicating whether to shuffle the tracks (Optional, default=True)
+        - "next": name of the track list to play after this one finishes (Optional)
         - "tracks": a list of track configs. See `Track` class for more information.
 
         :param config: `dict`
@@ -23,6 +24,7 @@ class TrackList:
         self.directory = config["directory"] if "directory" in config else None
         self.loop = config["loop"] if "loop" in config else True
         self.shuffle = config["shuffle"] if "shuffle" in config else True
+        self.next = config["next"] if "next" in config else None
         tracks = [Track(track_config) for track_config in config["tracks"]]
         self._tracks = tuple(tracks)  # immutable
 

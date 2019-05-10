@@ -4,13 +4,13 @@
 # D&DJ
 
 *D&DJ* was created to help dungeon masters incorporate music and sounds into their storytelling. The idea is to prepare the music and sounds you want to use for specific scenes in advance and then being
-able to play them without much hassle.
+able to play them without any issues.
 
 ### Overview
 
 - Prepare a configuration file defining the music and sounds you want to use
   - Supports links to YouTube videos (music)
-  - Supports start_at and end_at parameters
+  - Supports next, start_at and end_at parameters
 - Start the server with the config (and connect the server to the speakers)
   - The server acts as the media player
 - Visit the hosted web page from a device in the same network (e.g., phone)
@@ -108,10 +108,10 @@ and a list of `groups` that will be used.
 
 ```yaml
 music:
-  volume: 20  # value from 0 (mute) to 100 (max)
+  volume: 20              # value from 0 (mute) to 100 (max)
   directory: path/to/dir  # (Optional) used if all files are in the same dir
-  sort: true  # (Optional, default=true) whether to sort the groups alphabetically
-  groups: []  # a list of groups
+  sort: true              # (Optional, default=true) whether to sort the groups alphabetically
+  groups: []              # a list of groups
 ```
 
 A `group` can for example be a scene in the story. It has a `name` and defines a collection
@@ -123,8 +123,8 @@ music:
   groups:
   - name: Scene 1 - Travel
     directory: path/to/dir  # (Optional) used if all files of a group are in the same dir
-    sort: true  # (Optional, default=true) whether to sort the tracklists alphabetically
-    track_lists: []  # a list of tracklists
+    sort: true              # (Optional, default=true) whether to sort the tracklists alphabetically
+    track_lists: []         # a list of tracklists
   - name: Scene 2 - Arrival
     # ...
 ```
@@ -139,11 +139,12 @@ music:
   - name: Scene 1 - Travel
     # ...
     track_lists:
-    - name: Forest Ambience
+    - name: Spooky Music
       directory: path/to/dir  # (Optional) used if all files of a tracklist are in the same dir
-      loop: true  # (Optional, default=true) whether to loop if all tracks have been played
-      shuffle: true  # (Optional, default=true) whether to shuffle the tracks before playing them all
-      tracks: []  # a list of tracks
+      loop: true              # (Optional, default=true) whether to loop if all tracks have been played
+      shuffle: true           # (Optional, default=true) whether to shuffle the tracks before playing them all
+      next: Forest Ambience   # (Optional) name of the next tracklist to play
+      tracks: []              # a list of tracks
 ```
 
 Finally, a `track` refers to a music file or YouTube link. In the simplest case it is only a filename (link),
@@ -177,10 +178,10 @@ and a list of `groups` that will be used.
 
 ```yaml
 sound:
-  volume: 1  # value from 0 (mute) to 1 (max)
+  volume: 1               # value from 0 (mute) to 1 (max)
   directory: path/to/dir  # (Optional) used if all files are in the same dir
-  sort: true  # (Optional, default=true) whether to sort the groups alphabetically
-  groups: []  # a list of groups
+  sort: true              # (Optional, default=true) whether to sort the groups alphabetically
+  groups: []              # a list of groups
 ```
 
 A `group` has at minimum a `name` and defines a collection
@@ -192,8 +193,8 @@ sound:
   groups:
   - name: Meele Attacks
     directory: path/to/dir  # (Optional) used if all files of a group are in the same dir
-    sort: true  # (Optional, default=true) whether to sort the sounds alphabetically
-    sounds: []  # a list of sounds
+    sort: true              # (Optional, default=true) whether to sort the sounds alphabetically
+    sounds: []              # a list of sounds
   - name: Footsteps
     # ...
 ```
@@ -214,7 +215,7 @@ sound:
     sounds:
     - name: Sword Hit
       directory: path/to/dir  # (Optional) used if all files of a sound are in the same dir
-      files: []  # a list of sound files
+      files: []               # a list of sound files
 ```
 
 Finally, a sound `file` is in the simplest case just a filename, but it also can be a more
@@ -232,7 +233,7 @@ sound:
       files:
       - sword_hit_1.ogg         # can either be a filename
       - file: sword_hit_2.wav   # or a more specific config
-        end_at: 0:0:2  # (Optional) the format is %H:%M:%S
+        end_at: 0:0:2           # (Optional) the format is %H:%M:%S
 ```
 
 ### Splitting the config into multiple files

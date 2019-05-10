@@ -143,8 +143,8 @@ class MusicManager:
                 if not track_list.loop:
                     break
             if self.on_music_changes_callback is not None:
-                await self.on_music_changes_callback(action=MusicManagerAction.FINISH, request=request,
-                                                     currently_playing=None)
+                _ = await self.on_music_changes_callback(action=MusicManagerAction.FINISH, request=request,
+                                                         currently_playing=None)
         except asyncio.CancelledError:
             logging.info(f"Cancelled '{track_list.name}'")
             raise
@@ -153,6 +153,7 @@ class MusicManager:
                 self._current_player.stop()
             self._currently_playing = None
             self._current_player = None
+            await self._play_next_track_list(request, track_list)
 
     async def _play_track(self, group: MusicGroup, track_list: TrackList, track: Track):
         """
@@ -242,6 +243,25 @@ class MusicManager:
         if self._current_player is not None:
             while not self._current_player.is_playing():
                 await asyncio.sleep(self.SLEEP_TIME)
+
+    async def _play_next_track_list(self, request, current_track_list: TrackList):
+        """
+        If there is a next track list to play (`track_list.next` is set), then create a task to play it.
+        """
+        if current_track_list.next is None:
+            return
+        next_group_index = None
+        next_track_list_index = None
+        for _group_index, _group in enumerate(self.groups):
+            for _track_list_index, _track_list in enumerate(_group.track_lists):
+                if _track_list.name == current_track_list.next:
+                    next_group_index = _group_index
+                    next_track_list_index = _track_list_index
+                    break
+        if next_group_index is None or next_track_list_index is None:
+            logging.error(f"Could not find a track list named '{current_track_list.name}'")
+        else:
+            await self.play_track_list(request, next_group_index, next_track_list_index)
 
     async def set_volume(self, volume, set_global=True, smooth=True, n_steps=20, seconds=2):
         """
