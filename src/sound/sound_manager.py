@@ -31,6 +31,27 @@ class SoundManager:
         if "sort" not in config or ("sort" in config and config["sort"]):
             groups = sorted(groups, key=lambda x: x.name)
         self.groups = tuple(groups)
+        self._check_sounds_are_valid()
+
+    def _check_sounds_are_valid(self):
+        """
+        Iterates through every sound file and attempts to get its path. Logs any error and raises a `ValueError`
+        if a file path is invalid.
+        """
+        logging.info("Checking that sounds point to valid paths...")
+        for group in self.groups:
+            for sound in group.sounds:
+                try:
+                    root_directory = self._get_sound_root_directory(group, sound)
+                except ValueError as ex:
+                    logging.error(f"Sound '{sound.name}' is missing the directory.")
+                    raise ex
+                for sound_file in sound.files:
+                    file_path = os.path.join(root_directory, sound_file.file)
+                    if not os.path.isfile(file_path):
+                        logging.error(f"File {file_path} does not exist")
+                        raise ValueError
+        logging.info("Success! All sounds point to valid paths.")
 
     def __eq__(self, other):
         if isinstance(other, SoundManager):

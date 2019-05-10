@@ -48,6 +48,7 @@ class TestServer:
         monkeypatch.setattr(SoundManager, "set_volume", MagicMock())
         with monkeypatch.context() as m:
             m.setattr(MusicManager, "_check_tracks_are_valid", MagicMock())
+            m.setattr(SoundManager, "_check_sounds_are_valid", MagicMock())
             server = Server(
                 config_path=example_config_file,
                 host="127.0.0.1",
