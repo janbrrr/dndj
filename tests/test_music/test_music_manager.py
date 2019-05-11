@@ -238,6 +238,88 @@ class TestMusicManager:
         with pytest.raises(ValueError):
             _ = MusicManager(config)
 
+    def test_check_track_list_names_is_called_on_initialization(self, monkeypatch):
+        check_track_list_names_mock = MagicMock()
+        monkeypatch.setattr("src.music.music_manager.MusicManager._check_track_list_names", check_track_list_names_mock)
+        _ = MusicManager({
+            "volume": 1,
+            "groups": []
+        })
+        check_track_list_names_mock.assert_called_once()
+
+    def test_check_track_list_names_raises_error_if_duplicate_name(self):
+        """
+        If two tracklists have the same name, raise a `RuntimeError`.
+        """
+        config = {
+            "volume": 1,
+            "groups": [
+                {
+                    "name": "Group 1",
+                    "track_lists": [
+                        {
+                            "name": "Track List",
+                            "tracks": []
+                        },
+                        {
+                            "name": "Track List",
+                            "tracks": []
+                        }
+                    ]
+                }
+            ]
+        }
+        with pytest.raises(RuntimeError):
+            _ = MusicManager(config)
+
+    def test_check_track_list_names_raises_error_if_next_invalid_name(self):
+        """
+        If the `next` attribute of a tracklist is not the name of an existing tracklist, raise a `RuntimeError`.
+        """
+        config = {
+            "volume": 1,
+            "groups": [
+                {
+                    "name": "Group 1",
+                    "track_lists": [
+                        {
+                            "name": "Track List",
+                            "next": "Non-existing Track List",
+                            "tracks": []
+                        }
+                    ]
+                }
+            ]
+        }
+        with pytest.raises(RuntimeError):
+            _ = MusicManager(config)
+
+    def test_check_track_list_names(self):
+        """
+        If all names are unique and the `next` attributes are names of existing tracklists, no error should be raised.
+        """
+        config = {
+            "volume": 1,
+            "groups": [
+                {
+                    "name": "Group 1",
+                    "track_lists": [
+                        {
+                            "name": "First",
+                            "next": "Second",
+                            "tracks": []
+                        },
+                        {
+                            "name": "Second",
+                            "tracks": []
+                        }
+                    ]
+                }
+            ]
+        }
+        _ = MusicManager(config)
+        assert True  # No error occurred
+
     async def test_cancel_cancels_currently_playing(self, example_music_manager, monkeypatch):
         """
         Calling cancel() will cancel whatever is currently_playing and wait for it to reset the state.

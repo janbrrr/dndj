@@ -53,6 +53,7 @@ class MusicManager:
         self._currently_playing = None
         self._current_player = None
         self.on_music_changes_callback = on_music_changes_callback
+        self._check_track_list_names()
         self._check_tracks_are_valid()
 
     def _check_tracks_are_valid(self):
@@ -69,6 +70,33 @@ class MusicManager:
                         logging.error(f"Track '{track.file}' does not point to a valid path.")
                         raise ex
         logging.info("Success! All tracks point to valid paths.")
+
+    def _check_track_list_names(self):
+        """
+        Iterates through every track list, checks that the names are unique and that their `next` attributes (if set)
+        point to existing track list names.
+
+        Raises a `RuntimeError` if the names are not unique or a `next` attribute points to a non-existing track list.
+        """
+        logging.info("Checking that track lists have unique names and their `next` parameters...")
+        names = set()
+        next_names = set()
+        for group in self.groups:
+            for track_list in group.track_lists:
+                if track_list.name not in names:
+                    names.add(track_list.name)
+                else:
+                    logging.error(f"Found multiple track lists with the same name '{track_list.name}'.")
+                    raise RuntimeError(f"The names of the track lists must be unique. Found duplicate with name "
+                                       f"'{track_list.name}'.")
+                if track_list.next is not None:
+                    next_names.add(track_list.next)
+        if not next_names.issubset(names):
+            for next_name in next_names:
+                if next_name not in names:
+                    logging.error(f"'{next_name}' points to a non-existing track list.")
+                    raise RuntimeError(f"'{next_name}' points to a non-existing track list.")
+        logging.info("Success! Names are unique and `next` parameters point to existing track lists.")
 
     def __eq__(self, other):
         if isinstance(other, MusicManager):
