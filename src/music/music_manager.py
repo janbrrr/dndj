@@ -195,7 +195,7 @@ class MusicManager:
         except ValueError:
             logging.error(f"Failed to play '{track.file}'.")
             raise asyncio.CancelledError()
-        self._current_player = vlc.MediaPlayer(vlc.Instance(), path)
+        self._current_player = vlc.MediaPlayer(vlc.Instance("--novideo"), path)
         self._current_player.audio_set_volume(0)
         success = self._current_player.play()
         if success == -1:
