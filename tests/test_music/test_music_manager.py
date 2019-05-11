@@ -354,6 +354,64 @@ class TestMusicManager:
         assert example_music_manager._currently_playing is None
         assert example_music_manager._current_player is None
 
+    async def test_play_track_list_starts_next_track_list_if_finishes_playing(self, example_music_manager, monkeypatch):
+        """
+        If `_play_track_list()` finishes playing a track_list, `_play_next_track_list()` should be called with the
+        current request and the current track_list (that finished playing).
+        """
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track", CoroutineMock())
+        play_next_track_list_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_next_track_list", play_next_track_list_mock)
+        track_list = example_music_manager.groups[0].track_lists[0]
+        track_list.loop = False
+        track_list.next = "Next Track List"
+        await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
+        play_next_track_list_mock.assert_awaited_once_with(None, track_list)
+
+    async def test_play_track_list_does_not_start_next_track_list_if_cancelled(self, example_music_manager,
+                                                                               monkeypatch):
+        """
+        If `_play_track_list()` is cancelled for some reason, `_play_next_track_list()` should NOT be called since
+        the request has been cancelled.
+        """
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track",
+                            CoroutineMock(side_effect=asyncio.CancelledError))
+        play_next_track_list_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.MusicManager._play_next_track_list", play_next_track_list_mock)
+        track_list = example_music_manager.groups[0].track_lists[0]
+        track_list.loop = False
+        track_list.next = "Next Track List"
+        with pytest.raises(asyncio.CancelledError):
+            await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
+        play_next_track_list_mock.assert_not_awaited()
+
+    async def test_play_next_track_list(self, example_music_manager, monkeypatch):
+        """
+        The method `_play_next_track_list()` should look for the group index and track list of the track list with
+        the name specified in the `next` attribute in the `current_track_list`. If the specified track list exists,
+        the method `play_track_list()` should be called accordingly to start a task to play the next track list.
+        """
+        play_track_list_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.MusicManager.play_track_list", play_track_list_mock)
+        track_list = example_music_manager.groups[0].track_lists[0]
+        track_list.name = "Next Track List"
+        track_list.next = "Next Track List"
+        await example_music_manager._play_next_track_list(None, track_list)
+        play_track_list_mock.assert_awaited_once_with(None, 0, 0)
+
+    async def test_play_next_track_list_does_nothing_if_next_is_none(self, example_music_manager, monkeypatch):
+        """
+        The method `_play_next_track_list()` should only look for the next track list, if the `next` attribute of
+        the `current_track_list` is set.
+        """
+        play_track_list_mock = CoroutineMock()
+        monkeypatch.setattr("src.music.music_manager.MusicManager.play_track_list", play_track_list_mock)
+        track_list = example_music_manager.groups[0].track_lists[0]
+        track_list.name = "Next Track List"
+        track_list.next = None
+        await example_music_manager._play_next_track_list(None, track_list)
+        play_track_list_mock.assert_not_awaited()
+
     async def test_play_track_cancels_if_get_path_raises_value_error(self, example_music_manager, monkeypatch):
         """
         The _get_track_path() method will raise a ValueError, if it fails. In that case raise a CancelledError.
