@@ -214,6 +214,66 @@ class TestMusicManager:
         assert get_track_path_mock.call_count == 3  # There are three tracks in total to check
         get_track_path_mock.assert_has_calls(expected_calls, any_order=True)
 
+    def test_check_tracks_are_valid_does_not_raise_on_valid_youtube_video(self, monkeypatch):
+        config = {
+            "volume": 1,
+            "groups": [
+                {
+                    "name": "Group 1",
+                    "track_lists": [
+                        {
+                            "name": "Track List 1",
+                            "tracks": [
+                                "https://www.youtube.com/watch?v=hKRUPYrAQoE"  # Some existing video
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        _ = MusicManager(config)
+        assert True  # Success if no error was raised
+
+    def test_check_tracks_are_valid_raises_on_private_youtube_video(self, monkeypatch):
+        config = {
+            "volume": 1,
+            "groups": [
+                {
+                    "name": "Group 1",
+                    "track_lists": [
+                        {
+                            "name": "Track List 1",
+                            "tracks": [
+                                "https://www.youtube.com/watch?v=lTutay89N6Q"  # Some private video
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        with pytest.raises(RuntimeError):
+            _ = MusicManager(config)
+
+    def test_check_tracks_are_valid_raises_on_invalid_youtube_video(self, monkeypatch):
+        config = {
+            "volume": 1,
+            "groups": [
+                {
+                    "name": "Group 1",
+                    "track_lists": [
+                        {
+                            "name": "Track List 1",
+                            "tracks": [
+                                "https://www.youtube.com/watch?v=l1111111111"  # Some non-existent video
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+        with pytest.raises(RuntimeError):
+            _ = MusicManager(config)
+
     def test_check_tracks_are_valid_re_raises_exception(self):
         """
         Test that `_check_tracks_are_valid()´ re-raises the `ValueError` raised by `_get_track_path()` if the track

@@ -1,3 +1,4 @@
+import requests
 import vlc
 import pafy
 import asyncio
@@ -65,7 +66,13 @@ class MusicManager:
             for track_list in group.track_lists:
                 for track in track_list.tracks:
                     try:
-                        self._get_track_path(group, track_list, track)
+                        if not track.is_youtube_link:
+                            self._get_track_path(group, track_list, track)
+                        else:  # This is much faster to check if the link is a YouTube video
+                            url = f"https://www.youtube.com/oembed?url={track.file}"
+                            result = requests.get(url)
+                            if result.status_code != 200:
+                                raise RuntimeError(f"The url '{track.file}' is not a valid YouTube video.")
                     except Exception as ex:
                         logging.error(f"Track '{track.file}' does not point to a valid path.")
                         raise ex
