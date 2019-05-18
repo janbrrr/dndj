@@ -1,36 +1,141 @@
 music:
   volume: 20
+  directory: "example/music"
+  sort: false
   groups:
-  - name: Scene 1 - Travel
-    directory: "example/music/scene-1"
+  - name: Scene 1 - Wolfpack
+    sort: false
     track_lists:
-    - name: Forest Music
+    - name: Traveling to the Crime Scene
       tracks:
       - 153_Secret_Garden.mp3
-      - 161_Forest_Day.mp3
-    - name: Battle Music
+    - name: The Wolves Ambush the Shepherds
       tracks:
-      - https://www.youtube.com/watch?v=jIxas0a-KgM  # Strength of a Thousand Men
-      - https://www.youtube.com/watch?v=U6K-ZeqpO8k  # Victory
-  - name: Scene 2 - Arrival
+      - https://www.youtube.com/watch?v=2FyMiLGBKT0  # Orc Warriors
+      - https://www.youtube.com/watch?v=3bRN__YwhXU  # Goblin Raid
+      - https://www.youtube.com/watch?v=gh3VJ1E36W4  # Power of Will
+    - name: After the Battle
+      tracks:
+      - https://www.youtube.com/watch?v=HAw37tUHcOo  # Daytime Forest
+  - name: Scene 2 - The Village
+    sort: false
     track_lists:
-    - name: City Music
+    - name: Arrival at the City
       tracks:
-      - https://www.youtube.com/watch?v=_52K0E_gNY0  # Medieval City
-    - name: Tavern Music
+      - https://www.youtube.com/watch?v=Wd3kd0zY2bQ  # Medieval Village
+    - name: People are Concerned
+      shuffle: false
+      tracks:
+      - https://www.youtube.com/watch?v=KMSpRSceQXk  # Echoes in the Night
+      - file: https://www.youtube.com/watch?v=VCpg4CbgY1U  # Haunted Coal Mines
+        start_at: 0:0:18
+    - name: The Shepherd's Crook - Normal
       tracks:
       - https://www.youtube.com/watch?v=uaX-2RMzVvQ  # Heroes Inn
+    - name: The Shepherd's Crook - Festive
+      tracks:
+      - file: https://www.youtube.com/watch?v=nW_s8Z-uE48  # Medieval Anthem
+        start_at: 0:0:18
+    - name: Featherock's Theme
+      shuffle: false
+      tracks:
+      - https://www.youtube.com/watch?v=CdeGWJJur00  # Dukkha
+      - https://www.youtube.com/watch?v=VagES3pxttQ  # Sociopath
+  - name: Scene 3 - Plan of Attack
+    sort: false
+    track_lists:
+    - name: Tavern Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=uaX-2RMzVvQ  # Heroes Inn
+    - name: City Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=Wd3kd0zY2bQ  # Medieval Village
+    - name: The Adventure Starts
+      loop: false
+      next: Forest Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=OVhyoOkQFqs  # Venturing To The New World
+    - name: Forest Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=HAw37tUHcOo  # Daytime Forest
+  - name: Scene 4 - The Owlbear's Picnic
+    sort: false
+    track_lists:
+    - name: Forest Day Ambience
+      tracks:
+      - 161_Forest_Day.mp3
+    - name: Fighting the Owlbear
+      shuffle: false
+      tracks:
+      - file: https://www.youtube.com/watch?v=UMHCNIRGt1A  # The Fury Within
+        start_at: 0:0:27
+      - https://www.youtube.com/watch?v=jIxas0a-KgM  # Strength of a Thousand Men
+      - https://www.youtube.com/watch?v=062t45r5_kU  # Battle of The Immortals
+    - name: Forest Night Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=imxILmKjjCQ  # Campfire in the Woods (Night)
+    - name: Ambush in the Night
+      next: Forest Night Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=5_NTsl1UxxQ  # Haunted Grandmas Cottage
+  - name: Scene 5 - The Wolf Den
+    sort: false
+    track_lists:
+    - name: Sneaking into the Cave
+      next: Cave Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=yfuOtXgK9ZA  # Nightfall Cavern
+    - name: Cave Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=ZPYGLf6T9Hs  # Cold Cave
+    - name: A Fight Breaks Out
+      tracks:
+      - https://www.youtube.com/watch?v=KsZAnfR4ON4  # Escape
+      - https://www.youtube.com/watch?v=7qTjny1qoXs  # The Fall
+      - https://www.youtube.com/watch?v=f_6_V57cOMo  # Vindication
+    - name: Bolt explains their Situation
+      next: Cave Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=9kL4IsfX32w  # Horizon
+    - name: Let's Talk This Over
+      shuffle: false
+      next: Cave Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=jhKIgyylk5w  # A Little Place Called Home
+      - https://www.youtube.com/watch?v=-ZgRWf-bAiY  # Birth of Love
+    - name: Flame betrays Bolt
+      tracks:
+      - https://www.youtube.com/watch?v=furO_085RzQ  # Divided By One
+      - https://www.youtube.com/watch?v=uGIu6-WtwEs  # The Devil
+      - https://www.youtube.com/watch?v=rIUb9S46kII  # Drums of War
+    - name: Victory is Near
+      next: Cave Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=hKRUPYrAQoE  # Victory
+  - name: Scene 6 - Settling the Score
+    sort: false
+    track_lists:
+    - name: The Threat Is Over
+      tracks:
+      - https://www.youtube.com/watch?v=9vMxhu4BHTs  # The Enchantress White
+  - name: Other
+    sort: false
+    track_lists:
+    - name: Sad Music
+      tracks:
+      - https://www.youtube.com/watch?v=a_UhpnnZepA  # River of Tears
+      - https://www.youtube.com/watch?v=lbp8GaALXp8  # Forgive Me
+    - name: Scary Music
+      tracks:
+      - https://www.youtube.com/watch?v=ikl-QYQ252Q  # Lucifers Waltz
+      - https://www.youtube.com/watch?v=gYX3jRbNZh8  # Darkness of Light
 sound:
   volume: 1
   directory: "example/sounds"
   groups:
-    - name: Footsteps
-      sounds:
-      - name: Footsteps on Dry Leaves
-        files:
-        - file: footsteps-dry-leaves.wav
-          end_at: 0:0:4
-      - name: Footsteps on Wood Branches
-        files:
-        - file: steps-on-a-wood-branch.ogg
-          end_at: 0:0:5
+  - name: Scene 4 - Owlbear
+    sounds:
+    - name: Owlbear Footsteps
+      files:
+      - file: monster-footsteps-on-wood.ogg
+        end_at: 0:0:7

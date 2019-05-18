@@ -75,15 +75,15 @@ This project uses the [VLC media player](https://www.videolan.org/vlc/) to play 
 
 Run the example by typing `python start_server.py example/config.yaml`.
 
-Now you can visit `127.0.0.1:8080` in your browser and start playing around with it.
+Now you can visit `127.0.0.1:8080` in your browser and start playing around with it. 
+It is based on [The Wolves of Welton by Winghorn Press](https://winghornpress.com/adventures/wolves-of-welton/).
 
 Credits to [Tabletop Audio](https://tabletopaudio.com/) for some of the music/ambience in the example.
 The audio is licensed under
 [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 
 Sound Credits (licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/))
-- "Footsteps, Dry Leaves, G.wav" by [InspectorJ](www.jshaw.co.uk) of [Freesound.org](https://freesound.org)
-- "steps on a wood branch - actions" by [julius_galla](https://freesound.org/people/julius_galla/) of [Freesound.org](https://freesound.org)
+- "Monster footsteps on wood" by [Suburbanwizard](https://freesound.org/people/Suburbanwizard/) at [Freesound.org](https://freesound.org)
 
 # <a name="guide"/>User Guide
 
