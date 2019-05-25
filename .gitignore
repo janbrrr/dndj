@@ -1,6 +1,7 @@
 # Cache
 __pycache__/
 .pytest_cache/
+.dndj_cache/
 
 # IDE-related files
 .idea/

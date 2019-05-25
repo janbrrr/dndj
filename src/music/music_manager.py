@@ -1,3 +1,4 @@
+import collections
 import requests
 import vlc
 import pafy
@@ -12,6 +13,7 @@ from enum import Enum
 from src.music.music_group import MusicGroup
 from src.music.track import Track
 from src.music.track_list import TrackList
+from src import cache
 
 CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["group_index", "track_list_index", "task"])
 
@@ -27,6 +29,7 @@ class MusicManagerAction(Enum):
 class MusicManager:
 
     SLEEP_TIME = 0.01
+    VALID_YOUTUBE_TRACKS_CACHE = "valid_youtube_tracks.json"
 
     def __init__(self, config: Dict, on_music_changes_callback: Callable = None):
         """
@@ -64,6 +67,7 @@ class MusicManager:
         Iterates through every track and attempts to get its path. Logs any error and re-raises any exception.
         """
         logging.info("Checking that tracks point to valid paths...")
+        valid_youtube_tracks = collections.deque(cache.load(self.VALID_YOUTUBE_TRACKS_CACHE), maxlen=100)
         for group in self.groups:
             for track_list in group.track_lists:
                 for track in track_list.tracks:
@@ -71,13 +75,17 @@ class MusicManager:
                         if not track.is_youtube_link:
                             self._get_track_path(group, track_list, track)
                         else:  # This is much faster to check if the link is a YouTube video
+                            if track.file in valid_youtube_tracks:
+                                continue
                             url = f"https://www.youtube.com/oembed?url={track.file}"
                             result = requests.get(url)
                             if result.status_code != 200:
                                 raise RuntimeError(f"The url '{track.file}' is not a valid YouTube video.")
+                            valid_youtube_tracks.append(track.file)
                     except Exception as ex:
                         logging.error(f"Track '{track.file}' does not point to a valid path.")
                         raise ex
+        cache.save(list(valid_youtube_tracks), self.VALID_YOUTUBE_TRACKS_CACHE)
         logging.info("Success! All tracks point to valid paths.")
 
     def _check_track_list_names(self):
