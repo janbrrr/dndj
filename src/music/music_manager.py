@@ -4,6 +4,7 @@ import pafy
 import asyncio
 import logging
 import os
+from functools import lru_cache
 from collections import namedtuple
 from typing import Dict, Callable, Union
 from enum import Enum
@@ -53,6 +54,7 @@ class MusicManager:
         self.groups = tuple(groups)
         self._currently_playing = None
         self._current_player = None
+        self._get_audio_stream = lru_cache(maxsize=50)(self._get_audio_stream)
         self.on_music_changes_callback = on_music_changes_callback
         self._check_track_list_names()
         self._check_tracks_are_valid()
@@ -240,9 +242,7 @@ class MusicManager:
         :return: path to the `track` location that the VLC player can understand
         """
         if track.is_youtube_link:
-            youtube_video = pafy.new(track.file)
-            best_audio_stream = youtube_video.getbestaudio()
-            return best_audio_stream.url
+            return self._get_audio_stream(track.file)
         else:  # is regular file
             try:
                 root_directory = self._get_track_list_root_directory(group, track_list)
@@ -256,6 +256,14 @@ class MusicManager:
                 logging.error(f"File {file_path} does not exist")
                 raise ValueError
             return file_path
+
+    def _get_audio_stream(self, youtube_url: str):
+        """
+        Returns the url to the audio stream of the given url corresponding to a YouTube video.
+        """
+        youtube_video = pafy.new(youtube_url)
+        best_audio_stream = youtube_video.getbestaudio()
+        return best_audio_stream.url
 
     def _get_track_list_root_directory(self, group: MusicGroup, track_list: TrackList) -> str:
         """
