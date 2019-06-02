@@ -11,6 +11,19 @@ function playSound(groupIndex, soundIndex) {
     conn.send(JSON.stringify(toSend));
 }
 
+function stopSound(groupIndex, soundIndex) {
+    if (conn === null) {
+        onNotConnected();
+        return;
+    }
+    const toSend = {
+        "action": "stopSound",
+        "groupIndex": groupIndex,
+        "soundIndex": soundIndex,
+    };
+    conn.send(JSON.stringify(toSend));
+}
+
 function setSoundVolume(volume) {
     if (conn === null) {
         onNotConnected();

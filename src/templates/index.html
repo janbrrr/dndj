@@ -126,7 +126,14 @@
                 {% for group in sound.groups %}
                 {% set outer_loop = loop %}
                 <div>
-                    <a class="row btn collapse-btn" data-toggle="collapse" href="#collapseSoundGroup{{outer_loop.index0}}" role="button"
+                    <a id="group-sound-{{ outer_loop.index0 }}"
+                       {% if outer_loop.index0 in sound.groups_currently_playing %}
+                       class="row btn collapse-btn playing"
+                       {% else %}
+                       class="row btn collapse-btn"
+                       {% endif %}
+                       data-toggle="collapse"
+                       href="#collapseSoundGroup{{outer_loop.index0}}" role="button"
                        aria-expanded="false" aria-controls="collapseSoundGroup{{outer_loop.index0}}">
                         <h5><i class="collapse-icon fas fa-plus fa-xs"></i>{{ group.name }}</h5>
                     </a>
@@ -135,10 +142,20 @@
                             {% if group.sounds %}
                             {% for _sound in group.sounds %}
                             <div class="col-12 col-sm-6 col-xl-4 group-item">
-                                <button type="button" class="btn"
+                                <button type="button"
+                                        {% if (outer_loop.index0, loop.index0) in sound.sounds_currently_playing %}
+                                            class="btn playing"
+                                        {% else %}
+                                            class="btn"
+                                        {% endif %}
+                                        id="btn-sound-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                                         onclick="playSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
                                     <i class="fas fa-play play-icon"></i>
                                     {{ _sound.name }}
+                                </button>
+                                <button type="button" class="btn"
+                                        onclick="stopSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                                    <i class="fas fa-stop"></i>
                                 </button>
                             </div>
                             {% endfor %}

@@ -1,3 +1,4 @@
+import asyncio
 import json
 import pytest
 from unittest.mock import MagicMock
@@ -44,7 +45,7 @@ class TestServer:
         example_config_file.write_text(example_config_str)
         monkeypatch.setattr(MusicManager, "_play_track", CoroutineMock())
         monkeypatch.setattr(MusicManager, "set_volume", CoroutineMock())
-        monkeypatch.setattr(SoundManager, "play_sound", CoroutineMock())
+        monkeypatch.setattr(SoundManager, "_play_sound_file", CoroutineMock())
         monkeypatch.setattr(SoundManager, "set_volume", MagicMock())
         with monkeypatch.context() as m:
             m.setattr(MusicManager, "_check_tracks_are_valid", MagicMock())
@@ -124,7 +125,46 @@ class TestServer:
             "soundIndex": 0
         }
         await ws_resp.send_str(json.dumps(play_sound_request))
-        await ws_resp.close()
+        resp = await ws_resp.receive()
+        assert json.loads(resp.data) == {"action": "soundPlaying", "groupIndex": 0,
+                                         "soundIndex": 0, "groupName": "Footsteps",
+                                         "soundName": "Footsteps on Dry Leaves"}
+
+    async def test_client_is_notified_when_sound_finishes(self, patched_example_client):
+        ws_resp = await patched_example_client.ws_connect("/")
+        play_sound_request = {
+            "action": "playSound",
+            "groupIndex": 0,
+            "soundIndex": 0
+        }
+        await ws_resp.send_str(json.dumps(play_sound_request))
+        _ = await ws_resp.receive()  # First message is that the sound started playing
+        resp = await ws_resp.receive()  # Second message is that the sound finished playing
+        assert json.loads(resp.data) == {"action": "soundFinished", "groupIndex": 0,
+                                         "soundIndex": 0, "groupName": "Footsteps",
+                                         "soundName": "Footsteps on Dry Leaves"}
+
+    async def test_client_can_request_sound_to_stop(self, patched_example_client, monkeypatch):
+        # Mock playing the sound with sleeping to keep the task alive such that the client can cancel it
+        monkeypatch.setattr(SoundManager, "_play_sound_file", CoroutineMock(return_value=asyncio.sleep(5)))
+        ws_resp = await patched_example_client.ws_connect("/")
+        play_sound_request = {
+            "action": "playSound",
+            "groupIndex": 0,
+            "soundIndex": 0
+        }
+        await ws_resp.send_str(json.dumps(play_sound_request))
+        stop_sound_request = {
+            "action": "stopSound",
+            "groupIndex": 0,
+            "soundIndex": 0
+        }
+        await ws_resp.send_str(json.dumps(stop_sound_request))
+        _ = await ws_resp.receive()  # First message is that the sound started playing
+        resp = await ws_resp.receive()
+        assert json.loads(resp.data) == {"action": "soundStopped", "groupIndex": 0,
+                                         "soundIndex": 0, "groupName": "Footsteps",
+                                         "soundName": "Footsteps on Dry Leaves"}
 
     async def test_client_can_set_sound_volume(self, patched_example_client):
         ws_resp = await patched_example_client.ws_connect("/")

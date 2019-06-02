@@ -1,6 +1,8 @@
+import asyncio
 import os
 import pytest
 from unittest.mock import MagicMock, call
+
 from asynctest import CoroutineMock
 
 from src.sound import SoundGroup, SoundManager
@@ -280,14 +282,14 @@ class TestSoundManager:
         sound = group.sounds[0]
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
         sound_file = sound.files[0]
-        await example_sound_manager._play_sound(group, sound)
+        await example_sound_manager._play_sound(MagicMock(), 0, 0)
         sound_class_mock.assert_called_once_with(
             os.path.join(example_sound_manager._get_sound_root_directory(group, sound), sound_file.file)
         )
 
-    async def test_play_sound_sets_volume_and_plays(self, example_sound_manager, monkeypatch):
+    async def test_play_sound_file_sets_volume_and_plays(self, example_sound_manager, monkeypatch):
         """
-        Test that the `_play_sound()` method sets the volume on the `pygame.mixer.Sound` instance with the
+        Test that the `_play_sound_file()` method sets the volume on the `pygame.mixer.Sound` instance with the
         configured volume, that it starts to play the sound and waits for it to finish.
 
         This test assumes no `end_at` attribute on the sound, so make sure to remove it.
@@ -302,20 +304,20 @@ class TestSoundManager:
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
         sound_file = sound.files[0]
         sound_file.end_at = None  # Test without end_at
-        await example_sound_manager._play_sound(group, sound)
+        await example_sound_manager._play_sound_file("root", sound_file)
         sound_instance_mock.set_volume.assert_called_once_with(example_sound_manager.volume)
         sound_instance_mock.play.assert_called_once_with()
         sound_instance_mock.get_length.assert_called_once()
         sleep_mock.assert_called_once_with(42)  # same as sound_instance.get_length()
 
-    async def test_play_sound_sets_volume_and_plays_with_end_at(self, example_sound_manager, monkeypatch):
+    async def test_play_sound_file_sets_volume_and_plays_with_end_at(self, example_sound_manager, monkeypatch):
         """
-        Test that the `_play_sound()` method sets the volume on the `pygame.mixer.Sound` instance with the
+        Test that the `_play_sound_file()` method sets the volume on the `pygame.mixer.Sound` instance with the
         configured volume, that it starts to play the sound and waits for it to finish.
 
         This test assumes the `end_at` attribute on the sound to be set, so make sure to set it.
         Make sure the `play()` method is called appropriately and the method should sleep for the correct
-         amount of time.
+        amount of time.
         """
         sound_instance_mock = MagicMock()
         sleep_mock = CoroutineMock()
@@ -326,10 +328,33 @@ class TestSoundManager:
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
         sound_file = sound.files[0]
         sound_file.end_at = 4000
-        await example_sound_manager._play_sound(group, sound)
+        await example_sound_manager._play_sound_file("root", sound_file)
         sound_instance_mock.set_volume.assert_called_once_with(example_sound_manager.volume)
         sound_instance_mock.play.assert_called_once_with(maxtime=sound_file.end_at)
         sleep_mock.assert_called_once_with(sound_file.end_at / 1000)  # in seconds
+
+    async def test_play_sound_file_stops_if_cancelled(self, example_sound_manager, monkeypatch):
+        """
+        Test that the `_play_sound_file()` method will call `stop()` on the `pygame.mixer.Sound` instance if cancelled.
+        """
+        sound_instance_mock = MagicMock()
+        monkeypatch.setattr("src.sound.sound_manager.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
+        # Waiting for the sound to end (aka. sleeping) will cause a CancelledError via a side effect
+        monkeypatch.setattr("src.sound.sound_manager.asyncio.sleep", CoroutineMock(side_effect=asyncio.CancelledError))
+        group = example_sound_manager.groups[0]
+        sound = group.sounds[0]
+        assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
+        sound_file = sound.files[0]
+        sound_file.end_at = None  # Test without end_at
+        with pytest.raises(asyncio.CancelledError):
+            await example_sound_manager._play_sound_file("root", sound_file)
+        expected_calls = [
+            call.set_volume(example_sound_manager.volume),
+            call.play(),
+            call.get_length(),  # to sleep for this length
+            call.stop()
+        ]
+        assert sound_instance_mock.mock_calls == expected_calls
 
     def test_get_sound_root_directory_returns_global_directory(self, example_sound_manager):
         """
@@ -384,3 +409,25 @@ class TestSoundManager:
         example_sound_manager.volume = 1
         example_sound_manager.set_volume(0)
         assert example_sound_manager.volume == 0
+
+    async def test_currently_playing(self, example_sound_manager):
+        """
+        Test that the `currently_playing` property correctly returns the active sounds as tracked by the `SoundTracker`.
+        """
+        assert len(example_sound_manager.currently_playing) == 0
+        dummy_task_one = asyncio.create_task(asyncio.sleep(0.001))
+        dummy_task_two = asyncio.create_task(asyncio.sleep(0.001))
+        example_sound_manager.tracker.register_sound(0, 0, dummy_task_one)
+        example_sound_manager.tracker.register_sound(0, 1, dummy_task_two)
+        currently_playing = example_sound_manager.currently_playing
+        assert len(currently_playing) == 2
+        assert currently_playing[0].group_index == 0
+        assert currently_playing[0].group_name == example_sound_manager.groups[0].name
+        assert currently_playing[0].sound_index == 0
+        assert currently_playing[0].sound_name == example_sound_manager.groups[0].sounds[0].name
+        assert currently_playing[1].group_index == 0
+        assert currently_playing[1].group_name == example_sound_manager.groups[0].name
+        assert currently_playing[1].sound_index == 1
+        assert currently_playing[1].sound_name == example_sound_manager.groups[0].sounds[1].name
+        await dummy_task_one  # await since the task has to be executed at some point
+        await dummy_task_two

@@ -15,9 +15,9 @@ from aiohttp.web_request import Request
 
 from src.loader import CustomLoader
 from src.music import MusicManager, MusicManagerAction, MusicInformation
-from src.sound import SoundManager
+from src.sound import SoundManager, SoundActions, SoundCallbackInfo
 
-logging.basicConfig(format='%(levelname)-6s: %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s | %(levelname)-6s: %(message)s', level=logging.INFO, datefmt="%H:%M:%S")
 
 PROJECT_ROOT = pathlib.Path(__file__).parent
 
@@ -28,7 +28,7 @@ class Server:
         with open(config_path) as config_file:
             config = yaml.load(config_file, Loader=CustomLoader)
         self.music = MusicManager(config["music"], on_music_changes_callback=self.on_music_changes)
-        self.sound = SoundManager(config["sound"])
+        self.sound = SoundManager(config["sound"], callback_fn=self.on_sound_changes)
         self.app = None
         self.host = host
         self.port = port
@@ -76,7 +76,10 @@ class Server:
             },
             "sound": {
                 "volume": self.sound.volume,
-                "groups": self.sound.groups
+                "groups": self.sound.groups,
+                "groups_currently_playing": [sound_info.group_index for sound_info in self.sound.currently_playing],
+                "sounds_currently_playing": [(sound_info.group_index, sound_info.sound_index) for sound_info in
+                                             self.sound.currently_playing]
             }
         }
         return aiohttp_jinja2.render_template('index.html', request, context)
@@ -97,33 +100,44 @@ class Server:
         try:
             while True:
                 msg = await ws_current.receive()
-                if msg.type == aiohttp.WSMsgType.text:
-                    data_dict = json.loads(msg.data)
-                    if "action" in data_dict:
-                        if data_dict["action"] == "playMusic":
-                            if "groupIndex" in data_dict and "trackListIndex" in data_dict:
-                                group_index = int(data_dict["groupIndex"])
-                                track_list_index = int(data_dict["trackListIndex"])
-                                await self._play_music(request, group_index, track_list_index)
-                        elif data_dict["action"] == "stopMusic":
-                            await self._stop_music(request)
-                        elif data_dict["action"] == "setMusicVolume":
-                            if "volume" in data_dict:
-                                volume = float(data_dict["volume"])
-                                await self._set_music_volume(request, volume)
-                        elif data_dict["action"] == "playSound":
-                            if "groupIndex" in data_dict and "soundIndex" in data_dict:
-                                group_index = int(data_dict["groupIndex"])
-                                sound_index = int(data_dict["soundIndex"])
-                                await self._play_sound(group_index, sound_index)
-                        elif data_dict["action"] == "setSoundVolume":
-                            if "volume" in data_dict:
-                                volume = float(data_dict["volume"])
-                                await self._set_sound_volume(request, volume)
+                await self._handle_message(request, msg)
         except RuntimeError:
             logging.info(f"Client {ws_identifier} disconnected.")
             del request.app["websockets"][ws_identifier]
             return ws_current
+
+    async def _handle_message(self, request, msg):
+        if msg.type != aiohttp.WSMsgType.text:
+            return
+        data_dict = json.loads(msg.data)
+        if "action" not in data_dict:
+            return
+        action = data_dict["action"]
+        if action == "playMusic":
+            if "groupIndex" in data_dict and "trackListIndex" in data_dict:
+                group_index = int(data_dict["groupIndex"])
+                track_list_index = int(data_dict["trackListIndex"])
+                await self._play_music(request, group_index, track_list_index)
+        elif action == "stopMusic":
+            await self._stop_music(request)
+        elif action == "setMusicVolume":
+            if "volume" in data_dict:
+                volume = float(data_dict["volume"])
+                await self._set_music_volume(request, volume)
+        elif action == "playSound":
+            if "groupIndex" in data_dict and "soundIndex" in data_dict:
+                group_index = int(data_dict["groupIndex"])
+                sound_index = int(data_dict["soundIndex"])
+                await self._play_sound(request, group_index, sound_index)
+        elif action == "stopSound":
+            if "groupIndex" in data_dict and "soundIndex" in data_dict:
+                group_index = int(data_dict["groupIndex"])
+                sound_index = int(data_dict["soundIndex"])
+                await self._stop_sound(group_index, sound_index)
+        elif action == "setSoundVolume":
+            if "volume" in data_dict:
+                volume = float(data_dict["volume"])
+                await self._set_sound_volume(request, volume)
 
     async def _play_music(self, request, group_index, track_list_index):
         """
@@ -145,11 +159,17 @@ class Server:
         for ws in request.app["websockets"].values():
             await ws.send_json({"action": "setMusicVolume", "volume": volume})
 
-    async def _play_sound(self, group_index, sound_index):
+    async def _play_sound(self, request, group_index, sound_index):
         """
         Plays the sound.
         """
-        await self.sound.play_sound(group_index, sound_index)
+        await self.sound.play_sound(request, group_index, sound_index)
+
+    async def _stop_sound(self, group_index, sound_index):
+        """
+        Stops the sound.
+        """
+        await self.sound.cancel_sound(group_index, sound_index)
 
     async def _set_sound_volume(self, request, volume):
         """
@@ -167,17 +187,42 @@ class Server:
         Notifies all connected web sockets about the changes.
         """
         if action == MusicManagerAction.START:
-            logging.info(f"Music Callback: Start")
+            logging.debug(f"Music Callback: Start")
             for ws in request.app["websockets"].values():
                 await ws.send_json(
                     {"action": "nowPlaying", "groupIndex": currently_playing.group_index,
                      "trackListIndex": currently_playing.track_list_index,
                      "groupName": currently_playing.group_name, "trackName": currently_playing.track_list_name})
         elif action == MusicManagerAction.STOP:
-            logging.info(f"Music Callback: Stop")
+            logging.debug(f"Music Callback: Stop")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "musicStopped"})
         elif action == MusicManagerAction.FINISH:
-            logging.info(f"Music Callback: Finish")
+            logging.debug(f"Music Callback: Finish")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "musicFinished"})
+
+    async def on_sound_changes(self, action: SoundActions, request: Request, sound_info: Optional[SoundCallbackInfo]):
+        """
+        Callback function used by the `SoundManager` at `self.sound`.
+
+        Notifies all connected web sockets about the changes.
+        """
+        sound_info_dict = {
+            "groupIndex": sound_info.group_index,
+            "soundIndex": sound_info.sound_index,
+            "groupName": sound_info.group_name,
+            "soundName": sound_info.sound_name
+        }
+        if action == SoundActions.START:
+            logging.debug(f"Sound Callback: Start")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "soundPlaying", **sound_info_dict})
+        elif action == SoundActions.STOP:
+            logging.debug(f"Music Callback: Stop")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "soundStopped", **sound_info_dict})
+        elif action == SoundActions.FINISH:
+            logging.debug(f"Music Callback: Finish")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "soundFinished", **sound_info_dict})

@@ -10,7 +10,7 @@ $(document).ready(function() {
 
 function connect() {
     disconnect();
-    const wsUri = (window.location.protocol=='https:'&&'wss://'||'ws://')+window.location.host;
+    const wsUri = (window.location.protocol==='https:'&&'wss://'||'ws://')+window.location.host;
     conn = new WebSocket(wsUri);
     conn.onopen = function() {
         console.log("Connected");
@@ -18,36 +18,71 @@ function connect() {
     conn.onmessage = function(e) {
         const data = JSON.parse(e.data);
         switch (data.action) {
-            case "nowPlaying":
-                $(".playing").removeClass("playing");
+            case "nowPlaying": {
+                $("#music .playing").removeClass("playing");
                 $("#group-music-" + data.groupIndex).addClass("playing");
                 $("#btn-music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
                 $("#now-playing").text(`${data.groupName} > ${data.trackName}`);
-                console.log("Now playing " + data.trackName + " (group " + data.groupIndex + " at index " + data.trackListIndex + ")");
+                console.log("Now playing " + data.trackName + " (group " + data.groupIndex + " at index "
+                    + data.trackListIndex + ")");
                 displayToast("Music", "Now playing <strong>" + data.trackName + "</strong>.");
                 break;
-            case "musicStopped":
-                $(".playing").removeClass("playing");
+            }
+            case "musicStopped": {
+                $("#music .playing").removeClass("playing");
                 $("#now-playing").text("-");
                 console.log("Music stopped playing");
                 displayToast("Music", "Stopped the music.");
                 break;
-            case "musicFinished":
-                $(".playing").removeClass("playing");
+            }
+            case "musicFinished": {
+                $("#music .playing").removeClass("playing");
                 $("#now-playing").text("-");
                 console.log("Music finished playing");
                 displayToast("Music", "Finished playing the music.");
                 break;
-            case "setMusicVolume":
+            }
+            case "setMusicVolume": {
                 $("#music-volume").slider('setValue', data.volume);
                 console.log("Music volume set to " + data.volume);
                 displayToast("Music", "Set volume to <strong>" + data.volume + "</strong>.");
                 break;
-            case "setSoundVolume":
+            }
+            case "setSoundVolume": {
                 $("#sound-volume").slider('setValue', data.volume);
                 console.log("Sound volume set to " + data.volume);
                 displayToast("Sound", "Set volume to <strong>" + data.volume + "</strong>.");
                 break;
+            }
+            case "soundPlaying": {
+                $("#group-sound-" + data.groupIndex).addClass("playing");
+                $("#btn-sound-" + data.groupIndex + "-" + data.soundIndex).addClass("playing");
+                console.log("Now playing sound " + data.soundName + " (group " + data.groupIndex + " at index "
+                    + data.soundIndex + ")");
+                break;
+            }
+            case "soundStopped": {
+                $("#btn-sound-" + data.groupIndex + "-" + data.soundIndex).removeClass("playing");
+                const groupElement = $("#group-sound-" + data.groupIndex);
+                if (groupElement.find(".playing").length === 0) {
+                    groupElement.removeClass("playing");
+                }
+                console.log("Stopped sound " + data.soundName + " (group " + data.groupIndex + " at index "
+                    + data.soundIndex + ")");
+                break;
+            }
+            case "soundFinished": {
+                $("#btn-sound-" + data.groupIndex + "-" + data.soundIndex).removeClass("playing");
+                const groupElement = $("#group-sound-" + data.groupIndex);
+                if (groupElement.find(".playing").length === 0) {
+                    groupElement.removeClass("playing");
+                }
+                console.log("Finished sound " + data.soundName + " (group " + data.groupIndex + " at index "
+                    + data.soundIndex + ")");
+                break;
+            }
+            default:
+                console.log("Received unknown action: " + data.action);
         }
     };
     conn.onclose = function() {
