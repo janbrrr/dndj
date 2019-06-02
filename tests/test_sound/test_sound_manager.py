@@ -410,13 +410,13 @@ class TestSoundManager:
         example_sound_manager.set_volume(0)
         assert example_sound_manager.volume == 0
 
-    async def test_currently_playing(self, example_sound_manager):
+    async def test_currently_playing(self, example_sound_manager, loop):
         """
         Test that the `currently_playing` property correctly returns the active sounds as tracked by the `SoundTracker`.
         """
         assert len(example_sound_manager.currently_playing) == 0
-        dummy_task_one = asyncio.create_task(asyncio.sleep(0.001))
-        dummy_task_two = asyncio.create_task(asyncio.sleep(0.001))
+        dummy_task_one = loop.create_task(asyncio.sleep(0.001))
+        dummy_task_two = loop.create_task(asyncio.sleep(0.001))
         example_sound_manager.tracker.register_sound(0, 0, dummy_task_one)
         example_sound_manager.tracker.register_sound(0, 1, dummy_task_two)
         currently_playing = example_sound_manager.currently_playing
@@ -429,5 +429,3 @@ class TestSoundManager:
         assert currently_playing[1].group_name == example_sound_manager.groups[0].name
         assert currently_playing[1].sound_index == 1
         assert currently_playing[1].sound_name == example_sound_manager.groups[0].sounds[1].name
-        await dummy_task_one  # await since the task has to be executed at some point
-        await dummy_task_two
