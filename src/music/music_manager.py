@@ -15,6 +15,8 @@ from src.music.track import Track
 from src.music.track_list import TrackList
 from src import cache
 
+logger = logging.getLogger(__name__)
+
 CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["group_index", "track_list_index", "task"])
 
 MusicInformation = namedtuple("MusicInformation", ["group_index", "group_name", "track_list_index", "track_list_name"])
@@ -66,7 +68,7 @@ class MusicManager:
         """
         Iterates through every track and attempts to get its path. Logs any error and re-raises any exception.
         """
-        logging.info("Checking that tracks point to valid paths...")
+        logger.info("Checking that tracks point to valid paths...")
         valid_youtube_tracks = collections.deque(cache.load(self.VALID_YOUTUBE_TRACKS_CACHE), maxlen=100)
         for group in self.groups:
             for track_list in group.track_lists:
@@ -83,10 +85,10 @@ class MusicManager:
                                 raise RuntimeError(f"The url '{track.file}' is not a valid YouTube video.")
                             valid_youtube_tracks.append(track.file)
                     except Exception as ex:
-                        logging.error(f"Track '{track.file}' does not point to a valid path.")
+                        logger.error(f"Track '{track.file}' does not point to a valid path.")
                         raise ex
         cache.save(list(valid_youtube_tracks), self.VALID_YOUTUBE_TRACKS_CACHE)
-        logging.info("Success! All tracks point to valid paths.")
+        logger.info("Success! All tracks point to valid paths.")
 
     def _check_track_list_names(self):
         """
@@ -95,7 +97,7 @@ class MusicManager:
 
         Raises a `RuntimeError` if the names are not unique or a `next` attribute points to a non-existing track list.
         """
-        logging.info("Checking that track lists have unique names and their `next` parameters...")
+        logger.info("Checking that track lists have unique names and their `next` parameters...")
         names = set()
         next_names = set()
         for group in self.groups:
@@ -103,7 +105,7 @@ class MusicManager:
                 if track_list.name not in names:
                     names.add(track_list.name)
                 else:
-                    logging.error(f"Found multiple track lists with the same name '{track_list.name}'.")
+                    logger.error(f"Found multiple track lists with the same name '{track_list.name}'.")
                     raise RuntimeError(f"The names of the track lists must be unique. Found duplicate with name "
                                        f"'{track_list.name}'.")
                 if track_list.next is not None:
@@ -111,9 +113,9 @@ class MusicManager:
         if not next_names.issubset(names):
             for next_name in next_names:
                 if next_name not in names:
-                    logging.error(f"'{next_name}' points to a non-existing track list.")
+                    logger.error(f"'{next_name}' points to a non-existing track list.")
                     raise RuntimeError(f"'{next_name}' points to a non-existing track list.")
-        logging.info("Success! Names are unique and `next` parameters point to existing track lists.")
+        logger.info("Success! Names are unique and `next` parameters point to existing track lists.")
 
     def __eq__(self, other):
         if isinstance(other, MusicManager):
@@ -160,14 +162,14 @@ class MusicManager:
         Creates an asynchronous task to play the track list at the given index.
         If a track list is already being played, it will be cancelled and the new track list will be played.
         """
-        logging.debug(f"Received request to play music from group {group_index} at index "
+        logger.debug(f"Received request to play music from group {group_index} at index "
                       f"{track_list_index}")
         await self.cancel(request, use_callback=False)
         loop = asyncio.get_event_loop()
         self._currently_playing = CurrentlyPlaying(group_index, track_list_index,
                                                    loop.create_task(self._play_track_list(request, group_index,
                                                                                           track_list_index)))
-        logging.debug(f"Created a task to play music from group {group_index} at index "
+        logger.debug(f"Created a task to play music from group {group_index} at index "
                       f"{track_list_index}")
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
 
@@ -179,7 +181,7 @@ class MusicManager:
         track_list = group.track_lists[track_list_index]
         cancelled = False
         try:
-            logging.info(f"Loading '{track_list.name}'")
+            logger.info(f"Loading '{track_list.name}'")
             if self.on_music_changes_callback is not None:
                 await self.on_music_changes_callback(action=MusicManagerAction.START, request=request,
                                                      currently_playing=self.currently_playing)
@@ -192,7 +194,7 @@ class MusicManager:
                 _ = await self.on_music_changes_callback(action=MusicManagerAction.FINISH, request=request,
                                                          currently_playing=None)
         except asyncio.CancelledError:
-            logging.info(f"Cancelled '{track_list.name}'")
+            logger.info(f"Cancelled '{track_list.name}'")
             cancelled = True
             raise
         finally:
@@ -210,17 +212,17 @@ class MusicManager:
         try:
             path = self._get_track_path(group, track_list, track)
         except ValueError:
-            logging.error(f"Failed to play '{track.file}'.")
+            logger.error(f"Failed to play '{track.file}'.")
             raise asyncio.CancelledError()
         self._current_player = vlc.MediaPlayer(vlc.Instance("--novideo"), path)
         self._current_player.audio_set_volume(0)
         success = self._current_player.play()
         if success == -1:
-            logging.error(f"Failed to play {path}")
+            logger.error(f"Failed to play {path}")
             raise asyncio.CancelledError
         if track.start_at is not None:
             self._current_player.set_time(track.start_at)
-        logging.info(f"Now Playing: {track.file}")
+        logger.info(f"Now Playing: {track.file}")
         await self._wait_for_current_player_to_be_playing()
         await self.set_volume(self.volume, set_global=False)
         while self._current_player.is_playing():
@@ -229,10 +231,10 @@ class MusicManager:
                     self._current_player.stop()
                 await asyncio.sleep(self.SLEEP_TIME)
             except asyncio.CancelledError:
-                logging.debug(f"Received cancellation request for {track.file}")
+                logger.debug(f"Received cancellation request for {track.file}")
                 await self.set_volume(0, set_global=False)
                 raise
-        logging.info(f"Finished playing: {track.file}")
+        logger.info(f"Finished playing: {track.file}")
 
     def _get_track_path(self, group: MusicGroup, track_list: TrackList, track: Track) -> str:
         """
@@ -255,13 +257,13 @@ class MusicManager:
             try:
                 root_directory = self._get_track_list_root_directory(group, track_list)
             except ValueError:
-                logging.error(f"Unknown directory for {track.file}. "
+                logger.error(f"Unknown directory for {track.file}. "
                               f"You have to specify the directory on either the global level, "
                               f"group level or track list level.")
                 raise ValueError
             file_path = os.path.join(root_directory, track.file)
             if not os.path.isfile(file_path):
-                logging.error(f"File {file_path} does not exist")
+                logger.error(f"File {file_path} does not exist")
                 raise ValueError
             return file_path
 
@@ -313,7 +315,7 @@ class MusicManager:
                     next_track_list_index = _track_list_index
                     break
         if next_group_index is None or next_track_list_index is None:
-            logging.error(f"Could not find a track list named '{current_track_list.name}'")
+            logger.error(f"Could not find a track list named '{current_track_list.name}'")
         else:
             await self.play_track_list(request, next_group_index, next_track_list_index)
 
@@ -339,4 +341,4 @@ class MusicManager:
                     await asyncio.sleep(seconds / n_steps)
         if set_global:
             self.volume = volume
-            logging.debug(f"Changed music volume to {volume}")
+            logger.debug(f"Changed music volume to {volume}")
