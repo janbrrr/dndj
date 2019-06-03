@@ -17,6 +17,9 @@ from src.sound.sound_group import SoundGroup
 from src.sound.sound_tracker import SoundTracker
 
 
+logger = logging.getLogger(__name__)
+
+
 class SoundManager:
 
     SLEEP_TIME = 0.01
@@ -55,20 +58,20 @@ class SoundManager:
         Iterates through every sound file and attempts to get its path. Logs any error and raises a `ValueError`
         if a file path is invalid.
         """
-        logging.info("Checking that sounds point to valid paths...")
+        logger.info("Checking that sounds point to valid paths...")
         for group in self.groups:
             for sound in group.sounds:
                 try:
                     root_directory = self._get_sound_root_directory(group, sound)
                 except ValueError as ex:
-                    logging.error(f"Sound '{sound.name}' is missing the directory.")
+                    logger.error(f"Sound '{sound.name}' is missing the directory.")
                     raise ex
                 for sound_file in sound.files:
                     file_path = os.path.join(root_directory, sound_file.file)
                     if not os.path.isfile(file_path):
-                        logging.error(f"File {file_path} does not exist")
+                        logger.error(f"File {file_path} does not exist")
                         raise ValueError
-        logging.info("Success! All sounds point to valid paths.")
+        logger.info("Success! All sounds point to valid paths.")
 
     @property
     def currently_playing(self) -> List[SoundCallbackInfo]:
@@ -110,16 +113,16 @@ class SoundManager:
         sound = group.sounds[sound_index]
         sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name)
         try:
-            logging.debug(f"Loading '{sound.name}'")
+            logger.debug(f"Loading '{sound.name}'")
             sound_file = random.choice(sound.files)
             root_directory = self._get_sound_root_directory(group, sound)
             await self.callback_handler(action=SoundActions.START, request=request, sound_info=sound_info)
-            logging.info(f"Now Playing: {sound.name}")
+            logger.info(f"Now Playing: {sound.name}")
             await self._play_sound_file(root_directory, sound_file)
             await self.callback_handler(action=SoundActions.FINISH, request=request, sound_info=sound_info)
-            logging.info(f"Finished playing: {sound.name}")
+            logger.info(f"Finished playing: {sound.name}")
         except asyncio.CancelledError:
-            logging.info(f"Cancelled: {sound.name}")
+            logger.info(f"Cancelled: {sound.name}")
             await self.callback_handler(action=SoundActions.STOP, request=request, sound_info=sound_info)
             raise
 
@@ -166,7 +169,7 @@ class SoundManager:
         :param volume: new volume, a value between 0 (mute) and 1 (max)
         """
         self.volume = volume
-        logging.debug(f"Changed sound volume to {volume}")
+        logger.debug(f"Changed sound volume to {volume}")
 
     def __eq__(self, other):
         if isinstance(other, SoundManager):

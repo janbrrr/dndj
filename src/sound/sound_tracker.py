@@ -5,6 +5,9 @@ import logging
 from typing import Dict, List
 
 
+logger = logging.getLogger(__name__)
+
+
 ActiveSound = collections.namedtuple("ActiveSound", ["group_index", "sound_index", "task"])
 
 
@@ -42,7 +45,7 @@ class SoundTracker:
 
         Raises a `RuntimeError` if the task is already done. Finished tasks are not allowed to be registered.
         """
-        logging.debug(f"Registering task for group={group_index}, sound={sound_index}")
+        logger.debug(f"Registering task for group={group_index}, sound={sound_index}")
         key = self._get_sound_key(group_index, sound_index)
         if task.done():
             raise RuntimeError(f"Task for group={group_index}, sound={sound_index} is done, but was registered!")
@@ -55,7 +58,7 @@ class SoundTracker:
 
         Raises a `RuntimeError` if the task is already done. Finished tasks are not allowed to be registered.
         """
-        logging.debug(f"Unregistering task for group={group_index}, sound={sound_index}")
+        logger.debug(f"Unregistering task for group={group_index}, sound={sound_index}")
         key = self._get_sound_key(group_index, sound_index)
         task = self.sound_to_task[key]
         if not task.done():
@@ -66,7 +69,7 @@ class SoundTracker:
         """
         Cancels a task that has previously been registered for the given sound. Does nothing if there is no such task.
         """
-        logging.debug(f"Cancelling task for group={group_index}, sound={sound_index}")
+        logger.debug(f"Cancelling task for group={group_index}, sound={sound_index}")
         key = self._get_sound_key(group_index, sound_index)
         if key not in self.sound_to_task:
             return

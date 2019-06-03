@@ -17,7 +17,9 @@ from src.loader import CustomLoader
 from src.music import MusicManager, MusicManagerAction, MusicInformation
 from src.sound import SoundManager, SoundActions, SoundCallbackInfo
 
-logging.basicConfig(format='%(asctime)s | %(levelname)-6s: %(message)s', level=logging.INFO, datefmt="%H:%M:%S")
+logging.basicConfig(format='%(asctime)s | %(levelname)-6s | %(name)-25s: %(message)s', level=logging.INFO,
+                    datefmt="%H:%M:%S")
+logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = pathlib.Path(__file__).parent
 
@@ -38,7 +40,7 @@ class Server:
         Starts the web server.
         """
         self.app = self._init_app()
-        logging.info(f'Server started on http://{self.host}:{self.port}')
+        logger.info(f'Server started on http://{self.host}:{self.port}')
         web.run_app(self.app, host=self.host, port=self.port)
 
     async def _init_app(self):
@@ -96,13 +98,13 @@ class Server:
 
         ws_identifier = str(uuid.uuid4())
         request.app['websockets'][ws_identifier] = ws_current
-        logging.info(f"Client {ws_identifier} connected.")
+        logger.info(f"Client {ws_identifier} connected.")
         try:
             while True:
                 msg = await ws_current.receive()
                 await self._handle_message(request, msg)
         except RuntimeError:
-            logging.info(f"Client {ws_identifier} disconnected.")
+            logger.info(f"Client {ws_identifier} disconnected.")
             del request.app["websockets"][ws_identifier]
             return ws_current
 
@@ -187,18 +189,18 @@ class Server:
         Notifies all connected web sockets about the changes.
         """
         if action == MusicManagerAction.START:
-            logging.debug(f"Music Callback: Start")
+            logger.debug(f"Music Callback: Start")
             for ws in request.app["websockets"].values():
                 await ws.send_json(
                     {"action": "nowPlaying", "groupIndex": currently_playing.group_index,
                      "trackListIndex": currently_playing.track_list_index,
                      "groupName": currently_playing.group_name, "trackName": currently_playing.track_list_name})
         elif action == MusicManagerAction.STOP:
-            logging.debug(f"Music Callback: Stop")
+            logger.debug(f"Music Callback: Stop")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "musicStopped"})
         elif action == MusicManagerAction.FINISH:
-            logging.debug(f"Music Callback: Finish")
+            logger.debug(f"Music Callback: Finish")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "musicFinished"})
 
@@ -215,14 +217,14 @@ class Server:
             "soundName": sound_info.sound_name
         }
         if action == SoundActions.START:
-            logging.debug(f"Sound Callback: Start")
+            logger.debug(f"Sound Callback: Start")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "soundPlaying", **sound_info_dict})
         elif action == SoundActions.STOP:
-            logging.debug(f"Music Callback: Stop")
+            logger.debug(f"Music Callback: Stop")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "soundStopped", **sound_info_dict})
         elif action == SoundActions.FINISH:
-            logging.debug(f"Music Callback: Finish")
+            logger.debug(f"Music Callback: Finish")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "soundFinished", **sound_info_dict})
