@@ -11,3 +11,10 @@ exclude = '''
   | coverage_html
 )/
 '''
+
+[tool.isort]
+line_length = 120
+known_first_party = 'src'
+default_section = 'THIRDPARTY'
+multi_line_output = 5
+skip = 'venv'

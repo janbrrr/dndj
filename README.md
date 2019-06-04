@@ -386,9 +386,9 @@ The coverage report will be available in `coverage_html/index.html`.
 ### Code Style
 
 This repository uses [black](https://black.readthedocs.io/en/stable/) as code formatter
-combined with [flake8](http://flake8.pycqa.org/en/latest/). 
+combined with [flake8](http://flake8.pycqa.org/en/latest/) and [isort](https://isort.readthedocs.io/en/latest/). 
 
-Both will be run as pre-commit hooks and on Travis CI.
+All will be run as pre-commit hooks and on Travis CI.
 
 Given that hooks are not allowed to modify the staged changes, you have to commit twice if files have to be formatted.
 The first commit will fail as it formats the files and the second commit will verify that the files are properly
