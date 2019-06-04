@@ -59,13 +59,12 @@ the audio stream and pass it to the VLC media player.
 First, you need to have [Python](https://www.python.org/) installed, version 3.6 or higher.
 
 Next, set up a virtual environment.
-1. Make sure `virtualenv` is installed by typing `pip install virtualenv` in the terminal
-2. Change the directory to this project's root and type `virtualenv venv` to create the virtual environment
-3. Activate the virtual environment (`(venv)` should appear before the directory)
+1. Change the directory to this project's root and type `python -m venv venv` to create a virtual environment named `venv`
+2. Activate the virtual environment (`(venv)` should appear before the directory)
     1. On Windows: `venv\Scripts\activate`
     2. On Linux: `source venv/bin/activate`
-4. Install the requirements with `pip install -r requirements.txt`
-    1. Use the `requirements-dev.txt` if you are a developer
+3. Install the requirements with `pip install -r requirements.txt`
+    1. Use the `requirements-dev.txt` if you are a developer and run `pre-commit install`.
 
 Whenever you want to execute the program from the terminal, make sure the virtual environment is active.
 
