@@ -6,13 +6,9 @@ from src.music import Track, TrackList
 
 
 class TestTrackList:
-
     @pytest.fixture
     def minimal_track_list_config(self):
-        return {
-            "name": "Some Name",
-            "tracks": []
-        }
+        return {"name": "Some Name", "tracks": []}
 
     def test_minimal_dict_as_config(self, minimal_track_list_config):
         track_list = TrackList(minimal_track_list_config)
@@ -20,10 +16,7 @@ class TestTrackList:
         assert len(track_list.tracks) == 0
 
     def test_tracks_are_created(self, minimal_track_list_config):
-        minimal_track_list_config["tracks"] = [
-            "some-filename.mp3",
-            "other-filename.mp3"
-        ]
+        minimal_track_list_config["tracks"] = ["some-filename.mp3", "other-filename.mp3"]
         minimal_track_list_config["shuffle"] = False  # shuffle is True by default and this would mess with the test
         track_list = TrackList(minimal_track_list_config)
         assert len(track_list.tracks) == 2
@@ -58,10 +51,7 @@ class TestTrackList:
         assert track_list.shuffle is False
 
     def test_tracks_are_shuffled_if_shuffle_is_set(self, minimal_track_list_config, monkeypatch):
-        minimal_track_list_config["tracks"] = [
-            "some-filename.mp3",
-            "other-filename.mp3"
-        ]
+        minimal_track_list_config["tracks"] = ["some-filename.mp3", "other-filename.mp3"]
         random_mock = MagicMock()
         monkeypatch.setattr("src.music.track_list.random", random_mock)
         track_list = TrackList(minimal_track_list_config)
@@ -69,10 +59,7 @@ class TestTrackList:
         random_mock.shuffle.assert_called_once()
 
     def test_tracks_are_not_shuffled_if_shuffle_unset(self, minimal_track_list_config, monkeypatch):
-        minimal_track_list_config["tracks"] = [
-            "some-filename.mp3",
-            "other-filename.mp3"
-        ]
+        minimal_track_list_config["tracks"] = ["some-filename.mp3", "other-filename.mp3"]
         minimal_track_list_config["shuffle"] = False
         random_mock = MagicMock()
         monkeypatch.setattr("src.music.track_list.random", random_mock)
@@ -85,59 +72,31 @@ class TestTrackList:
         assert isinstance(track_list._tracks, tuple)
 
     def test_equal_if_same_config(self):
-        track_list_1 = TrackList({
-            "name": "Same Name",
-            "tracks": []
-        })
-        track_list_2 = TrackList({
-            "name": "Same Name",
-            "tracks": []
-        })
+        track_list_1 = TrackList({"name": "Same Name", "tracks": []})
+        track_list_2 = TrackList({"name": "Same Name", "tracks": []})
         assert track_list_1 == track_list_2
         assert track_list_2 == track_list_1
 
     def test_not_equal_if_different_attributes(self):
-        track_list_1 = TrackList({
-            "name": "Same Name",
-            "tracks": []
-        })
-        track_list_2 = TrackList({
-            "name": "Same Name",
-            "loop": False,
-            "tracks": []
-        })
+        track_list_1 = TrackList({"name": "Same Name", "tracks": []})
+        track_list_2 = TrackList({"name": "Same Name", "loop": False, "tracks": []})
         assert track_list_1 != track_list_2
         assert track_list_2 != track_list_1
 
     def test_not_equal_if_different_number_of_tracks(self):
-        track_list_1 = TrackList({
-            "name": "Same Name",
-            "tracks": []
-        })
-        track_list_2 = TrackList({
-            "name": "Same Name",
-            "tracks": ["some-filename.mp3"]
-        })
+        track_list_1 = TrackList({"name": "Same Name", "tracks": []})
+        track_list_2 = TrackList({"name": "Same Name", "tracks": ["some-filename.mp3"]})
         assert track_list_1 != track_list_2
         assert track_list_2 != track_list_1
 
     def test_not_equal_if_different_files(self):
-        track_list_1 = TrackList({
-            "name": "Same Name",
-            "tracks": ["some-filename.mp3"]
-        })
-        track_list_2 = TrackList({
-            "name": "Same Name",
-            "tracks": ["different-filename.mp3"]
-        })
+        track_list_1 = TrackList({"name": "Same Name", "tracks": ["some-filename.mp3"]})
+        track_list_2 = TrackList({"name": "Same Name", "tracks": ["different-filename.mp3"]})
         assert track_list_1 != track_list_2
         assert track_list_2 != track_list_1
 
     def test_not_equal_if_different_types(self):
-        config = {
-            "name": "Some Name",
-            "tracks": []
-        }
+        config = {"name": "Some Name", "tracks": []}
         track_list = TrackList(config)
         assert config != track_list
         assert track_list != config

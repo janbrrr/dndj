@@ -5,7 +5,6 @@ from src.music.track import Track
 
 
 class TrackList:
-
     def __init__(self, config: Dict):
         """
         Initializes a `TrackList` instance.
@@ -40,8 +39,12 @@ class TrackList:
 
     def __eq__(self, other):
         if isinstance(other, TrackList):
-            attrs_are_the_same = self.name == other.name and self.directory == other.directory \
-                                 and self.loop == other.loop and self.shuffle == other.shuffle
+            attrs_are_the_same = (
+                self.name == other.name
+                and self.directory == other.directory
+                and self.loop == other.loop
+                and self.shuffle == other.shuffle
+            )
             if not attrs_are_the_same:
                 return False
             if len(self._tracks) != len(other._tracks):

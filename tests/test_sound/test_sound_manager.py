@@ -9,13 +9,9 @@ from src.sound import SoundGroup, SoundManager
 
 
 class TestSoundManager:
-
     @pytest.fixture
     def minimal_sound_manager_config(self):
-        return {
-            "volume": 1,
-            "groups": []
-        }
+        return {"volume": 1, "groups": []}
 
     @pytest.fixture
     def example_sound_manager(self, example_config, monkeypatch):
@@ -30,18 +26,9 @@ class TestSoundManager:
         assert len(sound_manager.groups) == 0
 
     def test_groups_are_created(self, minimal_sound_manager_config):
-        sound_group_1_config = {
-            "name": "Some Sound Group 1",
-            "sounds": []
-        }
-        sound_group_2_config = {
-            "name": "Some Sound Group 2",
-            "sounds": []
-        }
-        minimal_sound_manager_config["groups"] = [
-            sound_group_1_config,
-            sound_group_2_config
-        ]
+        sound_group_1_config = {"name": "Some Sound Group 1", "sounds": []}
+        sound_group_2_config = {"name": "Some Sound Group 2", "sounds": []}
+        minimal_sound_manager_config["groups"] = [sound_group_1_config, sound_group_2_config]
         sound_manager = SoundManager(minimal_sound_manager_config)
         assert len(sound_manager.groups) == 2
         assert sound_manager.groups[0] == SoundGroup(sound_group_1_config)
@@ -57,36 +44,18 @@ class TestSoundManager:
         assert sound_manager.directory == "/some/dir/"
 
     def test_groups_are_sorted_by_name_by_default(self, minimal_sound_manager_config):
-        name_starts_with_n_config = {
-            "name": "Not First In The Alphabet",
-            "sounds": []
-        }
-        name_starts_with_a_config = {
-            "name": "Alphabet",
-            "sounds": []
-        }
-        minimal_sound_manager_config["groups"] = [
-            name_starts_with_n_config,
-            name_starts_with_a_config
-        ]
+        name_starts_with_n_config = {"name": "Not First In The Alphabet", "sounds": []}
+        name_starts_with_a_config = {"name": "Alphabet", "sounds": []}
+        minimal_sound_manager_config["groups"] = [name_starts_with_n_config, name_starts_with_a_config]
         sound_manager = SoundManager(minimal_sound_manager_config)
         assert sound_manager.groups[0] == SoundGroup(name_starts_with_a_config)
         assert sound_manager.groups[1] == SoundGroup(name_starts_with_n_config)
 
     def test_sort_in_config(self, minimal_sound_manager_config):
-        name_starts_with_n_config = {
-            "name": "Not First In The Alphabet",
-            "sounds": []
-        }
-        name_starts_with_a_config = {
-            "name": "Alphabet",
-            "sounds": []
-        }
+        name_starts_with_n_config = {"name": "Not First In The Alphabet", "sounds": []}
+        name_starts_with_a_config = {"name": "Alphabet", "sounds": []}
         minimal_sound_manager_config["sort"] = False
-        minimal_sound_manager_config["groups"] = [
-            name_starts_with_n_config,
-            name_starts_with_a_config
-        ]
+        minimal_sound_manager_config["groups"] = [name_starts_with_n_config, name_starts_with_a_config]
         sound_manager = SoundManager(minimal_sound_manager_config)
         assert sound_manager.groups[0] == SoundGroup(name_starts_with_n_config)
         assert sound_manager.groups[1] == SoundGroup(name_starts_with_a_config)
@@ -96,70 +65,31 @@ class TestSoundManager:
         assert isinstance(sound_manager.groups, tuple)
 
     def test_equal_if_same_config(self):
-        manager_1 = SoundManager({
-            "volume": 1,
-            "groups": []
-        })
-        manager_2 = SoundManager({
-            "volume": 1,
-            "groups": []
-        })
+        manager_1 = SoundManager({"volume": 1, "groups": []})
+        manager_2 = SoundManager({"volume": 1, "groups": []})
         assert manager_1 == manager_2
         assert manager_2 == manager_1
 
     def test_not_equal_if_different_attributes(self):
-        manager_1 = SoundManager({
-            "volume": 1,
-            "groups": []
-        })
-        manager_2 = SoundManager({
-            "volume": 0.5,
-            "groups": []
-        })
+        manager_1 = SoundManager({"volume": 1, "groups": []})
+        manager_2 = SoundManager({"volume": 0.5, "groups": []})
         assert manager_1 != manager_2
         assert manager_2 != manager_1
 
     def test_not_equal_if_different_number_of_groups(self):
-        manager_1 = SoundManager({
-            "volume": 1,
-            "groups": []
-        })
-        manager_2 = SoundManager({
-            "volume": 1,
-            "groups": [{
-                "name": "Group",
-                "sounds": []
-            }]
-        })
+        manager_1 = SoundManager({"volume": 1, "groups": []})
+        manager_2 = SoundManager({"volume": 1, "groups": [{"name": "Group", "sounds": []}]})
         assert manager_1 != manager_2
         assert manager_2 != manager_1
 
     def test_not_equal_if_different_groups(self):
-        manager_1 = SoundManager({
-            "volume": 1,
-            "groups": [{
-                "name": "Unique Group",
-                "sounds": []
-            }]
-        })
-        manager_2 = SoundManager({
-            "volume": 1,
-            "groups": [{
-                "name": "Normal Group",
-                "sounds": []
-            }]
-        })
+        manager_1 = SoundManager({"volume": 1, "groups": [{"name": "Unique Group", "sounds": []}]})
+        manager_2 = SoundManager({"volume": 1, "groups": [{"name": "Normal Group", "sounds": []}]})
         assert manager_1 != manager_2
         assert manager_2 != manager_1
 
     def test_not_equal_if_different_types(self):
-        config = {
-            "volume": 1,
-            "groups": [{
-                "name": "Group",
-                "sounds": []
-            }]
-        }
+        config = {"volume": 1, "groups": [{"name": "Group", "sounds": []}]}
         manager = SoundManager(config)
         assert config != manager
         assert manager != config
@@ -167,58 +97,34 @@ class TestSoundManager:
     def test_check_sounds_are_valid_is_called_on_initialization(self, monkeypatch):
         check_sounds_are_valid_mock = MagicMock()
         monkeypatch.setattr("src.sound.sound_manager.SoundManager._check_sounds_are_valid", check_sounds_are_valid_mock)
-        _ = SoundManager({
-            "volume": 1,
-            "groups": []
-        })
+        _ = SoundManager({"volume": 1, "groups": []})
         check_sounds_are_valid_mock.assert_called_once()
 
     def test_check_sounds_are_valid(self, monkeypatch):
         get_sound_root_directory_mock = MagicMock(return_value="root")
         is_file_mock = MagicMock()
-        monkeypatch.setattr("src.sound.sound_manager.SoundManager._get_sound_root_directory",
-                            get_sound_root_directory_mock)
+        monkeypatch.setattr(
+            "src.sound.sound_manager.SoundManager._get_sound_root_directory", get_sound_root_directory_mock
+        )
         monkeypatch.setattr("src.sound.sound_manager.os.path.isfile", is_file_mock)
-        manager = SoundManager({
-            "volume": 1,
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "sounds": [
-                        {
-                            "name": "Sound 1",
-                            "files": [
-                                "sound-1.wav",
-                                "sound-2.wav"
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Group 2",
-                    "sounds": [
-                        {
-                            "name": "Sound 2",
-                            "files": [
-                                "sound-3.wav"
-                            ]
-                        }
-                    ]
-                }
-            ]
-        })
+        manager = SoundManager(
+            {
+                "volume": 1,
+                "groups": [
+                    {"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["sound-1.wav", "sound-2.wav"]}]},
+                    {"name": "Group 2", "sounds": [{"name": "Sound 2", "files": ["sound-3.wav"]}]},
+                ],
+            }
+        )
         group_1 = manager.groups[0]
         group_2 = manager.groups[1]
-        expected_get_root_calls = [
-            call(group_1, group_1.sounds[0]),
-            call(group_2, group_2.sounds[0])
-        ]
+        expected_get_root_calls = [call(group_1, group_1.sounds[0]), call(group_2, group_2.sounds[0])]
         assert get_sound_root_directory_mock.call_count == 2  # There are two sounds in total
         get_sound_root_directory_mock.assert_has_calls(expected_get_root_calls, any_order=True)
         expected_is_file_calls = [
             call(os.path.join("root", group_1.sounds[0].files[0].file)),
             call(os.path.join("root", group_1.sounds[0].files[1].file)),
-            call(os.path.join("root", group_2.sounds[0].files[0].file))
+            call(os.path.join("root", group_2.sounds[0].files[0].file)),
         ]
         assert is_file_mock.call_count == 3  # There are three sound files in total to check
         is_file_mock.assert_has_calls(expected_is_file_calls, any_order=True)
@@ -230,19 +136,7 @@ class TestSoundManager:
         """
         config = {
             "volume": 1,
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "sounds": [
-                        {
-                            "name": "Sound 1",
-                            "files": [
-                                "no-directory.wav"
-                            ]
-                        }
-                    ]
-                }
-            ]
+            "groups": [{"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["no-directory.wav"]}]}],
         }
         with pytest.raises(ValueError):
             _ = SoundManager(config)
@@ -254,19 +148,7 @@ class TestSoundManager:
         config = {
             "volume": 1,
             "directory": "",
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "sounds": [
-                        {
-                            "name": "Sound 1",
-                            "files": [
-                                "file-does-not-exist.wav"
-                            ]
-                        }
-                    ]
-                }
-            ]
+            "groups": [{"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["file-does-not-exist.wav"]}]}],
         }
         with pytest.raises(ValueError):
             _ = SoundManager(config)
@@ -352,7 +234,7 @@ class TestSoundManager:
             call.set_volume(example_sound_manager.volume),
             call.play(),
             call.get_length(),  # to sleep for this length
-            call.stop()
+            call.stop(),
         ]
         assert sound_instance_mock.mock_calls == expected_calls
 

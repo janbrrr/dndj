@@ -4,7 +4,6 @@ from src.sound.sound import Sound
 
 
 class SoundGroup:
-
     def __init__(self, config: Dict):
         """
         Initializes a `SoundGroup` instance.

@@ -17,15 +17,15 @@ from src.loader import CustomLoader
 from src.music import MusicManager, MusicManagerAction, MusicInformation
 from src.sound import SoundManager, SoundActions, SoundCallbackInfo
 
-logging.basicConfig(format='%(asctime)s | %(levelname)-6s | %(name)-25s: %(message)s', level=logging.INFO,
-                    datefmt="%H:%M:%S")
+logging.basicConfig(
+    format="%(asctime)s | %(levelname)-6s | %(name)-25s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S"
+)
 logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = pathlib.Path(__file__).parent
 
 
 class Server:
-
     def __init__(self, config_path, host, port):
         with open(config_path) as config_file:
             config = yaml.load(config_file, Loader=CustomLoader)
@@ -40,7 +40,7 @@ class Server:
         Starts the web server.
         """
         self.app = self._init_app()
-        logger.info(f'Server started on http://{self.host}:{self.port}')
+        logger.info(f"Server started on http://{self.host}:{self.port}")
         web.run_app(self.app, host=self.host, port=self.port)
 
     async def _init_app(self):
@@ -48,23 +48,20 @@ class Server:
         Initializes the web application.
         """
         app = web.Application()
-        app['websockets'] = {}
+        app["websockets"] = {}
         app.on_shutdown.append(self._shutdown_app)
-        aiohttp_jinja2.setup(
-            app, loader=jinja2.PackageLoader('src', 'templates'))
-        app.router.add_get('/', self.index)
-        app.router.add_static('/static/',
-                              path=PROJECT_ROOT / 'static',
-                              name='static')
+        aiohttp_jinja2.setup(app, loader=jinja2.PackageLoader("src", "templates"))
+        app.router.add_get("/", self.index)
+        app.router.add_static("/static/", path=PROJECT_ROOT / "static", name="static")
         return app
 
     async def _shutdown_app(self, app):
         """
         Called when the app shut downs. Perform clean-up.
         """
-        for ws in app['websockets'].values():
+        for ws in app["websockets"].values():
             await ws.close()
-        app['websockets'].clear()
+        app["websockets"].clear()
 
     def _get_page(self, request):
         """
@@ -74,17 +71,18 @@ class Server:
             "music": {
                 "volume": self.music.volume,
                 "currently_playing": self.music.currently_playing,
-                "groups": self.music.groups
+                "groups": self.music.groups,
             },
             "sound": {
                 "volume": self.sound.volume,
                 "groups": self.sound.groups,
                 "groups_currently_playing": [sound_info.group_index for sound_info in self.sound.currently_playing],
-                "sounds_currently_playing": [(sound_info.group_index, sound_info.sound_index) for sound_info in
-                                             self.sound.currently_playing]
-            }
+                "sounds_currently_playing": [
+                    (sound_info.group_index, sound_info.sound_index) for sound_info in self.sound.currently_playing
+                ],
+            },
         }
-        return aiohttp_jinja2.render_template('index.html', request, context)
+        return aiohttp_jinja2.render_template("index.html", request, context)
 
     async def index(self, request):
         """
@@ -97,7 +95,7 @@ class Server:
         await ws_current.prepare(request)
 
         ws_identifier = str(uuid.uuid4())
-        request.app['websockets'][ws_identifier] = ws_current
+        request.app["websockets"][ws_identifier] = ws_current
         logger.info(f"Client {ws_identifier} connected.")
         try:
             while True:
@@ -181,8 +179,9 @@ class Server:
         for ws in request.app["websockets"].values():
             await ws.send_json({"action": "setSoundVolume", "volume": volume})
 
-    async def on_music_changes(self, action: MusicManagerAction, request: Request,
-                               currently_playing: Optional[MusicInformation]):
+    async def on_music_changes(
+        self, action: MusicManagerAction, request: Request, currently_playing: Optional[MusicInformation]
+    ):
         """
         Callback function used by the `MusicManager` at `self.music`.
 
@@ -192,9 +191,14 @@ class Server:
             logger.debug(f"Music Callback: Start")
             for ws in request.app["websockets"].values():
                 await ws.send_json(
-                    {"action": "nowPlaying", "groupIndex": currently_playing.group_index,
-                     "trackListIndex": currently_playing.track_list_index,
-                     "groupName": currently_playing.group_name, "trackName": currently_playing.track_list_name})
+                    {
+                        "action": "nowPlaying",
+                        "groupIndex": currently_playing.group_index,
+                        "trackListIndex": currently_playing.track_list_index,
+                        "groupName": currently_playing.group_name,
+                        "trackName": currently_playing.track_list_name,
+                    }
+                )
         elif action == MusicManagerAction.STOP:
             logger.debug(f"Music Callback: Stop")
             for ws in request.app["websockets"].values():
@@ -214,7 +218,7 @@ class Server:
             "groupIndex": sound_info.group_index,
             "soundIndex": sound_info.sound_index,
             "groupName": sound_info.group_name,
-            "soundName": sound_info.sound_name
+            "soundName": sound_info.sound_name,
         }
         if action == SoundActions.START:
             logger.debug(f"Sound Callback: Start")

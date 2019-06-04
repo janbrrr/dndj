@@ -1,12 +1,12 @@
 [tool.black]
-line-length = 88
+line-length = 120
 include = '\.pyi?$'
 exclude = '''
 /(
-    \.git
-  | \.venv
-  | \.dndj_cache
-  | \.pytest_cache
+    .git
+  | .dndj_cache
+  | .pytest_cache
+  | venv
   | docs
   | coverage_html
 )/

@@ -5,7 +5,6 @@ from src.sound.sound_tracker import SoundTracker
 
 
 class TestSoundTracker:
-
     def test_get_sound_key(self):
         tracker = SoundTracker()
         assert tracker._get_sound_key(0, 0) == "0-0"

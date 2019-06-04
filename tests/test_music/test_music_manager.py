@@ -9,13 +9,9 @@ from src.music.music_manager import CurrentlyPlaying
 
 
 class TestMusicManager:
-
     @pytest.fixture
     def minimal_music_manager_config(self):
-        return {
-            "volume": 50,
-            "groups": []
-        }
+        return {"volume": 50, "groups": []}
 
     @pytest.fixture
     def example_music_manager(self, example_config, monkeypatch):
@@ -30,18 +26,9 @@ class TestMusicManager:
         assert len(music_manager.groups) == 0
 
     def test_groups_are_created(self, minimal_music_manager_config):
-        music_group_1_config = {
-            "name": "Some Music Group 1",
-            "track_lists": []
-        }
-        music_group_2_config = {
-            "name": "Some Music Group 2",
-            "track_lists": []
-        }
-        minimal_music_manager_config["groups"] = [
-            music_group_1_config,
-            music_group_2_config
-        ]
+        music_group_1_config = {"name": "Some Music Group 1", "track_lists": []}
+        music_group_2_config = {"name": "Some Music Group 2", "track_lists": []}
+        minimal_music_manager_config["groups"] = [music_group_1_config, music_group_2_config]
         music_manager = MusicManager(minimal_music_manager_config)
         assert len(music_manager.groups) == 2
         assert music_manager.groups[0] == MusicGroup(music_group_1_config)
@@ -57,36 +44,18 @@ class TestMusicManager:
         assert music_manager.directory == "/some/dir/"
 
     def test_groups_are_sorted_by_name_by_default(self, minimal_music_manager_config):
-        name_starts_with_n_config = {
-            "name": "Not First In The Alphabet",
-            "track_lists": []
-        }
-        name_starts_with_a_config = {
-            "name": "Alphabet",
-            "track_lists": []
-        }
-        minimal_music_manager_config["groups"] = [
-            name_starts_with_n_config,
-            name_starts_with_a_config
-        ]
+        name_starts_with_n_config = {"name": "Not First In The Alphabet", "track_lists": []}
+        name_starts_with_a_config = {"name": "Alphabet", "track_lists": []}
+        minimal_music_manager_config["groups"] = [name_starts_with_n_config, name_starts_with_a_config]
         music_manager = MusicManager(minimal_music_manager_config)
         assert music_manager.groups[0] == MusicGroup(name_starts_with_a_config)
         assert music_manager.groups[1] == MusicGroup(name_starts_with_n_config)
 
     def test_sort_in_config(self, minimal_music_manager_config):
-        name_starts_with_n_config = {
-            "name": "Not First In The Alphabet",
-            "track_lists": []
-        }
-        name_starts_with_a_config = {
-            "name": "Alphabet",
-            "track_lists": []
-        }
+        name_starts_with_n_config = {"name": "Not First In The Alphabet", "track_lists": []}
+        name_starts_with_a_config = {"name": "Alphabet", "track_lists": []}
         minimal_music_manager_config["sort"] = False
-        minimal_music_manager_config["groups"] = [
-            name_starts_with_n_config,
-            name_starts_with_a_config
-        ]
+        minimal_music_manager_config["groups"] = [name_starts_with_n_config, name_starts_with_a_config]
         music_manager = MusicManager(minimal_music_manager_config)
         assert music_manager.groups[0] == MusicGroup(name_starts_with_n_config)
         assert music_manager.groups[1] == MusicGroup(name_starts_with_a_config)
@@ -96,70 +65,31 @@ class TestMusicManager:
         assert isinstance(music_manager.groups, tuple)
 
     def test_equal_if_same_config(self):
-        manager_1 = MusicManager({
-            "volume": 1,
-            "groups": []
-        })
-        manager_2 = MusicManager({
-            "volume": 1,
-            "groups": []
-        })
+        manager_1 = MusicManager({"volume": 1, "groups": []})
+        manager_2 = MusicManager({"volume": 1, "groups": []})
         assert manager_1 == manager_2
         assert manager_2 == manager_1
 
     def test_not_equal_if_different_attributes(self):
-        manager_1 = MusicManager({
-            "volume": 1,
-            "groups": []
-        })
-        manager_2 = MusicManager({
-            "volume": 0.5,
-            "groups": []
-        })
+        manager_1 = MusicManager({"volume": 1, "groups": []})
+        manager_2 = MusicManager({"volume": 0.5, "groups": []})
         assert manager_1 != manager_2
         assert manager_2 != manager_1
 
     def test_not_equal_if_different_number_of_groups(self):
-        manager_1 = MusicManager({
-            "volume": 1,
-            "groups": []
-        })
-        manager_2 = MusicManager({
-            "volume": 1,
-            "groups": [{
-                "name": "Group",
-                "track_lists": []
-            }]
-        })
+        manager_1 = MusicManager({"volume": 1, "groups": []})
+        manager_2 = MusicManager({"volume": 1, "groups": [{"name": "Group", "track_lists": []}]})
         assert manager_1 != manager_2
         assert manager_2 != manager_1
 
     def test_not_equal_if_different_groups(self):
-        manager_1 = MusicManager({
-            "volume": 1,
-            "groups": [{
-                "name": "Some Group",
-                "track_lists": []
-            }]
-        })
-        manager_2 = MusicManager({
-            "volume": 1,
-            "groups": [{
-                "name": "Different Group",
-                "track_lists": []
-            }]
-        })
+        manager_1 = MusicManager({"volume": 1, "groups": [{"name": "Some Group", "track_lists": []}]})
+        manager_2 = MusicManager({"volume": 1, "groups": [{"name": "Different Group", "track_lists": []}]})
         assert manager_1 != manager_2
         assert manager_2 != manager_1
 
     def test_not_equal_if_different_types(self):
-        config = {
-            "volume": 1,
-            "groups": [{
-                "name": "Some Group",
-                "track_lists": []
-            }]
-        }
+        config = {"volume": 1, "groups": [{"name": "Some Group", "track_lists": []}]}
         manager = MusicManager(config)
         assert config != manager
         assert manager != config
@@ -167,43 +97,24 @@ class TestMusicManager:
     def test_check_tracks_are_valid_is_called_on_initialization(self, monkeypatch):
         check_tracks_are_valid_mock = MagicMock()
         monkeypatch.setattr("src.music.music_manager.MusicManager._check_tracks_are_valid", check_tracks_are_valid_mock)
-        _ = MusicManager({
-            "volume": 1,
-            "groups": []
-        })
+        _ = MusicManager({"volume": 1, "groups": []})
         check_tracks_are_valid_mock.assert_called_once()
 
     def test_check_tracks_are_valid(self, monkeypatch):
         get_track_path_mock = MagicMock()
         monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", get_track_path_mock)
-        manager = MusicManager({
-            "volume": 1,
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "track_lists": [
-                        {
-                            "name": "Track List 1",
-                            "tracks": [
-                                "track-1.mp3",
-                                "track-2.mp3"
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Group 2",
-                    "track_lists": [
-                        {
-                            "name": "Track List 2",
-                            "tracks": [
-                                "track-3.mp3"
-                            ]
-                        }
-                    ]
-                }
-            ]
-        })
+        manager = MusicManager(
+            {
+                "volume": 1,
+                "groups": [
+                    {
+                        "name": "Group 1",
+                        "track_lists": [{"name": "Track List 1", "tracks": ["track-1.mp3", "track-2.mp3"]}],
+                    },
+                    {"name": "Group 2", "track_lists": [{"name": "Track List 2", "tracks": ["track-3.mp3"]}]},
+                ],
+            }
+        )
         group_1 = manager.groups[0]
         group_2 = manager.groups[1]
         expected_calls = [
@@ -223,13 +134,11 @@ class TestMusicManager:
                     "track_lists": [
                         {
                             "name": "Track List 1",
-                            "tracks": [
-                                "https://www.youtube.com/watch?v=hKRUPYrAQoE"  # Some existing video
-                            ]
+                            "tracks": ["https://www.youtube.com/watch?v=hKRUPYrAQoE"],  # Some existing video
                         }
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
         _ = MusicManager(config)
         assert True  # Success if no error was raised
@@ -243,13 +152,11 @@ class TestMusicManager:
                     "track_lists": [
                         {
                             "name": "Track List 1",
-                            "tracks": [
-                                "https://www.youtube.com/watch?v=lTutay89N6Q"  # Some private video
-                            ]
+                            "tracks": ["https://www.youtube.com/watch?v=lTutay89N6Q"],  # Some private video
                         }
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
         with pytest.raises(RuntimeError):
             _ = MusicManager(config)
@@ -263,13 +170,11 @@ class TestMusicManager:
                     "track_lists": [
                         {
                             "name": "Track List 1",
-                            "tracks": [
-                                "https://www.youtube.com/watch?v=l1111111111"  # Some non-existent video
-                            ]
+                            "tracks": ["https://www.youtube.com/watch?v=l1111111111"],  # Some non-existent video
                         }
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
         with pytest.raises(RuntimeError):
             _ = MusicManager(config)
@@ -282,18 +187,8 @@ class TestMusicManager:
         config = {
             "volume": 1,
             "groups": [
-                {
-                    "name": "Group 1",
-                    "track_lists": [
-                        {
-                            "name": "Track List 1",
-                            "tracks": [
-                                "file-does-not-exist.mp3"
-                            ]
-                        }
-                    ]
-                }
-            ]
+                {"name": "Group 1", "track_lists": [{"name": "Track List 1", "tracks": ["file-does-not-exist.mp3"]}]}
+            ],
         }
         with pytest.raises(ValueError):
             _ = MusicManager(config)
@@ -301,10 +196,7 @@ class TestMusicManager:
     def test_check_track_list_names_is_called_on_initialization(self, monkeypatch):
         check_track_list_names_mock = MagicMock()
         monkeypatch.setattr("src.music.music_manager.MusicManager._check_track_list_names", check_track_list_names_mock)
-        _ = MusicManager({
-            "volume": 1,
-            "groups": []
-        })
+        _ = MusicManager({"volume": 1, "groups": []})
         check_track_list_names_mock.assert_called_once()
 
     def test_check_track_list_names_raises_error_if_duplicate_name(self):
@@ -316,18 +208,9 @@ class TestMusicManager:
             "groups": [
                 {
                     "name": "Group 1",
-                    "track_lists": [
-                        {
-                            "name": "Track List",
-                            "tracks": []
-                        },
-                        {
-                            "name": "Track List",
-                            "tracks": []
-                        }
-                    ]
+                    "track_lists": [{"name": "Track List", "tracks": []}, {"name": "Track List", "tracks": []}],
                 }
-            ]
+            ],
         }
         with pytest.raises(RuntimeError):
             _ = MusicManager(config)
@@ -341,15 +224,9 @@ class TestMusicManager:
             "groups": [
                 {
                     "name": "Group 1",
-                    "track_lists": [
-                        {
-                            "name": "Track List",
-                            "next": "Non-existing Track List",
-                            "tracks": []
-                        }
-                    ]
+                    "track_lists": [{"name": "Track List", "next": "Non-existing Track List", "tracks": []}],
                 }
-            ]
+            ],
         }
         with pytest.raises(RuntimeError):
             _ = MusicManager(config)
@@ -364,18 +241,11 @@ class TestMusicManager:
                 {
                     "name": "Group 1",
                     "track_lists": [
-                        {
-                            "name": "First",
-                            "next": "Second",
-                            "tracks": []
-                        },
-                        {
-                            "name": "Second",
-                            "tracks": []
-                        }
-                    ]
+                        {"name": "First", "next": "Second", "tracks": []},
+                        {"name": "Second", "tracks": []},
+                    ],
                 }
-            ]
+            ],
         }
         _ = MusicManager(config)
         assert True  # No error occurred
@@ -384,8 +254,10 @@ class TestMusicManager:
         """
         Calling cancel() will cancel whatever is currently_playing and wait for it to reset the state.
         """
+
         def reset(x):
             example_music_manager._currently_playing = None
+
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock(side_effect=reset))
         currently_playing_mock = MagicMock()
         example_music_manager._currently_playing = currently_playing_mock
@@ -424,8 +296,10 @@ class TestMusicManager:
         track_list.loop = False
         await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
         assert play_track_mock.await_count == 2
-        play_track_mock.assert_has_awaits([call(group, track_list, track_list._tracks[0]),
-                                           call(group, track_list, track_list._tracks[1])], any_order=True)
+        play_track_mock.assert_has_awaits(
+            [call(group, track_list, track_list._tracks[0]), call(group, track_list, track_list._tracks[1])],
+            any_order=True,
+        )
 
     async def test_play_track_list_loops(self, example_music_manager, monkeypatch):
         """
@@ -444,14 +318,16 @@ class TestMusicManager:
         assert play_track_mock.await_count == 4  # loops once again over two tracks
         assert loop_property.call_count == 2
 
-    async def test_play_track_list_raises_cancelled_error_if_playing_a_track_is_cancelled(self, example_music_manager,
-                                                                                          monkeypatch):
+    async def test_play_track_list_raises_cancelled_error_if_playing_a_track_is_cancelled(
+        self, example_music_manager, monkeypatch
+    ):
         """
         The _play_track_list() calls _play_track() for every track in it. If _play_track() raises a CancelledError,
         re-raise it.
         """
-        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track",
-                            CoroutineMock(side_effect=asyncio.CancelledError))
+        monkeypatch.setattr(
+            "src.music.music_manager.MusicManager._play_track", CoroutineMock(side_effect=asyncio.CancelledError)
+        )
         group = example_music_manager.groups[0]
         track_list = group.track_lists[0]
         track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
@@ -482,8 +358,9 @@ class TestMusicManager:
         """
         If the task is cancelled, reset the state.
         """
-        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track",
-                            CoroutineMock(side_effect=asyncio.CancelledError))
+        monkeypatch.setattr(
+            "src.music.music_manager.MusicManager._play_track", CoroutineMock(side_effect=asyncio.CancelledError)
+        )
         group = example_music_manager.groups[0]
         track_list = group.track_lists[0]
         track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
@@ -510,14 +387,16 @@ class TestMusicManager:
         await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
         play_next_track_list_mock.assert_awaited_once_with(None, track_list)
 
-    async def test_play_track_list_does_not_start_next_track_list_if_cancelled(self, example_music_manager,
-                                                                               monkeypatch):
+    async def test_play_track_list_does_not_start_next_track_list_if_cancelled(
+        self, example_music_manager, monkeypatch
+    ):
         """
         If `_play_track_list()` is cancelled for some reason, `_play_next_track_list()` should NOT be called since
         the request has been cancelled.
         """
-        monkeypatch.setattr("src.music.music_manager.MusicManager._play_track",
-                            CoroutineMock(side_effect=asyncio.CancelledError))
+        monkeypatch.setattr(
+            "src.music.music_manager.MusicManager._play_track", CoroutineMock(side_effect=asyncio.CancelledError)
+        )
         play_next_track_list_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.MusicManager._play_next_track_list", play_next_track_list_mock)
         track_list = example_music_manager.groups[0].track_lists[0]
@@ -579,8 +458,9 @@ class TestMusicManager:
         with pytest.raises(asyncio.CancelledError):
             await example_music_manager._play_track(group=group, track_list=track_list, track=track)
 
-    async def test_play_track_cancels_if_cancelled_error_is_raised_while_playing(self, example_music_manager,
-                                                                                 monkeypatch):
+    async def test_play_track_cancels_if_cancelled_error_is_raised_while_playing(
+        self, example_music_manager, monkeypatch
+    ):
         """
         If a CancelledError is raised while the music is playing, catch it, set the volume to zero and
         re-raise it.
@@ -591,8 +471,9 @@ class TestMusicManager:
         set_volume_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
         monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
-        monkeypatch.setattr("src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing",
-                            CoroutineMock())
+        monkeypatch.setattr(
+            "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", CoroutineMock()
+        )
         monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", set_volume_mock)
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         group = example_music_manager.groups[0]
@@ -623,8 +504,9 @@ class TestMusicManager:
         set_volume_mock = CoroutineMock()  # necessary because it will use asyncio.sleep and mess up the numbers
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
         monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", get_track_path_mock)
-        monkeypatch.setattr("src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing",
-                            wait_for_start_mock)
+        monkeypatch.setattr(
+            "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", wait_for_start_mock
+        )
         monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", set_volume_mock)
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
         example_music_manager.volume = 55
@@ -647,8 +529,9 @@ class TestMusicManager:
         media_player_mock.is_playing.return_value = False
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
         monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
-        monkeypatch.setattr("src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing",
-                            CoroutineMock())
+        monkeypatch.setattr(
+            "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", CoroutineMock()
+        )
         monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         group = example_music_manager.groups[0]
@@ -667,12 +550,14 @@ class TestMusicManager:
 
         def set_is_playing_to_false():
             media_player_mock.is_playing.return_value = False
+
         media_player_mock.get_time.return_value = 1000
         media_player_mock.stop = MagicMock(side_effect=set_is_playing_to_false)
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
         monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
-        monkeypatch.setattr("src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing",
-                            CoroutineMock())
+        monkeypatch.setattr(
+            "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", CoroutineMock()
+        )
         monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         group = example_music_manager.groups[0]
@@ -680,9 +565,9 @@ class TestMusicManager:
         track = track_list.tracks[0]
         track.end_at = 1000
         await example_music_manager._play_track(group=group, track_list=track_list, track=track)
-        media_player_mock.get_time.assert_called_once()      # Compares get_time with track.end_at and
+        media_player_mock.get_time.assert_called_once()  # Compares get_time with track.end_at and
         assert media_player_mock.is_playing.call_count == 2  # immediately exits next step due to get_time >= end_at
-        media_player_mock.stop.assert_called_once()          # and calls stop()
+        media_player_mock.stop.assert_called_once()  # and calls stop()
 
     async def test_wait_for_current_player_to_be_playing(self, example_music_manager, monkeypatch):
         """
@@ -734,8 +619,9 @@ class TestMusicManager:
         track_list = group.track_lists[0]
         track = track_list.tracks[0]
         track.file = "file.mp3"
-        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_list_root_directory",
-                            MagicMock(return_value="root/dir/"))
+        monkeypatch.setattr(
+            "src.music.music_manager.MusicManager._get_track_list_root_directory", MagicMock(return_value="root/dir/")
+        )
         monkeypatch.setattr("src.music.music_manager.os.path.isfile", lambda x: True)
         path = example_music_manager._get_track_path(group, track_list, track)
         assert path == "root/dir/file.mp3"
@@ -764,8 +650,9 @@ class TestMusicManager:
         track_list = group.track_lists[0]
         track = track_list.tracks[0]
         track.file = "file.mp3"
-        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_list_root_directory",
-                            MagicMock(return_value="root/dir/"))  # non-existing dir
+        monkeypatch.setattr(
+            "src.music.music_manager.MusicManager._get_track_list_root_directory", MagicMock(return_value="root/dir/")
+        )  # non-existing dir
         with pytest.raises(ValueError):
             example_music_manager._get_track_path(group, track_list, track)
 
@@ -778,8 +665,9 @@ class TestMusicManager:
         first_group.directory = None
         first_track_list_in_first_group = first_group.track_lists[0]
         first_track_list_in_first_group.directory = None
-        directory = example_music_manager._get_track_list_root_directory(group=first_group,
-                                                                         track_list=first_track_list_in_first_group)
+        directory = example_music_manager._get_track_list_root_directory(
+            group=first_group, track_list=first_track_list_in_first_group
+        )
         assert directory == "global/dir"
 
     def test_get_track_list_root_directory_returns_group_directory(self, example_music_manager):
@@ -792,8 +680,9 @@ class TestMusicManager:
         first_group.directory = "group/dir"
         first_track_list_in_first_group = first_group.track_lists[0]
         first_track_list_in_first_group.directory = None
-        directory = example_music_manager._get_track_list_root_directory(group=first_group,
-                                                                         track_list=first_track_list_in_first_group)
+        directory = example_music_manager._get_track_list_root_directory(
+            group=first_group, track_list=first_track_list_in_first_group
+        )
         assert directory == "group/dir"
 
     def test_get_track_list_root_directory_returns_track_list_directory(self, example_music_manager):
@@ -806,8 +695,9 @@ class TestMusicManager:
         first_group.directory = "group/dir"
         first_track_list_in_first_group = first_group.track_lists[0]
         first_track_list_in_first_group.directory = "track/list/dir"
-        directory = example_music_manager._get_track_list_root_directory(group=first_group,
-                                                                         track_list=first_track_list_in_first_group)
+        directory = example_music_manager._get_track_list_root_directory(
+            group=first_group, track_list=first_track_list_in_first_group
+        )
         assert directory == "track/list/dir"
 
     def test_get_track_list_root_directory_raises_value_error_if_no_directory_on_any_level(self, example_music_manager):
@@ -821,8 +711,9 @@ class TestMusicManager:
         first_track_list_in_first_group = first_group.track_lists[0]
         first_track_list_in_first_group.directory = None
         with pytest.raises(ValueError):
-            example_music_manager._get_track_list_root_directory(group=first_group,
-                                                                 track_list=first_track_list_in_first_group)
+            example_music_manager._get_track_list_root_directory(
+                group=first_group, track_list=first_track_list_in_first_group
+            )
 
     async def test_set_volume_sets_volume_if_global_parameter(self, example_music_manager):
         example_music_manager.volume = 0
@@ -834,8 +725,9 @@ class TestMusicManager:
         await example_music_manager.set_volume(volume=1, set_global=False)
         assert example_music_manager.volume == 0
 
-    async def test_set_volume_instantly_sets_player_volume_if_no_smooth_parameter(self, example_music_manager,
-                                                                                  monkeypatch):
+    async def test_set_volume_instantly_sets_player_volume_if_no_smooth_parameter(
+        self, example_music_manager, monkeypatch
+    ):
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
         example_music_manager._current_player = MagicMock()
@@ -854,5 +746,5 @@ class TestMusicManager:
         sleep_mock.assert_awaited_with(seconds / n_steps)  # seconds / n_steps
         step_size = 100 / n_steps  # 1 = |starting_volume - new_volume|
         example_music_manager._current_player.audio_set_volume.assert_has_calls(
-             [call(int((i + 1) * step_size)) for i in range(n_steps)]  # 10, 20, 30, ..., 100
+            [call(int((i + 1) * step_size)) for i in range(n_steps)]  # 10, 20, 30, ..., 100
         )

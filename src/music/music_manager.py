@@ -106,8 +106,10 @@ class MusicManager:
                     names.add(track_list.name)
                 else:
                     logger.error(f"Found multiple track lists with the same name '{track_list.name}'.")
-                    raise RuntimeError(f"The names of the track lists must be unique. Found duplicate with name "
-                                       f"'{track_list.name}'.")
+                    raise RuntimeError(
+                        f"The names of the track lists must be unique. Found duplicate with name "
+                        f"'{track_list.name}'."
+                    )
                 if track_list.next is not None:
                     next_names.add(track_list.next)
         if not next_names.issubset(names):
@@ -119,9 +121,11 @@ class MusicManager:
 
     def __eq__(self, other):
         if isinstance(other, MusicManager):
-            attrs_are_the_same = self.volume == other.volume \
-                                 and self.directory == other.directory \
-                                 and self._currently_playing == other._currently_playing
+            attrs_are_the_same = (
+                self.volume == other.volume
+                and self.directory == other.directory
+                and self._currently_playing == other._currently_playing
+            )
             if not attrs_are_the_same:
                 return False
             if len(self.groups) != len(other.groups):
@@ -154,23 +158,24 @@ class MusicManager:
             while self._currently_playing is not None:  # wait till track list finishes cancelling
                 await asyncio.sleep(self.SLEEP_TIME)
         if self.on_music_changes_callback is not None and use_callback:
-            await self.on_music_changes_callback(action=MusicManagerAction.STOP, request=request,
-                                                 currently_playing=None)
+            await self.on_music_changes_callback(
+                action=MusicManagerAction.STOP, request=request, currently_playing=None
+            )
 
     async def play_track_list(self, request, group_index, track_list_index):
         """
         Creates an asynchronous task to play the track list at the given index.
         If a track list is already being played, it will be cancelled and the new track list will be played.
         """
-        logger.debug(f"Received request to play music from group {group_index} at index "
-                     f"{track_list_index}")
+        logger.debug(f"Received request to play music from group {group_index} at index " f"{track_list_index}")
         await self.cancel(request, use_callback=False)
         loop = asyncio.get_event_loop()
-        self._currently_playing = CurrentlyPlaying(group_index, track_list_index,
-                                                   loop.create_task(self._play_track_list(request, group_index,
-                                                                                          track_list_index)))
-        logger.debug(f"Created a task to play music from group {group_index} at index "
-                     f"{track_list_index}")
+        self._currently_playing = CurrentlyPlaying(
+            group_index,
+            track_list_index,
+            loop.create_task(self._play_track_list(request, group_index, track_list_index)),
+        )
+        logger.debug(f"Created a task to play music from group {group_index} at index " f"{track_list_index}")
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
 
     async def _play_track_list(self, request, group_index, track_list_index):
@@ -183,16 +188,18 @@ class MusicManager:
         try:
             logger.info(f"Loading '{track_list.name}'")
             if self.on_music_changes_callback is not None:
-                await self.on_music_changes_callback(action=MusicManagerAction.START, request=request,
-                                                     currently_playing=self.currently_playing)
+                await self.on_music_changes_callback(
+                    action=MusicManagerAction.START, request=request, currently_playing=self.currently_playing
+                )
             while True:
                 for track in track_list.tracks:
                     await self._play_track(group, track_list, track)
                 if not track_list.loop:
                     break
             if self.on_music_changes_callback is not None:
-                _ = await self.on_music_changes_callback(action=MusicManagerAction.FINISH, request=request,
-                                                         currently_playing=None)
+                _ = await self.on_music_changes_callback(
+                    action=MusicManagerAction.FINISH, request=request, currently_playing=None
+                )
         except asyncio.CancelledError:
             logger.info(f"Cancelled '{track_list.name}'")
             cancelled = True
@@ -257,9 +264,11 @@ class MusicManager:
             try:
                 root_directory = self._get_track_list_root_directory(group, track_list)
             except ValueError:
-                logger.error(f"Unknown directory for {track.file}. "
-                             f"You have to specify the directory on either the global level, "
-                             f"group level or track list level.")
+                logger.error(
+                    f"Unknown directory for {track.file}. "
+                    f"You have to specify the directory on either the global level, "
+                    f"group level or track list level."
+                )
                 raise ValueError
             file_path = os.path.join(root_directory, track.file)
             if not os.path.isfile(file_path):

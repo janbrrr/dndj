@@ -15,10 +15,10 @@ if __name__ == "__main__":
     """
     parser = argparse.ArgumentParser(description="Start the server")
     parser.add_argument("config", metavar="C", help="path to the config file")
-    parser.add_argument("--host", dest="host", action="store", default="127.0.0.1",
-                        help='The host (default: 127.0.0.1)')
-    parser.add_argument("--port", dest="port", action="store", default=8080,
-                        help='The port (default: 8080)')
+    parser.add_argument(
+        "--host", dest="host", action="store", default="127.0.0.1", help="The host (default: 127.0.0.1)"
+    )
+    parser.add_argument("--port", dest="port", action="store", default=8080, help="The port (default: 8080)")
 
     args = parser.parse_args()
     Server(config_path=args.config, host=args.host, port=args.port).start()

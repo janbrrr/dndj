@@ -3,7 +3,6 @@ from typing import Dict, Union
 
 
 class SoundFile:
-
     def __init__(self, config: Union[str, Dict]):
         """
         Initializes a `SoundFile` instance.

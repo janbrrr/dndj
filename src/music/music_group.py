@@ -4,7 +4,6 @@ from src.music.track_list import TrackList
 
 
 class MusicGroup:
-
     def __init__(self, config: Dict):
         """
         Initializes a `MusicGroup` instance.

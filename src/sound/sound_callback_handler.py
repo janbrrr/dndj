@@ -7,7 +7,6 @@ from src.sound.sound_callback_info import SoundCallbackInfo
 
 
 class SoundCallbackHandler:
-
     def __init__(self, callback_fn: Callable = None):
         self.callback_fn = callback_fn
 

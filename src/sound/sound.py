@@ -4,7 +4,6 @@ from src.sound.sound_file import SoundFile
 
 
 class Sound:
-
     def __init__(self, config: Dict):
         """
         Initializes a `Sound` instance.
