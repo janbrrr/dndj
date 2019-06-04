@@ -1,11 +1,10 @@
 import asyncio
 import logging
-import random
 import os
+import random
+from typing import Callable, Dict, List
 
 import pygame.mixer
-from typing import Dict, Callable, List
-
 from aiohttp.web_request import Request
 
 from src.sound import SoundFile

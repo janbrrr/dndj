@@ -1,8 +1,8 @@
 import asyncio
 import os
-import pytest
 from unittest.mock import MagicMock, call
 
+import pytest
 from asynctest import CoroutineMock
 
 from src.sound import SoundGroup, SoundManager

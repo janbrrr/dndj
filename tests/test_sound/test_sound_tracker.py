@@ -1,4 +1,5 @@
 import asyncio
+
 import pytest
 
 from src.sound.sound_tracker import SoundTracker

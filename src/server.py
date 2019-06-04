@@ -1,21 +1,20 @@
+import json
+import logging
+import pathlib
 import uuid
 from typing import Optional
 
 import aiohttp
-import json
-import yaml
-import logging
-import pathlib
-
-import jinja2
-
 import aiohttp_jinja2
+import jinja2
+import yaml
 from aiohttp import web
 from aiohttp.web_request import Request
 
 from src.loader import CustomLoader
-from src.music import MusicManager, MusicManagerAction, MusicInformation
-from src.sound import SoundManager, SoundActions, SoundCallbackInfo
+from src.music import MusicInformation, MusicManager, MusicManagerAction
+from src.sound import SoundActions, SoundCallbackInfo, SoundManager
+
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)-6s | %(name)-25s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S"

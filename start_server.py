@@ -2,6 +2,7 @@ import argparse
 
 from src.server import Server
 
+
 if __name__ == "__main__":
     """
     Starts the server with the provided YAML config file.

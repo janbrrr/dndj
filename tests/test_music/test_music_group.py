@@ -1,6 +1,6 @@
 import pytest
 
-from src.music import TrackList, MusicGroup
+from src.music import MusicGroup, TrackList
 
 
 class TestMusicGroup:

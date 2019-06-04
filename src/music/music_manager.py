@@ -1,19 +1,21 @@
-import collections
-import requests
-import vlc
-import pafy
 import asyncio
+import collections
 import logging
 import os
-from functools import lru_cache
 from collections import namedtuple
-from typing import Dict, Callable, Union
 from enum import Enum
+from functools import lru_cache
+from typing import Callable, Dict, Union
 
+import pafy
+import requests
+import vlc
+
+from src import cache
 from src.music.music_group import MusicGroup
 from src.music.track import Track
 from src.music.track_list import TrackList
-from src import cache
+
 
 logger = logging.getLogger(__name__)
 

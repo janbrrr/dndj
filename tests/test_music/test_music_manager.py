@@ -1,5 +1,5 @@
 import asyncio
-from unittest.mock import MagicMock, call, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, call
 
 import pytest
 from asynctest import CoroutineMock

@@ -1,7 +1,8 @@
 import asyncio
 import json
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from asynctest import CoroutineMock
 
 from src.music import MusicManager
