@@ -346,7 +346,6 @@ class TestMusicManager:
         track_list = group.track_lists[0]
         track_list.loop = False
         track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
-        example_music_manager._currently_playing = True
         current_player_mock = MagicMock()
         example_music_manager._current_player = current_player_mock
         await example_music_manager._play_track_list(request=None, group_index=0, track_list_index=0)
@@ -364,7 +363,6 @@ class TestMusicManager:
         group = example_music_manager.groups[0]
         track_list = group.track_lists[0]
         track_list._tracks = [Track("track-1.mp3"), Track("track-2.mp3")]
-        example_music_manager._currently_playing = True
         current_player_mock = MagicMock()
         example_music_manager._current_player = current_player_mock
         with pytest.raises(asyncio.CancelledError):

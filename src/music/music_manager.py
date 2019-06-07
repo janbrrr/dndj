@@ -3,7 +3,6 @@ import collections
 import logging
 import os
 from collections import namedtuple
-from enum import Enum
 from functools import lru_cache
 from typing import Callable, Dict, Union
 
@@ -12,6 +11,9 @@ import requests
 import vlc
 
 from src import cache
+from src.music.music_actions import MusicActions
+from src.music.music_callback_handler import MusicCallbackHandler
+from src.music.music_callback_info import MusicCallbackInfo
 from src.music.music_group import MusicGroup
 from src.music.track import Track
 from src.music.track_list import TrackList
@@ -21,21 +23,13 @@ logger = logging.getLogger(__name__)
 
 CurrentlyPlaying = namedtuple("CurrentlyPlaying", ["group_index", "track_list_index", "task"])
 
-MusicInformation = namedtuple("MusicInformation", ["group_index", "group_name", "track_list_index", "track_list_name"])
-
-
-class MusicManagerAction(Enum):
-    START = 1
-    STOP = 2
-    FINISH = 3
-
 
 class MusicManager:
 
     SLEEP_TIME = 0.01
     VALID_YOUTUBE_TRACKS_CACHE = "valid_youtube_tracks.json"
 
-    def __init__(self, config: Dict, on_music_changes_callback: Callable = None):
+    def __init__(self, config: Dict, callback_fn: Callable = None):
         """
         Initializes a `MusicManager` instance.
 
@@ -45,13 +39,13 @@ class MusicManager:
         - "sort": whether to sort the groups alphabetically (Optional, default=True)
         - "groups": a list of configs for `MusicGroup` instances. See `MusicGroup` class for more information
 
-        The `on_music_change_callback` is an async function that should accept the following optional keyword arguments:
-        - "action": value of type `MusicManagerAction`
+        The `callback_fn` is an async function that should accept the following optional keyword arguments:
+        - "action": value of type `MusicActions`
         - "request": the request that caused the action
-        - "currently_playing": an instance of `MusicInformation` (`None` if nothing is being played)
+        - "music_info": an instance of `MusicCallbackInfo` (`None` if nothing is being played)
 
         :param config: `dict`
-        :param on_music_changes_callback: function to call when the active music changes
+        :param callback_fn: function to call when the active music changes
         """
         self.volume = int(config["volume"])
         self.directory = config["directory"] if "directory" in config else None
@@ -62,7 +56,7 @@ class MusicManager:
         self._currently_playing = None
         self._current_player = None
         self._get_audio_stream = lru_cache(maxsize=50)(self._get_audio_stream)
-        self.on_music_changes_callback = on_music_changes_callback
+        self.callback_handler = MusicCallbackHandler(callback_fn=callback_fn)
         self._check_track_list_names()
         self._check_tracks_are_valid()
 
@@ -139,7 +133,7 @@ class MusicManager:
         return False
 
     @property
-    def currently_playing(self) -> Union[None, MusicInformation]:
+    def currently_playing(self) -> Union[None, MusicCallbackInfo]:
         """
         Returns information about the music that is currently being played. Returns `None` if nothing is being played.
         """
@@ -148,7 +142,7 @@ class MusicManager:
             group = self.groups[group_index]
             track_list_index = self._currently_playing.track_list_index
             track_list = group.track_lists[track_list_index]
-            return MusicInformation(group_index, group.name, track_list_index, track_list.name)
+            return MusicCallbackInfo(group_index, group.name, track_list_index, track_list.name)
         return None
 
     async def cancel(self, request, use_callback=True):
@@ -159,10 +153,8 @@ class MusicManager:
             self._currently_playing.task.cancel()
             while self._currently_playing is not None:  # wait till track list finishes cancelling
                 await asyncio.sleep(self.SLEEP_TIME)
-        if self.on_music_changes_callback is not None and use_callback:
-            await self.on_music_changes_callback(
-                action=MusicManagerAction.STOP, request=request, currently_playing=None
-            )
+        if use_callback:
+            await self.callback_handler(action=MusicActions.STOP, request=request, music_info=None)
 
     async def play_track_list(self, request, group_index, track_list_index):
         """
@@ -189,19 +181,13 @@ class MusicManager:
         cancelled = False
         try:
             logger.info(f"Loading '{track_list.name}'")
-            if self.on_music_changes_callback is not None:
-                await self.on_music_changes_callback(
-                    action=MusicManagerAction.START, request=request, currently_playing=self.currently_playing
-                )
+            await self.callback_handler(action=MusicActions.START, request=request, music_info=self.currently_playing)
             while True:
                 for track in track_list.tracks:
                     await self._play_track(group, track_list, track)
                 if not track_list.loop:
                     break
-            if self.on_music_changes_callback is not None:
-                _ = await self.on_music_changes_callback(
-                    action=MusicManagerAction.FINISH, request=request, currently_playing=None
-                )
+            await self.callback_handler(action=MusicActions.FINISH, request=request, music_info=None)
         except asyncio.CancelledError:
             logger.info(f"Cancelled '{track_list.name}'")
             cancelled = True

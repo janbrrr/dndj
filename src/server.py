@@ -12,7 +12,7 @@ from aiohttp import web
 from aiohttp.web_request import Request
 
 from src.loader import CustomLoader
-from src.music import MusicInformation, MusicManager, MusicManagerAction
+from src.music import MusicActions, MusicCallbackInfo, MusicManager
 from src.sound import SoundActions, SoundCallbackInfo, SoundManager
 
 
@@ -28,7 +28,7 @@ class Server:
     def __init__(self, config_path, host, port):
         with open(config_path) as config_file:
             config = yaml.load(config_file, Loader=CustomLoader)
-        self.music = MusicManager(config["music"], on_music_changes_callback=self.on_music_changes)
+        self.music = MusicManager(config["music"], callback_fn=self.on_music_changes)
         self.sound = SoundManager(config["sound"], callback_fn=self.on_sound_changes)
         self.app = None
         self.host = host
@@ -178,31 +178,29 @@ class Server:
         for ws in request.app["websockets"].values():
             await ws.send_json({"action": "setSoundVolume", "volume": volume})
 
-    async def on_music_changes(
-        self, action: MusicManagerAction, request: Request, currently_playing: Optional[MusicInformation]
-    ):
+    async def on_music_changes(self, action: MusicActions, request: Request, music_info: Optional[MusicCallbackInfo]):
         """
         Callback function used by the `MusicManager` at `self.music`.
 
         Notifies all connected web sockets about the changes.
         """
-        if action == MusicManagerAction.START:
+        if action == MusicActions.START:
             logger.debug(f"Music Callback: Start")
             for ws in request.app["websockets"].values():
                 await ws.send_json(
                     {
                         "action": "nowPlaying",
-                        "groupIndex": currently_playing.group_index,
-                        "trackListIndex": currently_playing.track_list_index,
-                        "groupName": currently_playing.group_name,
-                        "trackName": currently_playing.track_list_name,
+                        "groupIndex": music_info.group_index,
+                        "trackListIndex": music_info.track_list_index,
+                        "groupName": music_info.group_name,
+                        "trackName": music_info.track_list_name,
                     }
                 )
-        elif action == MusicManagerAction.STOP:
+        elif action == MusicActions.STOP:
             logger.debug(f"Music Callback: Stop")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "musicStopped"})
-        elif action == MusicManagerAction.FINISH:
+        elif action == MusicActions.FINISH:
             logger.debug(f"Music Callback: Finish")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "musicFinished"})
