@@ -56,7 +56,7 @@ the audio stream and pass it to the VLC media player.
 
 ## <a name="requirements-and-installation"/>Requirements & Installation
 
-First, you need to have [Python](https://www.python.org/) installed, version 3.6 or higher.
+First, you need to have [Python](https://www.python.org/) installed, version 3.7.
 
 Next, set up a virtual environment.
 1. Change the directory to this project's root and type `python -m venv venv` to create a virtual environment named `venv`
