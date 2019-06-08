@@ -1,19 +1,15 @@
 import asyncio
-import collections
 import logging
-import os
 from collections import namedtuple
-from functools import lru_cache
 from typing import Callable, Dict, Union
 
-import pafy
-import requests
 import vlc
 
-from src import cache
+from src.music import utils
 from src.music.music_actions import MusicActions
 from src.music.music_callback_handler import MusicCallbackHandler
 from src.music.music_callback_info import MusicCallbackInfo
+from src.music.music_checker import MusicChecker
 from src.music.music_group import MusicGroup
 from src.music.track import Track
 from src.music.track_list import TrackList
@@ -55,65 +51,8 @@ class MusicManager:
         self.groups = tuple(groups)
         self._currently_playing = None
         self._current_player = None
-        self._get_audio_stream = lru_cache(maxsize=50)(self._get_audio_stream)
         self.callback_handler = MusicCallbackHandler(callback_fn=callback_fn)
-        self._check_track_list_names()
-        self._check_tracks_are_valid()
-
-    def _check_tracks_are_valid(self):
-        """
-        Iterates through every track and attempts to get its path. Logs any error and re-raises any exception.
-        """
-        logger.info("Checking that tracks point to valid paths...")
-        valid_youtube_tracks = collections.deque(cache.load(self.VALID_YOUTUBE_TRACKS_CACHE), maxlen=100)
-        for group in self.groups:
-            for track_list in group.track_lists:
-                for track in track_list.tracks:
-                    try:
-                        if not track.is_youtube_link:
-                            self._get_track_path(group, track_list, track)
-                        else:  # This is much faster to check if the link is a YouTube video
-                            if track.file in valid_youtube_tracks:
-                                continue
-                            url = f"https://www.youtube.com/oembed?url={track.file}"
-                            result = requests.get(url)
-                            if result.status_code != 200:
-                                raise RuntimeError(f"The url '{track.file}' is not a valid YouTube video.")
-                            valid_youtube_tracks.append(track.file)
-                    except Exception as ex:
-                        logger.error(f"Track '{track.file}' does not point to a valid path.")
-                        raise ex
-        cache.save(list(valid_youtube_tracks), self.VALID_YOUTUBE_TRACKS_CACHE)
-        logger.info("Success! All tracks point to valid paths.")
-
-    def _check_track_list_names(self):
-        """
-        Iterates through every track list, checks that the names are unique and that their `next` attributes (if set)
-        point to existing track list names.
-
-        Raises a `RuntimeError` if the names are not unique or a `next` attribute points to a non-existing track list.
-        """
-        logger.info("Checking that track lists have unique names and their `next` parameters...")
-        names = set()
-        next_names = set()
-        for group in self.groups:
-            for track_list in group.track_lists:
-                if track_list.name not in names:
-                    names.add(track_list.name)
-                else:
-                    logger.error(f"Found multiple track lists with the same name '{track_list.name}'.")
-                    raise RuntimeError(
-                        f"The names of the track lists must be unique. Found duplicate with name "
-                        f"'{track_list.name}'."
-                    )
-                if track_list.next is not None:
-                    next_names.add(track_list.next)
-        if not next_names.issubset(names):
-            for next_name in next_names:
-                if next_name not in names:
-                    logger.error(f"'{next_name}' points to a non-existing track list.")
-                    raise RuntimeError(f"'{next_name}' points to a non-existing track list.")
-        logger.info("Success! Names are unique and `next` parameters point to existing track lists.")
+        MusicChecker().do_all_checks(self.groups, self.directory)
 
     def __eq__(self, other):
         if isinstance(other, MusicManager):
@@ -205,7 +144,7 @@ class MusicManager:
         Plays the given track from the given track list and group.
         """
         try:
-            path = self._get_track_path(group, track_list, track)
+            path = utils.get_track_path(group, track_list, track, default_dir=self.directory)
         except ValueError:
             logger.error(f"Failed to play '{track.file}'.")
             raise asyncio.CancelledError()
@@ -230,64 +169,6 @@ class MusicManager:
                 await self.set_volume(0, set_global=False)
                 raise
         logger.info(f"Finished playing: {track.file}")
-
-    def _get_track_path(self, group: MusicGroup, track_list: TrackList, track: Track) -> str:
-        """
-        Returns the path of the `Track` instance that should be played.
-
-        If the `file` attribute is a link to a YouTube video, get the corresponding
-        URL for the best audio stream and return it.
-
-        Otherwise assume that the `file` attribute refers to a file location. Return the file path.
-        Raises a `ValueError` if the file path is not valid.
-
-        :param group: `MusicGroup` where the `track_list` is in
-        :param track_list: `TrackList` where the `track` is in
-        :param track: the `Track` instance that should be played
-        :return: path to the `track` location that the VLC player can understand
-        """
-        if track.is_youtube_link:
-            return self._get_audio_stream(track.file)
-        else:  # is regular file
-            try:
-                root_directory = self._get_track_list_root_directory(group, track_list)
-            except ValueError:
-                logger.error(
-                    f"Unknown directory for {track.file}. "
-                    f"You have to specify the directory on either the global level, "
-                    f"group level or track list level."
-                )
-                raise ValueError
-            file_path = os.path.join(root_directory, track.file)
-            if not os.path.isfile(file_path):
-                logger.error(f"File {file_path} does not exist")
-                raise ValueError
-            return file_path
-
-    def _get_audio_stream(self, youtube_url: str):
-        """
-        Returns the url to the audio stream of the given url corresponding to a YouTube video.
-        """
-        youtube_video = pafy.new(youtube_url)
-        best_audio_stream = youtube_video.getbestaudio()
-        return best_audio_stream.url
-
-    def _get_track_list_root_directory(self, group: MusicGroup, track_list: TrackList) -> str:
-        """
-        Returns the root directory of the track list.
-
-        Lookup order:
-        1. the directory specified directly on the track list
-        2. the directory specified on the group
-        3. the global directory specified
-
-        If none of the above exists, raise a ValueError.
-        """
-        root_directory = track_list.directory if track_list.directory is not None else group.directory
-        root_directory = root_directory if root_directory is not None else self.directory
-        if root_directory is None:
-            raise ValueError("Missing directory")
-        return root_directory
 
     async def _wait_for_current_player_to_be_playing(self):
         """

@@ -16,7 +16,7 @@ class TestMusicManager:
     @pytest.fixture
     def example_music_manager(self, example_config, monkeypatch):
         with monkeypatch.context() as m:
-            m.setattr("src.music.music_manager.MusicManager._check_tracks_are_valid", MagicMock())
+            m.setattr("src.music.music_manager.MusicChecker", MagicMock())
             manager = MusicManager(config=example_config["music"])
         return manager
 
@@ -94,161 +94,11 @@ class TestMusicManager:
         assert config != manager
         assert manager != config
 
-    def test_check_tracks_are_valid_is_called_on_initialization(self, monkeypatch):
-        check_tracks_are_valid_mock = MagicMock()
-        monkeypatch.setattr("src.music.music_manager.MusicManager._check_tracks_are_valid", check_tracks_are_valid_mock)
-        _ = MusicManager({"volume": 1, "groups": []})
-        check_tracks_are_valid_mock.assert_called_once()
-
-    def test_check_tracks_are_valid(self, monkeypatch):
-        get_track_path_mock = MagicMock()
-        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", get_track_path_mock)
-        manager = MusicManager(
-            {
-                "volume": 1,
-                "groups": [
-                    {
-                        "name": "Group 1",
-                        "track_lists": [{"name": "Track List 1", "tracks": ["track-1.mp3", "track-2.mp3"]}],
-                    },
-                    {"name": "Group 2", "track_lists": [{"name": "Track List 2", "tracks": ["track-3.mp3"]}]},
-                ],
-            }
-        )
-        group_1 = manager.groups[0]
-        group_2 = manager.groups[1]
-        expected_calls = [
-            call(group_1, group_1.track_lists[0], group_1.track_lists[0]._tracks[0]),
-            call(group_1, group_1.track_lists[0], group_1.track_lists[0]._tracks[1]),
-            call(group_2, group_2.track_lists[0], group_2.track_lists[0]._tracks[0]),
-        ]
-        assert get_track_path_mock.call_count == 3  # There are three tracks in total to check
-        get_track_path_mock.assert_has_calls(expected_calls, any_order=True)
-
-    def test_check_tracks_are_valid_does_not_raise_on_valid_youtube_video(self, monkeypatch):
-        config = {
-            "volume": 1,
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "track_lists": [
-                        {
-                            "name": "Track List 1",
-                            "tracks": ["https://www.youtube.com/watch?v=hKRUPYrAQoE"],  # Some existing video
-                        }
-                    ],
-                }
-            ],
-        }
-        _ = MusicManager(config)
-        assert True  # Success if no error was raised
-
-    def test_check_tracks_are_valid_raises_on_private_youtube_video(self, monkeypatch):
-        config = {
-            "volume": 1,
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "track_lists": [
-                        {
-                            "name": "Track List 1",
-                            "tracks": ["https://www.youtube.com/watch?v=lTutay89N6Q"],  # Some private video
-                        }
-                    ],
-                }
-            ],
-        }
-        with pytest.raises(RuntimeError):
-            _ = MusicManager(config)
-
-    def test_check_tracks_are_valid_raises_on_invalid_youtube_video(self, monkeypatch):
-        config = {
-            "volume": 1,
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "track_lists": [
-                        {
-                            "name": "Track List 1",
-                            "tracks": ["https://www.youtube.com/watch?v=l1111111111"],  # Some non-existent video
-                        }
-                    ],
-                }
-            ],
-        }
-        with pytest.raises(RuntimeError):
-            _ = MusicManager(config)
-
-    def test_check_tracks_are_valid_re_raises_exception(self):
-        """
-        Test that `_check_tracks_are_valid()´ re-raises the `ValueError` raised by `_get_track_path()` if the track
-        is not a valid file.
-        """
-        config = {
-            "volume": 1,
-            "groups": [
-                {"name": "Group 1", "track_lists": [{"name": "Track List 1", "tracks": ["file-does-not-exist.mp3"]}]}
-            ],
-        }
-        with pytest.raises(ValueError):
-            _ = MusicManager(config)
-
-    def test_check_track_list_names_is_called_on_initialization(self, monkeypatch):
-        check_track_list_names_mock = MagicMock()
-        monkeypatch.setattr("src.music.music_manager.MusicManager._check_track_list_names", check_track_list_names_mock)
-        _ = MusicManager({"volume": 1, "groups": []})
-        check_track_list_names_mock.assert_called_once()
-
-    def test_check_track_list_names_raises_error_if_duplicate_name(self):
-        """
-        If two tracklists have the same name, raise a `RuntimeError`.
-        """
-        config = {
-            "volume": 1,
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "track_lists": [{"name": "Track List", "tracks": []}, {"name": "Track List", "tracks": []}],
-                }
-            ],
-        }
-        with pytest.raises(RuntimeError):
-            _ = MusicManager(config)
-
-    def test_check_track_list_names_raises_error_if_next_invalid_name(self):
-        """
-        If the `next` attribute of a tracklist is not the name of an existing tracklist, raise a `RuntimeError`.
-        """
-        config = {
-            "volume": 1,
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "track_lists": [{"name": "Track List", "next": "Non-existing Track List", "tracks": []}],
-                }
-            ],
-        }
-        with pytest.raises(RuntimeError):
-            _ = MusicManager(config)
-
-    def test_check_track_list_names(self):
-        """
-        If all names are unique and the `next` attributes are names of existing tracklists, no error should be raised.
-        """
-        config = {
-            "volume": 1,
-            "groups": [
-                {
-                    "name": "Group 1",
-                    "track_lists": [
-                        {"name": "First", "next": "Second", "tracks": []},
-                        {"name": "Second", "tracks": []},
-                    ],
-                }
-            ],
-        }
-        _ = MusicManager(config)
-        assert True  # No error occurred
+    def test_performs_checks_on_initialization(self, monkeypatch):
+        do_all_checks_mock = MagicMock()
+        monkeypatch.setattr("src.music.music_manager.MusicChecker.do_all_checks", do_all_checks_mock)
+        manager = MusicManager({"volume": 1, "directory": "default/dir/", "groups": []})
+        do_all_checks_mock.assert_called_once_with(manager.groups, manager.directory)
 
     async def test_cancel_cancels_currently_playing(self, example_music_manager, monkeypatch):
         """
@@ -435,7 +285,7 @@ class TestMusicManager:
         """
         The _get_track_path() method will raise a ValueError, if it fails. In that case raise a CancelledError.
         """
-        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(side_effect=ValueError))
+        monkeypatch.setattr("src.music.music_manager.utils.get_track_path", MagicMock(side_effect=ValueError))
         group = example_music_manager.groups[0]
         track_list = group.track_lists[0]
         track = track_list.tracks[0]
@@ -449,7 +299,7 @@ class TestMusicManager:
         media_player_mock = MagicMock()
         media_player_mock.play.return_value = -1
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
-        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.utils.get_track_path", MagicMock(return_value="url"))
         group = example_music_manager.groups[0]
         track_list = group.track_lists[0]
         track = track_list.tracks[0]
@@ -468,7 +318,7 @@ class TestMusicManager:
         media_player_mock.get_time = MagicMock(side_effect=asyncio.CancelledError)  # some method in the try block
         set_volume_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
-        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.utils.get_track_path", MagicMock(return_value="url"))
         monkeypatch.setattr(
             "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", CoroutineMock()
         )
@@ -501,7 +351,7 @@ class TestMusicManager:
         wait_for_start_mock = CoroutineMock()
         set_volume_mock = CoroutineMock()  # necessary because it will use asyncio.sleep and mess up the numbers
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
-        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", get_track_path_mock)
+        monkeypatch.setattr("src.music.music_manager.utils.get_track_path", get_track_path_mock)
         monkeypatch.setattr(
             "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", wait_for_start_mock
         )
@@ -526,7 +376,7 @@ class TestMusicManager:
         media_player_mock = MagicMock()
         media_player_mock.is_playing.return_value = False
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
-        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.utils.get_track_path", MagicMock(return_value="url"))
         monkeypatch.setattr(
             "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", CoroutineMock()
         )
@@ -552,7 +402,7 @@ class TestMusicManager:
         media_player_mock.get_time.return_value = 1000
         media_player_mock.stop = MagicMock(side_effect=set_is_playing_to_false)
         monkeypatch.setattr("src.music.music_manager.vlc.MediaPlayer", MagicMock(return_value=media_player_mock))
-        monkeypatch.setattr("src.music.music_manager.MusicManager._get_track_path", MagicMock(return_value="url"))
+        monkeypatch.setattr("src.music.music_manager.utils.get_track_path", MagicMock(return_value="url"))
         monkeypatch.setattr(
             "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", CoroutineMock()
         )
@@ -578,140 +428,6 @@ class TestMusicManager:
         await example_music_manager._wait_for_current_player_to_be_playing()
         assert example_music_manager._current_player.is_playing.call_count == 3
         assert sleep_mock.await_count == 2
-
-    def test_get_track_path_returns_audio_url_if_track_is_youtube_link(self, example_music_manager, monkeypatch):
-        """
-        If the `file` attribute of a `Track` is the link to a YouTube video, return the url of its audio stream.
-        """
-        group = example_music_manager.groups[0]
-        track_list = group.track_lists[0]
-        track = track_list.tracks[0]
-        track.file = "https://www.youtube.com/watch?v=jIxas0a-KgM"
-        pafy_mock = MagicMock()
-        youtube_video_mock = MagicMock()
-        audio_stream_mock = MagicMock()
-        audio_stream_mock.url = "some-url"
-        pafy_mock.new.return_value = youtube_video_mock
-        youtube_video_mock.getbestaudio.return_value = audio_stream_mock
-        monkeypatch.setattr("src.music.music_manager.pafy", pafy_mock)
-        path = example_music_manager._get_track_path(group, track_list, track)
-        assert path == "some-url"
-
-    def test_get_track_path_raises_no_exceptions_if_youtube_link(self, example_music_manager):
-        """
-        This test does not use mocking and ensures that `pafy` and `youtube-dl` do not raise any exceptions when
-        `_get_track_path()` is called and the `Track` is a link to a YouTube video.
-        """
-        group = example_music_manager.groups[0]
-        track_list = group.track_lists[0]
-        track = track_list.tracks[0]
-        track.file = "https://www.youtube.com/watch?v=jIxas0a-KgM"
-        example_music_manager._get_track_path(group, track_list, track)
-        assert True  # Test is a success if no exception has been raised
-
-    def test_get_track_path_returns_file_path_if_track_is_file(self, example_music_manager, monkeypatch):
-        """
-        If the `file` attribute of a `Track` is not the link to a YouTube video, return the file path.
-        """
-        group = example_music_manager.groups[0]
-        track_list = group.track_lists[0]
-        track = track_list.tracks[0]
-        track.file = "file.mp3"
-        monkeypatch.setattr(
-            "src.music.music_manager.MusicManager._get_track_list_root_directory", MagicMock(return_value="root/dir/")
-        )
-        monkeypatch.setattr("src.music.music_manager.os.path.isfile", lambda x: True)
-        path = example_music_manager._get_track_path(group, track_list, track)
-        assert path == "root/dir/file.mp3"
-
-    def test_get_track_path_raises_value_error_if_root_directory_unknown(self, example_music_manager, monkeypatch):
-        """
-        If the `file` attribute of a `Track` is not the link to a YouTube video, return the file path. The file path
-        consists of the root directory combined with the filename. If there is no root directory, raise a `ValueError`.
-        """
-        example_music_manager.directory = None
-        group = example_music_manager.groups[0]
-        group.directory = None
-        track_list = group.track_lists[0]
-        track_list.directory = None
-        track = track_list.tracks[0]
-        track.file = "file.mp3"
-        with pytest.raises(ValueError):
-            example_music_manager._get_track_path(group, track_list, track)
-
-    def test_get_track_path_raises_value_error_if_path_is_not_existing_file(self, example_music_manager, monkeypatch):
-        """
-        If the `file` attribute of a `Track` is not the link to a YouTube video, return the file path. But if the file
-        path does not refer to an existing file, raise a `ValueError`.
-        """
-        group = example_music_manager.groups[0]
-        track_list = group.track_lists[0]
-        track = track_list.tracks[0]
-        track.file = "file.mp3"
-        monkeypatch.setattr(
-            "src.music.music_manager.MusicManager._get_track_list_root_directory", MagicMock(return_value="root/dir/")
-        )  # non-existing dir
-        with pytest.raises(ValueError):
-            example_music_manager._get_track_path(group, track_list, track)
-
-    def test_get_track_list_root_directory_returns_global_directory(self, example_music_manager):
-        """
-        If a directory is specified at the global level and no other level, return the global directory.
-        """
-        example_music_manager.directory = "global/dir"
-        first_group = example_music_manager.groups[0]
-        first_group.directory = None
-        first_track_list_in_first_group = first_group.track_lists[0]
-        first_track_list_in_first_group.directory = None
-        directory = example_music_manager._get_track_list_root_directory(
-            group=first_group, track_list=first_track_list_in_first_group
-        )
-        assert directory == "global/dir"
-
-    def test_get_track_list_root_directory_returns_group_directory(self, example_music_manager):
-        """
-        If a directory is specified at the MusicGroup level and not the TrackList level, return the MusicGroup directory
-        (even if there is a global directory specified).
-        """
-        example_music_manager.directory = "global/dir"
-        first_group = example_music_manager.groups[0]
-        first_group.directory = "group/dir"
-        first_track_list_in_first_group = first_group.track_lists[0]
-        first_track_list_in_first_group.directory = None
-        directory = example_music_manager._get_track_list_root_directory(
-            group=first_group, track_list=first_track_list_in_first_group
-        )
-        assert directory == "group/dir"
-
-    def test_get_track_list_root_directory_returns_track_list_directory(self, example_music_manager):
-        """
-        If a directory is specified at the TrackList, return it (even if there is a global directory and a
-        MusicGroup directory specified).
-        """
-        example_music_manager.directory = "global/dir"
-        first_group = example_music_manager.groups[0]
-        first_group.directory = "group/dir"
-        first_track_list_in_first_group = first_group.track_lists[0]
-        first_track_list_in_first_group.directory = "track/list/dir"
-        directory = example_music_manager._get_track_list_root_directory(
-            group=first_group, track_list=first_track_list_in_first_group
-        )
-        assert directory == "track/list/dir"
-
-    def test_get_track_list_root_directory_raises_value_error_if_no_directory_on_any_level(self, example_music_manager):
-        """
-        If no directory is specified at all (neither the global, MusicGroup or TrackList level),
-        then raise a ValueError.
-        """
-        example_music_manager.directory = None
-        first_group = example_music_manager.groups[0]
-        first_group.directory = None
-        first_track_list_in_first_group = first_group.track_lists[0]
-        first_track_list_in_first_group.directory = None
-        with pytest.raises(ValueError):
-            example_music_manager._get_track_list_root_directory(
-                group=first_group, track_list=first_track_list_in_first_group
-            )
 
     async def test_set_volume_sets_volume_if_global_parameter(self, example_music_manager):
         example_music_manager.volume = 0
