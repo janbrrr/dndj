@@ -9,8 +9,8 @@ env:
   - AUDIODEV=null
 
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install -yq vlc
+  - sudo apt-get -qq update
+  - sudo apt-get install -qq vlc
 
 install:
   - pip install -r requirements-dev.txt
