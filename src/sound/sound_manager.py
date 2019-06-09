@@ -7,11 +7,11 @@ from typing import Callable, Dict, List
 import pygame.mixer
 from aiohttp.web_request import Request
 
-from src.sound import SoundFile
-from src.sound.sound import Sound
+from src.sound import SoundFile, utils
 from src.sound.sound_actions import SoundActions
 from src.sound.sound_callback_handler import SoundCallbackHandler
 from src.sound.sound_callback_info import SoundCallbackInfo
+from src.sound.sound_checker import SoundChecker
 from src.sound.sound_group import SoundGroup
 from src.sound.sound_tracker import SoundTracker
 
@@ -48,29 +48,9 @@ class SoundManager:
         if "sort" not in config or ("sort" in config and config["sort"]):
             groups = sorted(groups, key=lambda x: x.name)
         self.groups = tuple(groups)
-        self._check_sounds_are_valid()
         self.callback_handler = SoundCallbackHandler(callback_fn=callback_fn)
         self.tracker = SoundTracker()
-
-    def _check_sounds_are_valid(self):
-        """
-        Iterates through every sound file and attempts to get its path. Logs any error and raises a `ValueError`
-        if a file path is invalid.
-        """
-        logger.info("Checking that sounds point to valid paths...")
-        for group in self.groups:
-            for sound in group.sounds:
-                try:
-                    root_directory = self._get_sound_root_directory(group, sound)
-                except ValueError as ex:
-                    logger.error(f"Sound '{sound.name}' is missing the directory.")
-                    raise ex
-                for sound_file in sound.files:
-                    file_path = os.path.join(root_directory, sound_file.file)
-                    if not os.path.isfile(file_path):
-                        logger.error(f"File {file_path} does not exist")
-                        raise ValueError
-        logger.info("Success! All sounds point to valid paths.")
+        SoundChecker().do_all_checks(self.groups, self.directory)
 
     @property
     def currently_playing(self) -> List[SoundCallbackInfo]:
@@ -114,7 +94,7 @@ class SoundManager:
         try:
             logger.debug(f"Loading '{sound.name}'")
             sound_file = random.choice(sound.files)
-            root_directory = self._get_sound_root_directory(group, sound)
+            root_directory = utils.get_sound_root_directory(group, sound, default_dir=self.directory)
             await self.callback_handler(action=SoundActions.START, request=request, sound_info=sound_info)
             logger.info(f"Now Playing: {sound.name}")
             await self._play_sound_file(root_directory, sound_file)
@@ -143,23 +123,6 @@ class SoundManager:
             if pygame_sound is not None:
                 pygame_sound.stop()
                 raise
-
-    def _get_sound_root_directory(self, group: SoundGroup, sound: Sound) -> str:
-        """
-        Returns the root directory of the sound.
-
-        Lookup order:
-        1. the directory specified directly on the sound
-        2. the directory specified on the group
-        3. the global directory specified
-
-        If none of the above exists, raise a ValueError.
-        """
-        root_directory = sound.directory if sound.directory is not None else group.directory
-        root_directory = root_directory if root_directory is not None else self.directory
-        if root_directory is None:
-            raise ValueError(f"Sound '{sound.name}' is missing directory.")
-        return root_directory
 
     def set_volume(self, volume):
         """

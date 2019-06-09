@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, call
 import pytest
 from asynctest import CoroutineMock
 
-from src.sound import SoundGroup, SoundManager
+from src.sound import SoundGroup, SoundManager, utils
 
 
 class TestSoundManager:
@@ -16,7 +16,7 @@ class TestSoundManager:
     @pytest.fixture
     def example_sound_manager(self, example_config, monkeypatch):
         with monkeypatch.context() as m:
-            m.setattr("src.sound.sound_manager.SoundManager._check_sounds_are_valid", MagicMock())
+            m.setattr("src.sound.sound_manager.SoundChecker", MagicMock())
             manager = SoundManager(config=example_config["sound"])
         return manager
 
@@ -94,64 +94,11 @@ class TestSoundManager:
         assert config != manager
         assert manager != config
 
-    def test_check_sounds_are_valid_is_called_on_initialization(self, monkeypatch):
-        check_sounds_are_valid_mock = MagicMock()
-        monkeypatch.setattr("src.sound.sound_manager.SoundManager._check_sounds_are_valid", check_sounds_are_valid_mock)
-        _ = SoundManager({"volume": 1, "groups": []})
-        check_sounds_are_valid_mock.assert_called_once()
-
-    def test_check_sounds_are_valid(self, monkeypatch):
-        get_sound_root_directory_mock = MagicMock(return_value="root")
-        is_file_mock = MagicMock()
-        monkeypatch.setattr(
-            "src.sound.sound_manager.SoundManager._get_sound_root_directory", get_sound_root_directory_mock
-        )
-        monkeypatch.setattr("src.sound.sound_manager.os.path.isfile", is_file_mock)
-        manager = SoundManager(
-            {
-                "volume": 1,
-                "groups": [
-                    {"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["sound-1.wav", "sound-2.wav"]}]},
-                    {"name": "Group 2", "sounds": [{"name": "Sound 2", "files": ["sound-3.wav"]}]},
-                ],
-            }
-        )
-        group_1 = manager.groups[0]
-        group_2 = manager.groups[1]
-        expected_get_root_calls = [call(group_1, group_1.sounds[0]), call(group_2, group_2.sounds[0])]
-        assert get_sound_root_directory_mock.call_count == 2  # There are two sounds in total
-        get_sound_root_directory_mock.assert_has_calls(expected_get_root_calls, any_order=True)
-        expected_is_file_calls = [
-            call(os.path.join("root", group_1.sounds[0].files[0].file)),
-            call(os.path.join("root", group_1.sounds[0].files[1].file)),
-            call(os.path.join("root", group_2.sounds[0].files[0].file)),
-        ]
-        assert is_file_mock.call_count == 3  # There are three sound files in total to check
-        is_file_mock.assert_has_calls(expected_is_file_calls, any_order=True)
-
-    def test_check_sounds_are_valid_re_raises_exception(self):
-        """
-        Test that `_check_sounds_are_valid()´ re-raises the `ValueError` raised by `_get_sound_root_directory()`
-        if the sound has no root directory.
-        """
-        config = {
-            "volume": 1,
-            "groups": [{"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["no-directory.wav"]}]}],
-        }
-        with pytest.raises(ValueError):
-            _ = SoundManager(config)
-
-    def test_check_sounds_are_valid_raises_exception_if_file_invalid(self):
-        """
-        Test that `_check_sounds_are_valid()´ raises a `ValueError` if the file path of a sound is invalid.
-        """
-        config = {
-            "volume": 1,
-            "directory": "",
-            "groups": [{"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["file-does-not-exist.wav"]}]}],
-        }
-        with pytest.raises(ValueError):
-            _ = SoundManager(config)
+    def test_performs_checks_on_initialization(self, monkeypatch):
+        do_all_checks_mock = MagicMock()
+        monkeypatch.setattr("src.sound.sound_manager.SoundChecker.do_all_checks", do_all_checks_mock)
+        manager = SoundManager({"volume": 1, "directory": "default/dir/", "groups": []})
+        do_all_checks_mock.assert_called_once_with(manager.groups, manager.directory)
 
     async def test_play_sound_uses_correct_file_path(self, example_sound_manager, monkeypatch):
         """
@@ -166,7 +113,10 @@ class TestSoundManager:
         sound_file = sound.files[0]
         await example_sound_manager._play_sound(MagicMock(), 0, 0)
         sound_class_mock.assert_called_once_with(
-            os.path.join(example_sound_manager._get_sound_root_directory(group, sound), sound_file.file)
+            os.path.join(
+                utils.get_sound_root_directory(group, sound, default_dir=example_sound_manager.directory),
+                sound_file.file,
+            )
         )
 
     async def test_play_sound_file_sets_volume_and_plays(self, example_sound_manager, monkeypatch):
@@ -237,55 +187,6 @@ class TestSoundManager:
             call.stop(),
         ]
         assert sound_instance_mock.mock_calls == expected_calls
-
-    def test_get_sound_root_directory_returns_global_directory(self, example_sound_manager):
-        """
-        If a directory is specified at the global level and no other level, return the global directory.
-        """
-        example_sound_manager.directory = "global/dir"
-        first_group = example_sound_manager.groups[0]
-        first_group.directory = None
-        first_sound_in_first_group = first_group.sounds[0]
-        first_sound_in_first_group.directory = None
-        directory = example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
-        assert directory == "global/dir"
-
-    def test_get_sound_root_directory_returns_group_directory(self, example_sound_manager):
-        """
-        When a directory is specified for a SoundGroup and no directory is specified for the Sound, the
-        group directory should be returned (not the global directory).
-        """
-        example_sound_manager.directory = "global/dir"
-        first_group = example_sound_manager.groups[0]
-        first_group.directory = "group/dir"
-        first_sound_in_first_group = first_group.sounds[0]
-        first_sound_in_first_group.directory = None
-        directory = example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
-        assert directory == "group/dir"
-
-    def test_get_sound_root_directory_returns_sound_directory(self, example_sound_manager):
-        """
-        When a directory is specified for a Sound, it should be returned (not the global or group directory).
-        """
-        example_sound_manager.directory = "global/dir"
-        first_group = example_sound_manager.groups[0]
-        first_group.directory = "group/dir"
-        first_sound_in_first_group = first_group.sounds[0]
-        first_sound_in_first_group.directory = "sound/dir"
-        directory = example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
-        assert directory == "sound/dir"
-
-    def test_get_sound_root_directory_raises_value_error_if_no_directory_on_any_level(self, example_sound_manager):
-        """
-        If no directory is specified at all (neither the global, group or sound level), then raise a ValueError.
-        """
-        example_sound_manager.directory = None
-        first_group = example_sound_manager.groups[0]
-        first_group.directory = None
-        first_sound_in_first_group = first_group.sounds[0]
-        first_sound_in_first_group.directory = None
-        with pytest.raises(ValueError):
-            example_sound_manager._get_sound_root_directory(group=first_group, sound=first_sound_in_first_group)
 
     def test_set_volume(self, example_sound_manager):
         example_sound_manager.volume = 1
