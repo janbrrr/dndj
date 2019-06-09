@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 
 import pkg_resources
 import requests
@@ -17,9 +18,9 @@ def check_youtube_dl_version() -> bool:
     tags = result.json()
     latest_tag = tags[0]["name"]
     latest_version = datetime.datetime.strptime(latest_tag, "%Y.%m.%d")
-    try:
+    if os.name == "nt":
         latest_version = latest_version.strftime("%Y.%#m.%#d")  # Windows uses #
-    except Exception:
+    else:
         latest_version = latest_version.strftime("%Y.%-m.%-d")  # Other OS use -
     current_version = pkg_resources.get_distribution("youtube-dl").version
     is_latest_version = current_version == latest_version
