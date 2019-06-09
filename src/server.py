@@ -17,7 +17,7 @@ from src.sound import SoundActions, SoundCallbackInfo, SoundManager
 
 
 logging.basicConfig(
-    format="%(asctime)s | %(levelname)-6s | %(name)-25s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S"
+    format="%(asctime)s | %(levelname)-7s | %(name)-25s: %(message)s", level=logging.INFO, datefmt="%H:%M:%S"
 )
 logger = logging.getLogger(__name__)
 
