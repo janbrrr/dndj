@@ -177,7 +177,7 @@ and a list of `groups` that will be used.
 
 ```yaml
 sound:
-  volume: 1               # value from 0 (mute) to 1 (max)
+  volume: 1               # value from 0 (mute) to 1 (max) (master volume, each sound has its own volume)
   directory: path/to/dir  # (Optional) used if all files are in the same dir
   sort: true              # (Optional, default=true) whether to sort the groups alphabetically
   groups: []              # a list of groups
@@ -214,6 +214,7 @@ sound:
     sounds:
     - name: Sword Hit
       directory: path/to/dir  # (Optional) used if all files of a sound are in the same dir
+      volume: 0.5             # (Optional, default=1) value from 0 (mute) to 1 (max)
       files: []               # a list of sound files
 ```
 

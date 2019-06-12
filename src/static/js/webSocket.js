@@ -48,10 +48,16 @@ function connect() {
                 displayToast("Music", "Set volume to <strong>" + data.volume + "</strong>.");
                 break;
             }
-            case "setSoundVolume": {
+            case "setSoundMasterVolume": {
                 $("#sound-volume").slider('setValue', data.volume);
-                console.log("Sound volume set to " + data.volume);
-                displayToast("Sound", "Set volume to <strong>" + data.volume + "</strong>.");
+                console.log("Sound master volume set to " + data.volume);
+                displayToast("Sound", "Set master volume to <strong>" + data.volume + "</strong>.");
+                break;
+            }
+            case "setSoundVolume": {
+                $("#sound-volume-" + data.groupIndex + "-" + data.soundIndex).slider('setValue', data.volume);
+                console.log("Sound volume for group=" + data.groupIndex + ", sound=" + data.soundIndex +
+                    "set to " + data.volume);
                 break;
             }
             case "soundPlaying": {

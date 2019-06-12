@@ -119,8 +119,8 @@
         </div>
         <div class="tab-pane fade" id="sound" role="tabpanel" aria-labelledby="sound-tab">
             <p>
-                Volume
-                <input id="sound-volume" type="text" data-slider-min="0" data-slider-max="1"
+                Master Volume
+                <input id="sound-master-volume" type="text" data-slider-min="0" data-slider-max="1"
                        data-slider-step="0.05" data-slider-value="{{ sound.volume }}"/>
             </p>
             <hr class="row">
@@ -144,21 +144,29 @@
                             {% if group.sounds %}
                             {% for _sound in group.sounds %}
                             <div class="col-12 col-sm-6 col-xl-4 group-item">
-                                <button type="button"
-                                        {% if (outer_loop.index0, loop.index0) in sound.sounds_currently_playing %}
-                                            class="btn playing"
-                                        {% else %}
-                                            class="btn"
-                                        {% endif %}
-                                        id="btn-sound-{{ outer_loop.index0 }}-{{ loop.index0 }}"
-                                        onclick="playSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
-                                    <i class="fas fa-play play-icon"></i>
+                                <div>
                                     {{ _sound.name }}
-                                </button>
-                                <button type="button" class="btn"
-                                        onclick="stopSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
-                                    <i class="fas fa-stop"></i>
-                                </button>
+                                </div>
+                                <div>
+                                    <button type="button"
+                                            {% if (outer_loop.index0, loop.index0) in sound.sounds_currently_playing %}
+                                                class="btn playing"
+                                            {% else %}
+                                                class="btn"
+                                            {% endif %}
+                                            id="btn-sound-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                                            onclick="playSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                                        <i class="fas fa-play play-icon"></i>
+                                    </button>
+                                    <button type="button" class="btn"
+                                            onclick="stopSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                                        <i class="fas fa-stop"></i>
+                                    </button>
+                                    <input id="sound-volume-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                                           class="sound-volume" type="text" data-slider-min="0" data-slider-max="1"
+                                           data-slider-step="0.05" data-slider-value="{{ _sound.volume }}"
+                                           data-group-index="{{ outer_loop.index0 }}" data-sound-index="{{ loop.index0 }}"/>
+                                </div>
                             </div>
                             {% endfor %}
                             {% else %}

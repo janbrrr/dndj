@@ -7,7 +7,7 @@ from typing import Callable, Dict, List
 import pygame.mixer
 from aiohttp.web_request import Request
 
-from src.sound import SoundFile, utils
+from src.sound import utils
 from src.sound.sound_actions import SoundActions
 from src.sound.sound_callback_handler import SoundCallbackHandler
 from src.sound.sound_callback_info import SoundCallbackInfo
@@ -50,7 +50,14 @@ class SoundManager:
         self.groups = tuple(groups)
         self.callback_handler = SoundCallbackHandler(callback_fn=callback_fn)
         self.tracker = SoundTracker()
+        self.players = {}
         SoundChecker().do_all_checks(self.groups, self.directory)
+
+    def _get_player_key(self, group_index: int, sound_index: int):
+        """
+        Returns the dictionary key for the dictionary of player instances at `self.players`.
+        """
+        return f"{group_index}-{sound_index}"
 
     @property
     def currently_playing(self) -> List[SoundCallbackInfo]:
@@ -93,11 +100,9 @@ class SoundManager:
         sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name)
         try:
             logger.debug(f"Loading '{sound.name}'")
-            sound_file = random.choice(sound.files)
-            root_directory = utils.get_sound_root_directory(group, sound, default_dir=self.directory)
             await self.callback_handler(action=SoundActions.START, request=request, sound_info=sound_info)
             logger.info(f"Now Playing: {sound.name}")
-            await self._play_sound_file(root_directory, sound_file)
+            await self._play_sound_file(group_index, sound_index)
             await self.callback_handler(action=SoundActions.FINISH, request=request, sound_info=sound_info)
             logger.info(f"Finished playing: {sound.name}")
         except asyncio.CancelledError:
@@ -105,14 +110,19 @@ class SoundManager:
             await self.callback_handler(action=SoundActions.STOP, request=request, sound_info=sound_info)
             raise
 
-    async def _play_sound_file(self, root_directory: str, sound_file: SoundFile):
+    async def _play_sound_file(self, group_index: int, sound_index: int):
         """
-        Plays the given sound file.
+        Plays a sound file from the given group and sound.
         """
+        group = self.groups[group_index]
+        sound = group.sounds[sound_index]
+        root_directory = utils.get_sound_root_directory(group, sound, default_dir=self.directory)
+        sound_file = random.choice(sound.files)
         pygame_sound = None
         try:
             pygame_sound = pygame.mixer.Sound(os.path.join(root_directory, sound_file.file))
-            pygame_sound.set_volume(self.volume)
+            self.players[self._get_player_key(group_index, sound_index)] = pygame_sound
+            pygame_sound.set_volume(self.volume * sound.volume)
             if sound_file.end_at is not None:
                 pygame_sound.play(maxtime=sound_file.end_at)
                 await asyncio.sleep(sound_file.end_at / 1000)
@@ -122,16 +132,33 @@ class SoundManager:
         except asyncio.CancelledError:
             if pygame_sound is not None:
                 pygame_sound.stop()
+                del self.players[self._get_player_key(group_index, sound_index)]
                 raise
 
-    def set_volume(self, volume):
+    def set_master_volume(self, volume: float):
         """
-        Sets the volume for the sounds.
+        Sets the master volume for the sounds.
 
         :param volume: new volume, a value between 0 (mute) and 1 (max)
         """
         self.volume = volume
         logger.debug(f"Changed sound volume to {volume}")
+
+    def set_sound_volume(self, group_index: int, sound_index: int, volume: float):
+        """
+        Sets the volume for a specific sound. If the sound is currently being played, the volume of the player is
+        updated.
+
+        :param group_index: index of the group of the sound
+        :param sound_index: index of the sound in the group
+        :param volume: new volume, a value between 0 (mute) and 1 (max)
+        """
+        sound = self.groups[group_index].sounds[sound_index]
+        sound.volume = volume
+        player_key = self._get_player_key(group_index, sound_index)
+        if player_key in self.players:
+            self.players[player_key].set_volume(self.volume * sound.volume)
+        logger.debug(f"Changed sound volume for group={group_index}, sound={sound_index} to {volume}")
 
     def __eq__(self, other):
         if isinstance(other, SoundManager):

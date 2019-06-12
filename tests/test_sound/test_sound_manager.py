@@ -131,13 +131,15 @@ class TestSoundManager:
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.sound.sound_manager.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
         monkeypatch.setattr("src.sound.sound_manager.asyncio.sleep", sleep_mock)
+        example_sound_manager.volume = 0.5
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
+        sound.volume = 0.5
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
         sound_file = sound.files[0]
         sound_file.end_at = None  # Test without end_at
-        await example_sound_manager._play_sound_file("root", sound_file)
-        sound_instance_mock.set_volume.assert_called_once_with(example_sound_manager.volume)
+        await example_sound_manager._play_sound_file(0, 0)
+        sound_instance_mock.set_volume.assert_called_once_with(example_sound_manager.volume * sound.volume)
         sound_instance_mock.play.assert_called_once_with()
         sound_instance_mock.get_length.assert_called_once()
         sleep_mock.assert_called_once_with(42)  # same as sound_instance.get_length()
@@ -155,13 +157,15 @@ class TestSoundManager:
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.sound.sound_manager.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
         monkeypatch.setattr("src.sound.sound_manager.asyncio.sleep", sleep_mock)
+        example_sound_manager.volume = 0.5
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
+        sound.volume = 0.5
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
         sound_file = sound.files[0]
         sound_file.end_at = 4000
-        await example_sound_manager._play_sound_file("root", sound_file)
-        sound_instance_mock.set_volume.assert_called_once_with(example_sound_manager.volume)
+        await example_sound_manager._play_sound_file(0, 0)
+        sound_instance_mock.set_volume.assert_called_once_with(example_sound_manager.volume * sound.volume)
         sound_instance_mock.play.assert_called_once_with(maxtime=sound_file.end_at)
         sleep_mock.assert_called_once_with(sound_file.end_at / 1000)  # in seconds
 
@@ -173,25 +177,42 @@ class TestSoundManager:
         monkeypatch.setattr("src.sound.sound_manager.pygame.mixer.Sound", MagicMock(return_value=sound_instance_mock))
         # Waiting for the sound to end (aka. sleeping) will cause a CancelledError via a side effect
         monkeypatch.setattr("src.sound.sound_manager.asyncio.sleep", CoroutineMock(side_effect=asyncio.CancelledError))
+        example_sound_manager.volume = 0.5
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
+        sound.volume = 0.5
         assert len(sound.files) == 1  # make sure it is only one since they are chosen at random
         sound_file = sound.files[0]
         sound_file.end_at = None  # Test without end_at
         with pytest.raises(asyncio.CancelledError):
-            await example_sound_manager._play_sound_file("root", sound_file)
+            await example_sound_manager._play_sound_file(0, 0)
         expected_calls = [
-            call.set_volume(example_sound_manager.volume),
+            call.set_volume(example_sound_manager.volume * sound.volume),
             call.play(),
             call.get_length(),  # to sleep for this length
             call.stop(),
         ]
         assert sound_instance_mock.mock_calls == expected_calls
 
-    def test_set_volume(self, example_sound_manager):
+    def test_set_master_volume(self, example_sound_manager):
         example_sound_manager.volume = 1
-        example_sound_manager.set_volume(0)
+        example_sound_manager.set_master_volume(0)
         assert example_sound_manager.volume == 0
+
+    def test_set_volume(self, example_sound_manager):
+        group = example_sound_manager.groups[0]
+        sound = group.sounds[0]
+        sound.volume = 1
+        example_sound_manager.set_sound_volume(group_index=0, sound_index=0, volume=0.5)
+        assert sound.volume == 0.5
+
+    def test_set_volume_sets_volume_on_player(self, example_sound_manager):
+        player_key = example_sound_manager._get_player_key(0, 0)
+        player_mock = MagicMock()
+        example_sound_manager.players[player_key] = player_mock
+        example_sound_manager.volume = 0.5
+        example_sound_manager.set_sound_volume(group_index=0, sound_index=0, volume=0.5)
+        player_mock.set_volume.assert_called_once_with(example_sound_manager.volume * 0.5)
 
     async def test_currently_playing(self, example_sound_manager, loop):
         """
@@ -212,3 +233,4 @@ class TestSoundManager:
         assert currently_playing[1].group_name == example_sound_manager.groups[0].name
         assert currently_playing[1].sound_index == 1
         assert currently_playing[1].sound_name == example_sound_manager.groups[0].sounds[1].name
+        await asyncio.gather(dummy_task_one, dummy_task_two)

@@ -24,13 +24,27 @@ function stopSound(groupIndex, soundIndex) {
     conn.send(JSON.stringify(toSend));
 }
 
-function setSoundVolume(volume) {
+function setSoundMasterVolume(volume) {
+    if (conn === null) {
+        onNotConnected();
+        return;
+    }
+    const toSend = {
+        "action": "setSoundMasterVolume",
+        "volume": volume,
+    };
+    conn.send(JSON.stringify(toSend));
+}
+
+function setSoundVolume(groupIndex, soundIndex, volume) {
     if (conn === null) {
         onNotConnected();
         return;
     }
     const toSend = {
         "action": "setSoundVolume",
+        "groupIndex": groupIndex,
+        "soundIndex": soundIndex,
         "volume": volume,
     };
     conn.send(JSON.stringify(toSend));

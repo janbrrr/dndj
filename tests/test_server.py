@@ -42,7 +42,6 @@ class TestServer:
         monkeypatch.setattr(MusicManager, "_play_track", CoroutineMock())
         monkeypatch.setattr(MusicManager, "set_volume", CoroutineMock())
         monkeypatch.setattr(SoundManager, "_play_sound_file", CoroutineMock())
-        monkeypatch.setattr(SoundManager, "set_volume", MagicMock())
         with monkeypatch.context() as m:
             m.setattr("src.music.music_manager.MusicChecker", MagicMock())
             m.setattr("src.sound.sound_manager.SoundChecker", MagicMock())
@@ -143,9 +142,16 @@ class TestServer:
             "soundName": "Footsteps on Dry Leaves",
         }
 
+    async def test_client_can_set_sound_master_volume(self, patched_example_client):
+        ws_resp = await patched_example_client.ws_connect("/")
+        set_sound_master_volume_request = {"action": "setSoundMasterVolume", "volume": 0.25}
+        await ws_resp.send_str(json.dumps(set_sound_master_volume_request))
+        resp = await ws_resp.receive()
+        assert json.loads(resp.data) == {"action": "setSoundMasterVolume", "volume": 0.25}
+
     async def test_client_can_set_sound_volume(self, patched_example_client):
         ws_resp = await patched_example_client.ws_connect("/")
-        set_sound_volume_request = {"action": "setSoundVolume", "volume": 0.25}
+        set_sound_volume_request = {"action": "setSoundVolume", "groupIndex": 0, "soundIndex": 0, "volume": 0.25}
         await ws_resp.send_str(json.dumps(set_sound_volume_request))
         resp = await ws_resp.receive()
-        assert json.loads(resp.data) == {"action": "setSoundVolume", "volume": 0.25}
+        assert json.loads(resp.data) == {"action": "setSoundVolume", "groupIndex": 0, "soundIndex": 0, "volume": 0.25}
