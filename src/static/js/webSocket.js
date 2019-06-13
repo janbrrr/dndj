@@ -62,13 +62,19 @@ function connect() {
             }
             case "soundPlaying": {
                 $("#group-sound-" + data.groupIndex).addClass("playing");
-                $("#btn-sound-" + data.groupIndex + "-" + data.soundIndex).addClass("playing");
+                const playButton = $("#btn-sound-play-" + data.groupIndex + "-" + data.soundIndex);
+                const stopButton = $("#btn-sound-stop-" + data.groupIndex + "-" + data.soundIndex);
+                playButton.addClass("hidden");
+                stopButton.removeClass("hidden").addClass("playing");
                 console.log("Now playing sound " + data.soundName + " (group " + data.groupIndex + " at index "
                     + data.soundIndex + ")");
                 break;
             }
             case "soundStopped": {
-                $("#btn-sound-" + data.groupIndex + "-" + data.soundIndex).removeClass("playing");
+                const playButton = $("#btn-sound-play-" + data.groupIndex + "-" + data.soundIndex);
+                const stopButton = $("#btn-sound-stop-" + data.groupIndex + "-" + data.soundIndex);
+                stopButton.removeClass("playing").addClass("hidden");
+                playButton.removeClass("hidden");
                 const groupElement = $("#group-sound-" + data.groupIndex);
                 if (groupElement.find(".playing").length === 0) {
                     groupElement.removeClass("playing");
@@ -78,7 +84,10 @@ function connect() {
                 break;
             }
             case "soundFinished": {
-                $("#btn-sound-" + data.groupIndex + "-" + data.soundIndex).removeClass("playing");
+                const playButton = $("#btn-sound-play-" + data.groupIndex + "-" + data.soundIndex);
+                const stopButton = $("#btn-sound-stop-" + data.groupIndex + "-" + data.soundIndex);
+                stopButton.removeClass("playing").addClass("hidden");
+                playButton.removeClass("hidden");
                 const groupElement = $("#group-sound-" + data.groupIndex);
                 if (groupElement.find(".playing").length === 0) {
                     groupElement.removeClass("playing");

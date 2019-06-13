@@ -149,18 +149,24 @@
                                 </div>
                                 <div>
                                     <button type="button"
+                                        {% if (outer_loop.index0, loop.index0) in sound.sounds_currently_playing %}
+                                            class="btn hidden"
+                                        {% else %}
+                                            class="btn"
+                                        {% endif %}
+                                        id="btn-sound-play-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                                        onclick="playSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                                        <i class="fas fa-play play-icon"></i>
+                                    </button>
+                                    <button type="button"
                                             {% if (outer_loop.index0, loop.index0) in sound.sounds_currently_playing %}
                                                 class="btn playing"
                                             {% else %}
-                                                class="btn"
+                                                class="btn hidden"
                                             {% endif %}
-                                            id="btn-sound-{{ outer_loop.index0 }}-{{ loop.index0 }}"
-                                            onclick="playSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
-                                        <i class="fas fa-play play-icon"></i>
-                                    </button>
-                                    <button type="button" class="btn"
+                                            id="btn-sound-stop-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                                             onclick="stopSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
-                                        <i class="fas fa-stop"></i>
+                                        <i class="fas fa-stop play-icon"></i>
                                     </button>
                                     <input id="sound-volume-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                                            class="sound-volume" type="text" data-slider-min="0" data-slider-max="1"

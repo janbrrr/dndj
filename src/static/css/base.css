@@ -51,3 +51,7 @@
 #toast-container {
     z-index: 1030;
 }
+
+.hidden {
+    display: none;
+}
