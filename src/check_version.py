@@ -1,6 +1,4 @@
-import datetime
 import logging
-import os
 
 import pkg_resources
 import requests
@@ -14,14 +12,8 @@ def check_youtube_dl_version() -> bool:
     Returns `False` if a new version of the 'youtube-dl' package is available.
     If that is the case, this information will be logged.
     """
-    result = requests.get("https://api.github.com/repos/ytdl-org/youtube-dl/tags")
-    tags = result.json()
-    latest_tag = tags[0]["name"]
-    latest_version = datetime.datetime.strptime(latest_tag, "%Y.%m.%d")
-    if os.name == "nt":
-        latest_version = latest_version.strftime("%Y.%#m.%#d")  # Windows uses #
-    else:
-        latest_version = latest_version.strftime("%Y.%-m.%-d")  # Other OS use -
+    result = requests.get("https://pypi.org/pypi/youtube_dl/json")
+    latest_version = result.json()["info"]["version"]
     current_version = pkg_resources.get_distribution("youtube-dl").version
     is_latest_version = current_version == latest_version
     if not is_latest_version:
