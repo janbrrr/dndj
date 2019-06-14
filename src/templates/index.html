@@ -60,7 +60,7 @@
                 Now Playing
                 <strong>
                     <span id="now-playing" class="ml-2">
-                        {% if music.currently_playing %}
+                        {% if music.currently_playing.0 %}
                             {{ music.currently_playing.1 }} > {{ music.currently_playing.3 }}
                         {% else %}
                             -

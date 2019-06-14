@@ -118,7 +118,7 @@ class Server:
                 track_list_index = int(data_dict["trackListIndex"])
                 await self._play_music(request, group_index, track_list_index)
         elif action == "stopMusic":
-            await self._stop_music(request)
+            await self._stop_music()
         elif action == "setMusicVolume":
             if "volume" in data_dict:
                 volume = float(data_dict["volume"])
@@ -146,23 +146,21 @@ class Server:
 
     async def _play_music(self, request, group_index, track_list_index):
         """
-        Starts to play the music and notifies all connected web sockets.
+        Starts to play the music.
         """
         await self.music.play_track_list(request, group_index, track_list_index)
 
-    async def _stop_music(self, request):
+    async def _stop_music(self):
         """
-        Stops the music and notifies all connected web sockets.
+        Stops the music.
         """
-        await self.music.cancel(request)
+        await self.music.cancel()
 
     async def _set_music_volume(self, request, volume):
         """
-        Sets the music volume and notifies all connected web sockets.
+        Sets the music volume.
         """
-        await self.music.set_volume(volume, seconds=1)
-        for ws in request.app["websockets"].values():
-            await ws.send_json({"action": "setMusicVolume", "volume": volume})
+        await self.music.set_volume(request, volume)
 
     async def _play_sound(self, request, group_index, sound_index):
         """
@@ -194,7 +192,7 @@ class Server:
                 {"action": "setSoundVolume", "groupIndex": group_index, "soundIndex": sound_index, "volume": volume}
             )
 
-    async def on_music_changes(self, action: MusicActions, request: Request, music_info: Optional[MusicCallbackInfo]):
+    async def on_music_changes(self, action: MusicActions, request: Request, music_info: MusicCallbackInfo):
         """
         Callback function used by the `MusicManager` at `self.music`.
 
@@ -220,6 +218,10 @@ class Server:
             logger.debug(f"Music Callback: Finish")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "musicFinished"})
+        elif action == MusicActions.VOLUME:
+            logger.debug(f"Music Callback: Volume")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "setMusicVolume", "volume": music_info.volume})
 
     async def on_sound_changes(self, action: SoundActions, request: Request, sound_info: Optional[SoundCallbackInfo]):
         """

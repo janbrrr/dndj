@@ -40,7 +40,6 @@ class TestServer:
         example_config_file = tmp_path / "config.yaml"
         example_config_file.write_text(example_config_str)
         monkeypatch.setattr(MusicManager, "_play_track", CoroutineMock())
-        monkeypatch.setattr(MusicManager, "set_volume", CoroutineMock())
         monkeypatch.setattr(SoundManager, "_play_sound_file", CoroutineMock())
         with monkeypatch.context() as m:
             m.setattr("src.music.music_manager.MusicChecker", MagicMock())
@@ -83,8 +82,13 @@ class TestServer:
             "trackName": "Forest Music",
         }
 
-    async def test_client_can_request_music_to_stop(self, patched_example_client):
+    async def test_client_can_request_music_to_stop(self, patched_example_client, monkeypatch):
+        # Mock playing the music with sleeping to keep the task alive such that the client can cancel it
+        monkeypatch.setattr(MusicManager, "_play_track", CoroutineMock(return_value=asyncio.sleep(5)))
         ws_resp = await patched_example_client.ws_connect("/")
+        play_music_request = {"action": "playMusic", "groupIndex": 0, "trackListIndex": 1}
+        await ws_resp.send_str(json.dumps(play_music_request))
+        resp = await ws_resp.receive()  # Receive message that the music started playing
         stop_music_request = {"action": "stopMusic"}
         await ws_resp.send_str(json.dumps(stop_music_request))
         resp = await ws_resp.receive()

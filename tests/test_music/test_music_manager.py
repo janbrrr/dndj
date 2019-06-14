@@ -111,7 +111,7 @@ class TestMusicManager:
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock(side_effect=reset))
         currently_playing_mock = MagicMock()
         example_music_manager._currently_playing = currently_playing_mock
-        await example_music_manager.cancel(request=None)
+        await example_music_manager.cancel()
         assert example_music_manager._currently_playing is None
         currently_playing_mock.task.cancel.assert_called_once()
 
@@ -322,7 +322,7 @@ class TestMusicManager:
         monkeypatch.setattr(
             "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", CoroutineMock()
         )
-        monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", set_volume_mock)
+        monkeypatch.setattr("src.music.music_manager.MusicManager._set_volume", set_volume_mock)
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         group = example_music_manager.groups[0]
         track_list = group.track_lists[0]
@@ -340,7 +340,7 @@ class TestMusicManager:
         - Create a MediaPlayer instance
         - Call the play() method on the media player
         - Wait for it to start playing
-        - Set the volume with set_volume()
+        - Set the volume with _set_volume()
         - While the media player is_playing(), wait
         """
         media_player_mock = MagicMock()
@@ -355,7 +355,7 @@ class TestMusicManager:
         monkeypatch.setattr(
             "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", wait_for_start_mock
         )
-        monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", set_volume_mock)
+        monkeypatch.setattr("src.music.music_manager.MusicManager._set_volume", set_volume_mock)
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
         example_music_manager.volume = 55
         group = example_music_manager.groups[0]
@@ -380,7 +380,7 @@ class TestMusicManager:
         monkeypatch.setattr(
             "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", CoroutineMock()
         )
-        monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", CoroutineMock())
+        monkeypatch.setattr("src.music.music_manager.MusicManager._set_volume", CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         group = example_music_manager.groups[0]
         track_list = group.track_lists[0]
@@ -406,7 +406,7 @@ class TestMusicManager:
         monkeypatch.setattr(
             "src.music.music_manager.MusicManager._wait_for_current_player_to_be_playing", CoroutineMock()
         )
-        monkeypatch.setattr("src.music.music_manager.MusicManager.set_volume", CoroutineMock())
+        monkeypatch.setattr("src.music.music_manager.MusicManager._set_volume", CoroutineMock())
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", CoroutineMock())
         group = example_music_manager.groups[0]
         track_list = group.track_lists[0]
@@ -431,12 +431,12 @@ class TestMusicManager:
 
     async def test_set_volume_sets_volume_if_global_parameter(self, example_music_manager):
         example_music_manager.volume = 0
-        await example_music_manager.set_volume(volume=1, set_global=True)
+        await example_music_manager._set_volume(volume=1, set_global=True)
         assert example_music_manager.volume == 1
 
     async def test_set_volume_does_not_set_volume_if_no_global_parameter(self, example_music_manager):
         example_music_manager.volume = 0
-        await example_music_manager.set_volume(volume=1, set_global=False)
+        await example_music_manager._set_volume(volume=1, set_global=False)
         assert example_music_manager.volume == 0
 
     async def test_set_volume_instantly_sets_player_volume_if_no_smooth_parameter(
@@ -445,7 +445,7 @@ class TestMusicManager:
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
         example_music_manager._current_player = MagicMock()
-        await example_music_manager.set_volume(volume=1, smooth=False)
+        await example_music_manager._set_volume(volume=1, smooth=False)
         sleep_mock.assert_not_awaited()
         example_music_manager._current_player.audio_set_volume.assert_called_once_with(1)
 
@@ -456,7 +456,7 @@ class TestMusicManager:
         example_music_manager._current_player.audio_get_volume.return_value = 0
         n_steps = 10
         seconds = 10
-        await example_music_manager.set_volume(volume=100, smooth=True, n_steps=n_steps, seconds=seconds)
+        await example_music_manager._set_volume(volume=100, smooth=True, n_steps=n_steps, seconds=seconds)
         sleep_mock.assert_awaited_with(seconds / n_steps)  # seconds / n_steps
         step_size = 100 / n_steps  # 1 = |starting_volume - new_volume|
         example_music_manager._current_player.audio_set_volume.assert_has_calls(
