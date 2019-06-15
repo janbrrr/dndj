@@ -176,21 +176,15 @@ class Server:
 
     async def _set_sound_master_volume(self, request, volume):
         """
-        Sets the sound master volume and notifies all connected web sockets.
+        Sets the sound master volume.
         """
-        self.sound.set_master_volume(volume)
-        for ws in request.app["websockets"].values():
-            await ws.send_json({"action": "setSoundMasterVolume", "volume": volume})
+        await self.sound.set_master_volume(request, volume)
 
     async def _set_sound_volume(self, request, group_index, sound_index, volume):
         """
-        Sets the volume for a specific sound and notifies all connected web sockets.
+        Sets the volume for a specific sound.
         """
-        self.sound.set_sound_volume(group_index, sound_index, volume)
-        for ws in request.app["websockets"].values():
-            await ws.send_json(
-                {"action": "setSoundVolume", "groupIndex": group_index, "soundIndex": sound_index, "volume": volume}
-            )
+        await self.sound.set_sound_volume(request, group_index, sound_index, volume)
 
     async def on_music_changes(self, action: MusicActions, request: Request, music_info: MusicCallbackInfo):
         """
@@ -223,27 +217,41 @@ class Server:
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setMusicVolume", "volume": music_info.volume})
 
-    async def on_sound_changes(self, action: SoundActions, request: Request, sound_info: Optional[SoundCallbackInfo]):
+    async def on_sound_changes(
+        self, action: SoundActions, request: Request, sound_info: Optional[SoundCallbackInfo], master_volume: float
+    ):
         """
         Callback function used by the `SoundManager` at `self.sound`.
 
         Notifies all connected web sockets about the changes.
         """
-        sound_info_dict = {
-            "groupIndex": sound_info.group_index,
-            "soundIndex": sound_info.sound_index,
-            "groupName": sound_info.group_name,
-            "soundName": sound_info.sound_name,
-        }
+        if sound_info is not None:
+            sound_info_dict = {
+                "groupIndex": sound_info.group_index,
+                "soundIndex": sound_info.sound_index,
+                "groupName": sound_info.group_name,
+                "soundName": sound_info.sound_name,
+                "volume": sound_info.volume,
+            }
+        else:
+            sound_info_dict = {}
         if action == SoundActions.START:
             logger.debug(f"Sound Callback: Start")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "soundPlaying", **sound_info_dict})
         elif action == SoundActions.STOP:
-            logger.debug(f"Music Callback: Stop")
+            logger.debug(f"Sound Callback: Stop")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "soundStopped", **sound_info_dict})
         elif action == SoundActions.FINISH:
-            logger.debug(f"Music Callback: Finish")
+            logger.debug(f"Sound Callback: Finish")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "soundFinished", **sound_info_dict})
+        elif action == SoundActions.MASTER_VOLUME:
+            logger.debug(f"Sound Callback: Master Volume")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "setSoundMasterVolume", "volume": master_volume})
+        elif action == SoundActions.VOLUME:
+            logger.debug(f"Sound Callback: Volume")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "setSoundVolume", **sound_info_dict})

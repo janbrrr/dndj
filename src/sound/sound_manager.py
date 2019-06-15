@@ -37,6 +37,7 @@ class SoundManager:
         - "action": value of type `SoundActions`
         - "request": the request that caused the action
         - "sound_info": instance of type `SoundCallbackInfo` (`None` if action not related to particular sound)
+        - "master_volume": float (0 to 1)
 
         :param config: `dict`
         :param callback_fn: function to call when the active sounds change
@@ -71,7 +72,9 @@ class SoundManager:
             group = self.groups[group_index]
             sound_index = active_sound.sound_index
             sound = group.sounds[sound_index]
-            sounds_being_played.append(SoundCallbackInfo(group_index, group.name, sound_index, sound.name))
+            sounds_being_played.append(
+                SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume)
+            )
         return sounds_being_played
 
     async def cancel_sound(self, group_index: int, sound_index: int):
@@ -97,17 +100,17 @@ class SoundManager:
         """
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
-        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name)
+        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume)
         try:
             logger.debug(f"Loading '{sound.name}'")
-            await self.callback_handler(action=SoundActions.START, request=request, sound_info=sound_info)
+            await self.callback_handler(SoundActions.START, request, sound_info, self.volume)
             logger.info(f"Now Playing: {sound.name}")
             await self._play_sound_file(group_index, sound_index)
-            await self.callback_handler(action=SoundActions.FINISH, request=request, sound_info=sound_info)
+            await self.callback_handler(SoundActions.FINISH, request, sound_info, self.volume)
             logger.info(f"Finished playing: {sound.name}")
         except asyncio.CancelledError:
             logger.info(f"Cancelled: {sound.name}")
-            await self.callback_handler(action=SoundActions.STOP, request=request, sound_info=sound_info)
+            await self.callback_handler(SoundActions.STOP, request, sound_info, self.volume)
             raise
 
     async def _play_sound_file(self, group_index: int, sound_index: int):
@@ -135,30 +138,36 @@ class SoundManager:
                 del self.players[self._get_player_key(group_index, sound_index)]
                 raise
 
-    def set_master_volume(self, volume: float):
+    async def set_master_volume(self, request: Request, volume: float):
         """
         Sets the master volume for the sounds.
 
+        :param request: the request that caused this action
         :param volume: new volume, a value between 0 (mute) and 1 (max)
         """
         self.volume = volume
-        logger.debug(f"Changed sound volume to {volume}")
+        logger.debug(f"Changed sound master volume to {volume}")
+        await self.callback_handler(SoundActions.MASTER_VOLUME, request, None, self.volume)
 
-    def set_sound_volume(self, group_index: int, sound_index: int, volume: float):
+    async def set_sound_volume(self, request: Request, group_index: int, sound_index: int, volume: float):
         """
         Sets the volume for a specific sound. If the sound is currently being played, the volume of the player is
         updated.
 
+        :param request: the request that caused this action
         :param group_index: index of the group of the sound
         :param sound_index: index of the sound in the group
         :param volume: new volume, a value between 0 (mute) and 1 (max)
         """
-        sound = self.groups[group_index].sounds[sound_index]
+        group = self.groups[group_index]
+        sound = group.sounds[sound_index]
         sound.volume = volume
+        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume)
         player_key = self._get_player_key(group_index, sound_index)
         if player_key in self.players:
             self.players[player_key].set_volume(self.volume * sound.volume)
         logger.debug(f"Changed sound volume for group={group_index}, sound={sound_index} to {volume}")
+        await self.callback_handler(SoundActions.VOLUME, request, sound_info, self.volume)
 
     def __eq__(self, other):
         if isinstance(other, SoundManager):

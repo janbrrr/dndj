@@ -194,24 +194,24 @@ class TestSoundManager:
         ]
         assert sound_instance_mock.mock_calls == expected_calls
 
-    def test_set_master_volume(self, example_sound_manager):
+    async def test_set_master_volume(self, example_sound_manager):
         example_sound_manager.volume = 1
-        example_sound_manager.set_master_volume(0)
+        await example_sound_manager.set_master_volume(request=MagicMock(), volume=0)
         assert example_sound_manager.volume == 0
 
-    def test_set_volume(self, example_sound_manager):
+    async def test_set_volume(self, example_sound_manager):
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
         sound.volume = 1
-        example_sound_manager.set_sound_volume(group_index=0, sound_index=0, volume=0.5)
+        await example_sound_manager.set_sound_volume(request=MagicMock(), group_index=0, sound_index=0, volume=0.5)
         assert sound.volume == 0.5
 
-    def test_set_volume_sets_volume_on_player(self, example_sound_manager):
+    async def test_set_volume_sets_volume_on_player(self, example_sound_manager):
         player_key = example_sound_manager._get_player_key(0, 0)
         player_mock = MagicMock()
         example_sound_manager.players[player_key] = player_mock
         example_sound_manager.volume = 0.5
-        example_sound_manager.set_sound_volume(group_index=0, sound_index=0, volume=0.5)
+        await example_sound_manager.set_sound_volume(request=MagicMock(), group_index=0, sound_index=0, volume=0.5)
         player_mock.set_volume.assert_called_once_with(example_sound_manager.volume * 0.5)
 
     async def test_currently_playing(self, example_sound_manager, loop):

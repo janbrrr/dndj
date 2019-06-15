@@ -112,6 +112,7 @@ class TestServer:
             "soundIndex": 0,
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
+            "volume": 1,
         }
 
     async def test_client_is_notified_when_sound_finishes(self, patched_example_client):
@@ -126,6 +127,7 @@ class TestServer:
             "soundIndex": 0,
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
+            "volume": 1,
         }
 
     async def test_client_can_request_sound_to_stop(self, patched_example_client, monkeypatch):
@@ -144,6 +146,7 @@ class TestServer:
             "soundIndex": 0,
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
+            "volume": 1,
         }
 
     async def test_client_can_set_sound_master_volume(self, patched_example_client):
@@ -158,4 +161,11 @@ class TestServer:
         set_sound_volume_request = {"action": "setSoundVolume", "groupIndex": 0, "soundIndex": 0, "volume": 0.25}
         await ws_resp.send_str(json.dumps(set_sound_volume_request))
         resp = await ws_resp.receive()
-        assert json.loads(resp.data) == {"action": "setSoundVolume", "groupIndex": 0, "soundIndex": 0, "volume": 0.25}
+        assert json.loads(resp.data) == {
+            "action": "setSoundVolume",
+            "groupIndex": 0,
+            "soundIndex": 0,
+            "groupName": "Footsteps",
+            "soundName": "Footsteps on Dry Leaves",
+            "volume": 0.25,
+        }
