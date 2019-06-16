@@ -50,6 +50,11 @@
 
 #toast-container {
     z-index: 1030;
+    pointer-events: none;
+}
+
+.toast {
+    pointer-events: all;
 }
 
 .hidden {
