@@ -1,0 +1,60 @@
+<p>
+    Now Playing
+    <strong>
+        <span id="now-playing" class="ml-2">
+            {% if music.currently_playing.0 %}
+                {{ music.currently_playing.1 }} > {{ music.currently_playing.3 }}
+            {% else %}
+                -
+            {% endif %}
+        </span>
+    </strong>
+</p>
+<p>
+    Stop the Music
+    <button type="button" class="btn" onclick="stopMusic()">
+        <i class="fas fa-stop"></i>
+    </button>
+</p>
+<p>
+    Volume
+    <input id="music-volume" type="text" data-slider-min="0" data-slider-max="100"
+           data-slider-step="5" data-slider-value="{{ music.volume }}"/>
+</p>
+<hr class="row">
+<div>
+    {% for group in music.groups %}
+    {% set outer_loop = loop %}
+    <div>
+        <a id="group-music-{{ outer_loop.index0 }}"
+           class="row btn collapse-btn {% if music.currently_playing
+                    and music.currently_playing.1 == group.name %}playing{% endif %}"
+           data-toggle="collapse"
+           href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
+           aria-expanded="false" aria-controls="collapseMusicGroup{{outer_loop.index0}}">
+            <h5><i class="collapse-icon fas fa-plus fa-xs"></i>{{ group.name }}</h5>
+        </a>
+        <div class="collapse" id="collapseMusicGroup{{outer_loop.index0}}">
+            <div class="row">
+                {% if group.track_lists %}
+                {% for _track_list in group.track_lists %}
+                <div class="col-12 col-sm-6 col-xl-4 group-item">
+                    <button type="button" class="btn {% if music.currently_playing
+                    and music.currently_playing.1 == group.name
+                    and music.currently_playing.3 == _track_list.name %}playing{% endif %}"
+                            id="btn-music-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                            onclick="playMusic({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                        <i class="fas fa-play play-icon"></i>
+                        {{ _track_list.name }}
+                    </button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="list-group-item">No track lists available.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <hr class="row">
+    {% endfor %}
+</div>
