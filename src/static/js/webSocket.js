@@ -62,8 +62,10 @@ function connect() {
             }
             case "soundPlaying": {
                 $("#group-sound-" + data.groupIndex).addClass("playing");
+                const soundDiv = $("#sound-" + data.groupIndex + "-" + data.soundIndex);
                 const playButton = $("#btn-sound-play-" + data.groupIndex + "-" + data.soundIndex);
                 const stopButton = $("#btn-sound-stop-" + data.groupIndex + "-" + data.soundIndex);
+                soundDiv.addClass("playing");
                 playButton.addClass("hidden");
                 stopButton.removeClass("hidden").addClass("playing");
                 console.log("Now playing sound " + data.soundName + " (group " + data.groupIndex + " at index "
@@ -71,26 +73,30 @@ function connect() {
                 break;
             }
             case "soundStopped": {
+                const soundDiv = $("#sound-" + data.groupIndex + "-" + data.soundIndex);
                 const playButton = $("#btn-sound-play-" + data.groupIndex + "-" + data.soundIndex);
                 const stopButton = $("#btn-sound-stop-" + data.groupIndex + "-" + data.soundIndex);
+                soundDiv.removeClass("playing");
                 stopButton.removeClass("playing").addClass("hidden");
                 playButton.removeClass("hidden");
-                const groupElement = $("#group-sound-" + data.groupIndex);
-                if (groupElement.find(".playing").length === 0) {
-                    groupElement.removeClass("playing");
+                const groupElement = $("#group-sound-" + data.groupIndex).parent();
+                if (groupElement.find("div.playing").length === 0) {
+                    groupElement.children("a").removeClass("playing");
                 }
                 console.log("Stopped sound " + data.soundName + " (group " + data.groupIndex + " at index "
                     + data.soundIndex + ")");
                 break;
             }
             case "soundFinished": {
+                const soundDiv = $("#sound-" + data.groupIndex + "-" + data.soundIndex);
                 const playButton = $("#btn-sound-play-" + data.groupIndex + "-" + data.soundIndex);
                 const stopButton = $("#btn-sound-stop-" + data.groupIndex + "-" + data.soundIndex);
+                soundDiv.removeClass("playing");
                 stopButton.removeClass("playing").addClass("hidden");
                 playButton.removeClass("hidden");
-                const groupElement = $("#group-sound-" + data.groupIndex);
-                if (groupElement.find(".playing").length === 0) {
-                    groupElement.removeClass("playing");
+                const groupElement = $("#group-sound-" + data.groupIndex).parent();
+                if (groupElement.find("div.playing").length === 0) {
+                    groupElement.children("a").removeClass("playing");
                 }
                 console.log("Finished sound " + data.soundName + " (group " + data.groupIndex + " at index "
                     + data.soundIndex + ")");

@@ -29,6 +29,10 @@ class TestSound:
         sound = Sound(minimal_sound_config)
         assert sound.directory == "/some/dir/"
 
+    def test_loop_is_false_by_default(self, minimal_sound_config):
+        sound = Sound(minimal_sound_config)
+        assert sound.loop is False
+
     def test_files_use_tuple_instead_of_list(self, minimal_sound_config):
         sound = Sound(minimal_sound_config)
         assert isinstance(sound.files, tuple)

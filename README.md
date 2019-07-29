@@ -215,6 +215,7 @@ sound:
     - name: Sword Hit
       directory: path/to/dir  # (Optional) used if all files of a sound are in the same dir
       volume: 0.5             # (Optional, default=1) value from 0 (mute) to 1 (max)
+      loop: false             # (Optional, default=false) whether to loop the sound
       files: []               # a list of sound files
 ```
 

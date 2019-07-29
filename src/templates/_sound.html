@@ -23,7 +23,12 @@
             <div class="row">
                 {% if group.sounds %}
                 {% for _sound in group.sounds %}
-                <div class="col-12 col-sm-6 col-xl-4 group-item">
+                <div id="sound-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                     {% if (outer_loop.index0, loop.index0) in sound.sounds_currently_playing %}
+                     class="col-12 col-sm-6 col-xl-4 group-item playing"
+                     {% else %}
+                     class="col-12 col-sm-6 col-xl-4 group-item"
+                     {% endif %}>
                     <div>
                         {{ _sound.name }}
                     </div>

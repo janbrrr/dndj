@@ -90,9 +90,20 @@ class SoundManager:
         """
         await self.cancel_sound(group_index, sound_index)
         loop = asyncio.get_event_loop()
-        task = loop.create_task(self._play_sound(request, group_index, sound_index))
+        task = loop.create_task(self._play_repeating_sound(request, group_index, sound_index))
         self.tracker.register_sound(group_index, sound_index, task)
         await asyncio.sleep(self.SLEEP_TIME)  # Return to the event loop that will start the task
+
+    async def _play_repeating_sound(self, request: Request, group_index: int, sound_index: int):
+        """
+        Plays the given sound. Repeats the sound if its `loop` attribute is set.
+        """
+        group = self.groups[group_index]
+        sound = group.sounds[sound_index]
+        while True:
+            await self._play_sound(request, group_index, sound_index)
+            if not sound.loop:
+                break
 
     async def _play_sound(self, request: Request, group_index: int, sound_index: int):
         """

@@ -100,6 +100,32 @@ class TestSoundManager:
         manager = SoundManager({"volume": 1, "directory": "default/dir/", "groups": []})
         do_all_checks_mock.assert_called_once_with(manager.groups, manager.directory)
 
+    async def test_play_repeating_sound_repeats_if_loop_is_set(self, example_sound_manager, monkeypatch):
+        """
+        Test that the `_play_repeating_sound()` will repeatedly call `_play_sound()` if the `loop` attribute on
+        the `Sound` instance is set.
+        """
+        group = example_sound_manager.groups[0]
+        sound = group.sounds[0]
+        sound.loop = True
+        count = 0
+
+        def unset_loop(*args, **kwargs):
+            nonlocal count
+            nonlocal sound
+            count += 1
+            if count == 3:
+                sound.loop = False
+
+        play_sound_mock = CoroutineMock(side_effect=unset_loop)
+        example_sound_manager._play_sound = play_sound_mock
+        request_mock = MagicMock()
+        await example_sound_manager._play_repeating_sound(request_mock, 0, 0)
+        assert play_sound_mock.await_count == 3
+        play_sound_mock.assert_has_awaits(
+            [call(request_mock, 0, 0), call(request_mock, 0, 0), call(request_mock, 0, 0)]
+        )
+
     async def test_play_sound_uses_correct_file_path(self, example_sound_manager, monkeypatch):
         """
         Test that the `_play_sound()` method instantiates the `pygame.mixer.Sound` with the file path of the sound file
