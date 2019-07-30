@@ -68,12 +68,8 @@ class SoundManager:
         active_sounds = self.tracker.active_sounds
         sounds_being_played = []
         for active_sound in active_sounds:
-            group_index = active_sound.group_index
-            group = self.groups[group_index]
-            sound_index = active_sound.sound_index
-            sound = group.sounds[sound_index]
             sounds_being_played.append(
-                SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume, sound.loop)
+                self._get_sound_callback_info(active_sound.group_index, active_sound.sound_index)
             )
         return sounds_being_played
 
@@ -96,32 +92,40 @@ class SoundManager:
 
     async def _play_repeating_sound(self, request: Request, group_index: int, sound_index: int):
         """
-        Plays the given sound. Repeats the sound if its `loop` attribute is set.
+        Plays the given sound. Repeats the sound if its `loop` attribute is set after waiting for `loop_delay` ms.
         """
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
-        while True:
-            await self._play_sound(request, group_index, sound_index)
-            if not sound.loop:
-                break
+        sound_info = self._get_sound_callback_info(group_index, sound_index)
+        try:
+            await self.callback_handler(SoundActions.START, request, sound_info, self.volume)
+            logger.info(f"Playing sound on repeat: {sound.name}")
+            while True:
+                await self._play_sound(group_index, sound_index)
+                if not sound.loop:
+                    break
+                delay = sound.loop_delay
+                if delay == 0:
+                    continue
+                await asyncio.sleep(delay / 1000.0)
+            await self.callback_handler(SoundActions.FINISH, request, sound_info, self.volume)
+            logger.info(f"Finished sound on repeat: {sound.name}")
+        except asyncio.CancelledError:
+            await self.callback_handler(SoundActions.STOP, request, sound_info, self.volume)
+            logger.info(f"Cancelled sound on repeat: {sound.name}")
 
-    async def _play_sound(self, request: Request, group_index: int, sound_index: int):
+    async def _play_sound(self, group_index: int, sound_index: int):
         """
         Plays the given sound.
         """
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
-        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume, sound.loop)
         try:
-            logger.debug(f"Loading '{sound.name}'")
-            await self.callback_handler(SoundActions.START, request, sound_info, self.volume)
-            logger.info(f"Now Playing: {sound.name}")
+            logger.info(f"Playing sound file for: {sound.name}")
             await self._play_sound_file(group_index, sound_index)
-            await self.callback_handler(SoundActions.FINISH, request, sound_info, self.volume)
-            logger.info(f"Finished playing: {sound.name}")
+            logger.info(f"Finished sound file for: {sound.name}")
         except asyncio.CancelledError:
-            logger.info(f"Cancelled: {sound.name}")
-            await self.callback_handler(SoundActions.STOP, request, sound_info, self.volume)
+            logger.info(f"Cancelled sound file for: {sound.name}")
             raise
 
     async def _play_sound_file(self, group_index: int, sound_index: int):
@@ -157,7 +161,7 @@ class SoundManager:
         :param volume: new volume, a value between 0 (mute) and 1 (max)
         """
         self.volume = volume
-        logger.debug(f"Changed sound master volume to {volume}")
+        logger.info(f"Changed sound master volume to {volume}")
         await self.callback_handler(SoundActions.MASTER_VOLUME, request, None, self.volume)
 
     async def set_sound_volume(self, request: Request, group_index: int, sound_index: int, volume: float):
@@ -173,11 +177,11 @@ class SoundManager:
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
         sound.volume = volume
-        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume, sound.loop)
+        sound_info = self._get_sound_callback_info(group_index, sound_index)
         player_key = self._get_player_key(group_index, sound_index)
         if player_key in self.players:
             self.players[player_key].set_volume(self.volume * sound.volume)
-        logger.debug(f"Changed sound volume for group={group_index}, sound={sound_index} to {volume}")
+        logger.info(f"Changed sound volume for group={group_index}, sound={sound_index} to {volume}")
         await self.callback_handler(SoundActions.VOLUME, request, sound_info, self.volume)
 
     async def set_sound_loop(self, request: Request, group_index: int, sound_index: int, loop_value: bool):
@@ -192,9 +196,38 @@ class SoundManager:
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
         sound.loop = loop_value
-        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume, sound.loop)
-        logger.debug(f"Changed sound loop attribute for group={group_index}, sound={sound_index} to {loop_value}")
+        sound_info = self._get_sound_callback_info(group_index, sound_index)
+        logger.info(f"Changed sound loop attribute for group={group_index}, sound={sound_index} to {loop_value}")
         await self.callback_handler(SoundActions.LOOP, request, sound_info, self.volume)
+
+    async def set_sound_loop_delay(self, request: Request, group_index: int, sound_index: int, loop_delay: str):
+        """
+        Sets the loop delay for a specific sound. The `loop_delay` argument is expected to be either a single
+        integer or an interval of the form `<int>-<int>`.
+
+        :param request: the request that caused this action
+        :param group_index: index of the group of the sound
+        :param sound_index: index of the sound in the group
+        :param loop_delay: new value of the loop delay
+        """
+        group = self.groups[group_index]
+        sound = group.sounds[sound_index]
+        try:
+            sound.loop_delay = loop_delay
+            logger.info(f"Changed sound loop delay for group={group_index}, sound={sound_index} to {loop_delay}")
+        except ValueError:
+            logger.info(
+                f"Failed to change sound loop delay for group={group_index}, sound={sound_index} to " f"{loop_delay}"
+            )
+        sound_info = self._get_sound_callback_info(group_index, sound_index)
+        await self.callback_handler(SoundActions.LOOP_DELAY, request, sound_info, self.volume)
+
+    def _get_sound_callback_info(self, group_index, sound_index):
+        group = self.groups[group_index]
+        sound = group.sounds[sound_index]
+        return SoundCallbackInfo(
+            group_index, group.name, sound_index, sound.name, sound.volume, sound.loop, sound.loop_delay_config
+        )
 
     def __eq__(self, other):
         if isinstance(other, SoundManager):

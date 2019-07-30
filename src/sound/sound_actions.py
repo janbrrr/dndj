@@ -8,3 +8,4 @@ class SoundActions(Enum):
     MASTER_VOLUME = 4
     VOLUME = 5
     LOOP = 6
+    LOOP_DELAY = 7

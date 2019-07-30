@@ -149,6 +149,12 @@ class Server:
                 sound_index = int(data_dict["soundIndex"])
                 loop = bool(data_dict["loop"])
                 await self._set_sound_loop(request, group_index, sound_index, loop)
+        elif action == "setSoundLoopDelay":
+            if "groupIndex" in data_dict and "soundIndex" in data_dict and "loopDelay" in data_dict:
+                group_index = int(data_dict["groupIndex"])
+                sound_index = int(data_dict["soundIndex"])
+                loop_delay = data_dict["loopDelay"]
+                await self._set_sound_loop_delay(request, group_index, sound_index, loop_delay)
 
     async def _play_music(self, request, group_index, track_list_index):
         """
@@ -198,6 +204,12 @@ class Server:
         """
         await self.sound.set_sound_loop(request, group_index, sound_index, loop)
 
+    async def _set_sound_loop_delay(self, request, group_index, sound_index, loop_delay):
+        """
+        Sets the loop delay for a specific sound.
+        """
+        await self.sound.set_sound_loop_delay(request, group_index, sound_index, loop_delay)
+
     async def on_music_changes(self, action: MusicActions, request: Request, music_info: MusicCallbackInfo):
         """
         Callback function used by the `MusicManager` at `self.music`.
@@ -245,6 +257,7 @@ class Server:
                 "soundName": sound_info.sound_name,
                 "volume": sound_info.volume,
                 "loop": sound_info.loop,
+                "loopDelay": sound_info.loop_delay_config,
             }
         else:
             sound_info_dict = {}
@@ -272,3 +285,7 @@ class Server:
             logger.debug(f"Sound Callback: Loop")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setSoundLoop", **sound_info_dict})
+        elif action == SoundActions.LOOP_DELAY:
+            logger.debug(f"Sound Callback: Loop Delay")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "setSoundLoopDelay", **sound_info_dict})

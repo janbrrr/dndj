@@ -58,6 +58,10 @@ function connect() {
                 _handleSetSoundLoop(data);
                 break;
             }
+            case "setSoundLoopDelay": {
+                _handleSetSoundLoopDelay(data);
+                break;
+            }
             default:
                 console.log("Received unknown action: " + data.action);
         }
@@ -199,4 +203,11 @@ function _handleSetSoundLoop(data) {
     }
     console.log("Sound loop for group=" + data.groupIndex + ", sound=" + data.soundIndex +
         " set to " + data.loop);
+}
+
+function _handleSetSoundLoopDelay(data) {
+    const soundLoopDelayInput = $("#sound-loop-delay-" + data.groupIndex + "-" + data.soundIndex);
+    soundLoopDelayInput.val(data.loopDelay);
+    console.log("Sound loop delay for group=" + data.groupIndex + ", sound=" + data.soundIndex +
+        " set to " + data.loopDelay);
 }

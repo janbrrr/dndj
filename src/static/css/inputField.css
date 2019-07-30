@@ -1,0 +1,72 @@
+/*
+Credits to Andreas Storm
+and his pen at https://codepen.io/andreasstorm/pen/gKGbxo
+ */
+
+.input-field {
+    position: relative;
+    margin: auto;
+    max-width: 150px;
+}
+
+.input-field .label {
+    position: absolute;
+    top: 16px;
+    left: 0;
+    font-size: 16px;
+    color: #9098A9;
+    font-weight: 500;
+    transform-origin: 0 0;
+    transition: all .2s ease;
+}
+
+.input-field .border {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 100%;
+    background: var(--myBlue);
+    transform: scaleX(0);
+    transform-origin: 0 0;
+    transition: all .15s ease;
+}
+
+.input-field input {
+    -webkit-appearance: none;
+    width: 100%;
+    border: 0;
+    font-family: inherit;
+    padding: 12px 0;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 500;
+    border-bottom: 2px solid #C8CCD4;
+    background: none;
+    border-radius: 0;
+    color: #9098A9;
+    transition: all .15s ease;
+}
+
+.input-field input:hover {
+    background: rgba(34, 50, 84,.03);
+}
+
+.input-field input:not(:placeholder-shown) + span {
+    color: #5A667F;
+    transform: translateY(-26px) scale(.75);
+}
+
+.input-field input:focus {
+    background: none;
+    outline: none;
+}
+
+.input-field input:focus + span {
+    color: var(--myBlue);
+    transform: translateY(-26px) scale(.75);
+}
+
+.input-field input:focus + .border {
+    transform: scaleX(1);
+}

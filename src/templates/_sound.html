@@ -25,9 +25,9 @@
                 {% for _sound in group.sounds %}
                 <div id="sound-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                      {% if (outer_loop.index0, loop.index0) in sound.sounds_currently_playing %}
-                     class="col-12 col-sm-6 col-xl-4 group-item playing"
+                     class="col-12 col-sm-12 col-lg-6 group-item playing"
                      {% else %}
-                     class="col-12 col-sm-6 col-xl-4 group-item"
+                     class="col-12 col-sm-12 col-lg-6 group-item"
                      {% endif %}>
                     <div>
                         {{ _sound.name }}
@@ -61,6 +61,14 @@
                             <i id="btn-sound-loop-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                                class="fas fa-undo {% if _sound.loop %}looping{% endif %}"></i>
                         </button>
+                        <label for="sound-loop-delay-{{ outer_loop.index0 }}-{{ loop.index0 }}" class="input-field">
+                            <input id="sound-loop-delay-{{ outer_loop.index0 }}-{{ loop.index0 }}" type="text"
+                               class="input-field"
+                               onfocusout="setSoundLoopDelay({{ outer_loop.index0 }}, {{ loop.index0 }})"
+                               value="{{ _sound.loop_delay_config }}">
+                            <span class="label">Loop Delay (in ms)</span>
+                            <span class="border"></span>
+                        </label>
                     </div>
                 </div>
                 {% endfor %}

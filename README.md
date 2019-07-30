@@ -106,6 +106,7 @@ At the root is the `music` element that defines at least the `volume`
 and a list of `groups` that will be used.
 
 ```yaml
+### music > root config ###
 music:
   volume: 20              # value from 0 (mute) to 100 (max)
   directory: path/to/dir  # (Optional) used if all files are in the same dir
@@ -117,6 +118,7 @@ A `group` can for example be a scene in the story. It has a `name` and defines a
 of `track_lists` (i.e., playlists).
 
 ```yaml
+### music > group config ###
 music:
   # ...
   groups:
@@ -132,6 +134,7 @@ A `track_list` also has at least a `name` and defines a collection of `tracks` t
 it will play.
 
 ```yaml
+### music > track_list config ###
 music:
   # ...
   groups:
@@ -152,6 +155,7 @@ but you can further configure it. Every file type that the VLC media player supp
 Keep in mind that streaming the audio from YouTube will introduce a delay of a second or two to build up the
 connection etc.
 ```yaml
+### music > track config ###
 music:
   # ...
   groups:
@@ -176,6 +180,7 @@ At the root is the `sound` element that defines at least the `volume`
 and a list of `groups` that will be used.
 
 ```yaml
+### sound > root config ###
 sound:
   volume: 1               # value from 0 (mute) to 1 (max) (master volume, each sound has its own volume)
   directory: path/to/dir  # (Optional) used if all files are in the same dir
@@ -187,6 +192,7 @@ A `group` has at minimum a `name` and defines a collection
 of `sounds` (e.g., footstep sounds).
 
 ```yaml
+### sound > group config ###
 sound:
   # ...
   groups:
@@ -206,6 +212,7 @@ sound files, each being a variant of a sword hit. When *Sword Hit* is being play
 will be played at random to introduce a bit of variety.
 
 ```yaml
+### sound > sound config ###
 sound:
   # ...
   groups:
@@ -216,6 +223,7 @@ sound:
       directory: path/to/dir  # (Optional) used if all files of a sound are in the same dir
       volume: 0.5             # (Optional, default=1) value from 0 (mute) to 1 (max)
       loop: false             # (Optional, default=false) whether to loop the sound
+      loop_delay: 5000-7000   # (Optional, default=0) delay to use in ms, single number or interval
       files: []               # a list of sound files
 ```
 
@@ -223,6 +231,7 @@ Finally, a sound `file` is in the simplest case just a filename, but it also can
 specific configuration. Note that only `.ogg` and `.wav` files are supported.
 
 ```yaml
+### sound > file config ###
 sound:
   # ...
   groups:

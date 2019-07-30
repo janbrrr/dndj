@@ -64,3 +64,18 @@ function setSoundLoop(groupIndex, soundIndex) {
     };
     conn.send(JSON.stringify(toSend));
 }
+
+function setSoundLoopDelay(groupIndex, soundIndex) {
+    if (conn === null) {
+        onNotConnected();
+        return;
+    }
+    const inputElement = $("#sound-loop-delay-" + groupIndex + "-" + soundIndex);
+    const toSend = {
+        "action": "setSoundLoopDelay",
+        "groupIndex": groupIndex,
+        "soundIndex": soundIndex,
+        "loopDelay": inputElement.val(),
+    };
+    conn.send(JSON.stringify(toSend));
+}

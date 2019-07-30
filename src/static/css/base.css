@@ -1,21 +1,26 @@
+:root {
+    --myBlue: #337ab7;
+    --myWhite: #E0E0E0;
+}
+
 .btn:hover {
-    color: #337ab7;
+    color: var(--myBlue);
 }
 
 .playing {
-    color: #337ab7;
+    color: var(--myBlue);
 }
 
 .playing:hover {
-    color: #337ab7;
+    color: var(--myBlue);
 }
 
 .looping {
-    color: #337ab7;
+    color: var(--myBlue);
 }
 
 .looping:hover {
-    color: #337ab7;
+    color: var(--myBlue);
 }
 
 .slider {

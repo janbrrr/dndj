@@ -1,6 +1,6 @@
 body.dark-mode {
     background-color: #212121;
-    color: #E0E0E0;
+    color: var(--myWhite);
 }
 
 body.dark-mode .toast {
@@ -8,32 +8,32 @@ body.dark-mode .toast {
 }
 
 body.dark-mode .nav-link {
-    color: #E0E0E0;
+    color: var(--myWhite);
 }
 
 body.dark-mode .nav-link:hover {
-    color: #337ab7;
+    color: var(--myBlue);
 }
 
 body.dark-mode .nav-link.active {
     background-color: #212121;
-    color: #E0E0E0;
+    color: var(--myWhite);
 }
 
 body.dark-mode .btn {
-    color: #E0E0E0;
+    color: var(--myWhite);
 }
 
 body.dark-mode .btn:hover {
-    color: #337ab7;
+    color: var(--myBlue);
 }
 
 body.dark-mode .playing {
-    color: #337ab7;
+    color: var(--myBlue);
 }
 
 body.dark-mode .looping {
-    color: #337ab7;
+    color: var(--myBlue);
 }
 
 body.dark-mode hr.row {
