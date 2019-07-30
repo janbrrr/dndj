@@ -260,3 +260,10 @@ class TestSoundManager:
         assert currently_playing[1].sound_index == 1
         assert currently_playing[1].sound_name == example_sound_manager.groups[0].sounds[1].name
         await asyncio.gather(dummy_task_one, dummy_task_two)
+
+    async def test_set_sound_loop(self, example_sound_manager):
+        group = example_sound_manager.groups[0]
+        sound = group.sounds[0]
+        sound.loop = False
+        await example_sound_manager.set_sound_loop(request=MagicMock(), group_index=0, sound_index=0, loop_value=True)
+        assert sound.loop is True

@@ -73,7 +73,7 @@ class SoundManager:
             sound_index = active_sound.sound_index
             sound = group.sounds[sound_index]
             sounds_being_played.append(
-                SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume)
+                SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume, sound.loop)
             )
         return sounds_being_played
 
@@ -111,7 +111,7 @@ class SoundManager:
         """
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
-        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume)
+        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume, sound.loop)
         try:
             logger.debug(f"Loading '{sound.name}'")
             await self.callback_handler(SoundActions.START, request, sound_info, self.volume)
@@ -173,12 +173,28 @@ class SoundManager:
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
         sound.volume = volume
-        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume)
+        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume, sound.loop)
         player_key = self._get_player_key(group_index, sound_index)
         if player_key in self.players:
             self.players[player_key].set_volume(self.volume * sound.volume)
         logger.debug(f"Changed sound volume for group={group_index}, sound={sound_index} to {volume}")
         await self.callback_handler(SoundActions.VOLUME, request, sound_info, self.volume)
+
+    async def set_sound_loop(self, request: Request, group_index: int, sound_index: int, loop_value: bool):
+        """
+        Sets the loop attribute for a specific sound.
+
+        :param request: the request that caused this action
+        :param group_index: index of the group of the sound
+        :param sound_index: index of the sound in the group
+        :param loop_value: new value of the loop attribute
+        """
+        group = self.groups[group_index]
+        sound = group.sounds[sound_index]
+        sound.loop = loop_value
+        sound_info = SoundCallbackInfo(group_index, group.name, sound_index, sound.name, sound.volume, sound.loop)
+        logger.debug(f"Changed sound loop attribute for group={group_index}, sound={sound_index} to {loop_value}")
+        await self.callback_handler(SoundActions.LOOP, request, sound_info, self.volume)
 
     def __eq__(self, other):
         if isinstance(other, SoundManager):

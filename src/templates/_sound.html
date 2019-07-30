@@ -57,6 +57,10 @@
                                class="sound-volume" type="text" data-slider-min="0" data-slider-max="1"
                                data-slider-step="0.05" data-slider-value="{{ _sound.volume }}"
                                data-group-index="{{ outer_loop.index0 }}" data-sound-index="{{ loop.index0 }}"/>
+                        <button type="button" class="btn" onclick="setSoundLoop({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                            <i id="btn-sound-loop-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                               class="fas fa-undo {% if _sound.loop %}looping{% endif %}"></i>
+                        </button>
                     </div>
                 </div>
                 {% endfor %}

@@ -32,6 +32,10 @@ body.dark-mode .playing {
     color: #337ab7;
 }
 
+body.dark-mode .looping {
+    color: #337ab7;
+}
+
 body.dark-mode hr.row {
     border-color: #3D3D3D;
 }

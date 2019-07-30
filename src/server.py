@@ -143,6 +143,12 @@ class Server:
                 sound_index = int(data_dict["soundIndex"])
                 volume = float(data_dict["volume"])
                 await self._set_sound_volume(request, group_index, sound_index, volume)
+        elif action == "setSoundLoop":
+            if "groupIndex" in data_dict and "soundIndex" in data_dict and "loop" in data_dict:
+                group_index = int(data_dict["groupIndex"])
+                sound_index = int(data_dict["soundIndex"])
+                loop = bool(data_dict["loop"])
+                await self._set_sound_loop(request, group_index, sound_index, loop)
 
     async def _play_music(self, request, group_index, track_list_index):
         """
@@ -185,6 +191,12 @@ class Server:
         Sets the volume for a specific sound.
         """
         await self.sound.set_sound_volume(request, group_index, sound_index, volume)
+
+    async def _set_sound_loop(self, request, group_index, sound_index, loop):
+        """
+        Sets the loop attribute for a specific sound.
+        """
+        await self.sound.set_sound_loop(request, group_index, sound_index, loop)
 
     async def on_music_changes(self, action: MusicActions, request: Request, music_info: MusicCallbackInfo):
         """
@@ -232,6 +244,7 @@ class Server:
                 "groupName": sound_info.group_name,
                 "soundName": sound_info.sound_name,
                 "volume": sound_info.volume,
+                "loop": sound_info.loop,
             }
         else:
             sound_info_dict = {}
@@ -255,3 +268,7 @@ class Server:
             logger.debug(f"Sound Callback: Volume")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setSoundVolume", **sound_info_dict})
+        elif action == SoundActions.LOOP:
+            logger.debug(f"Sound Callback: Loop")
+            for ws in request.app["websockets"].values():
+                await ws.send_json({"action": "setSoundLoop", **sound_info_dict})

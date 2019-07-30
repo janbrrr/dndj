@@ -10,6 +10,14 @@
     color: #337ab7;
 }
 
+.looping {
+    color: #337ab7;
+}
+
+.looping:hover {
+    color: #337ab7;
+}
+
 .slider {
     margin-left: 15px;
     margin-right: 15px;

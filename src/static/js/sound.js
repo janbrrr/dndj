@@ -49,3 +49,18 @@ function setSoundVolume(groupIndex, soundIndex, volume) {
     };
     conn.send(JSON.stringify(toSend));
 }
+
+function setSoundLoop(groupIndex, soundIndex) {
+    if (conn === null) {
+        onNotConnected();
+        return;
+    }
+    const currentValue = $("#btn-sound-loop-" + groupIndex + "-" + soundIndex).hasClass("looping");
+    const toSend = {
+        "action": "setSoundLoop",
+        "groupIndex": groupIndex,
+        "soundIndex": soundIndex,
+        "loop": !currentValue,
+    };
+    conn.send(JSON.stringify(toSend));
+}
