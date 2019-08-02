@@ -9,8 +9,16 @@ able to play them without any issues.
 ### Overview
 
 - Prepare a configuration file defining the music and sounds you want to use
-  - Supports links to YouTube videos (music)
+- Music
+  - Supports MP3 files and links to YouTube videos
   - Supports next, start_at and end_at parameters
+  - One only piece of music can be played at a time
+- Sound
+  - Supports WAV and OGG files
+  - Supports end_at and individual volume parameters
+  - Sounds support looping (every X milliseconds or random within an interval)
+  - Each sound can only be played once at a time
+  - Different sounds can be played at the same time
 - Start the server with the config (and connect the server to the speakers)
   - The server acts as the media player
 - Visit the hosted web page from a device in the same network (e.g., phone)
@@ -299,7 +307,8 @@ when it plays.
 
 For example, when the party meets the villain for the first time, you can play some dark super villain music 
 (maybe even give the villain his own soundtrack). Or when something sad happens or a sad story is being told, 
-emphasize the sadness by underlying it with sad music.
+emphasize the sadness by underlying it with sad music. Keep in mind that the music is not the focus and should be
+quiet enough to not disturb while talking. Also, use music without any vocals since they will be distracting.
 
 Think you of the situations you expect to arise in your story and how you can use music to emphasize some of them.
 
@@ -362,11 +371,17 @@ Here is small collection of sources where you can discover great music.
 
 - [Derek & Brandon Fiechter](https://www.youtube.com/channel/UCjMZjGhrFq_4llVS_x2XJ_w/) (Fantasy Music)
 
+- [Lukas King](https://www.youtube.com/user/LucasKingPiano/featured) (Piano Music)
+
 - [Michael Ghelfi](https://www.youtube.com/user/MichaelGhelfi) (Fantasy Music and Ambience)
 
 - [Peter Crowley's Fantasy Dream](https://www.youtube.com/user/PeterCrowley83/) (Fantasy Music)
 
+- [Peter Grundy](https://www.youtube.com/user/23Alchemist23/featured) (Fantasy Music)
+
 - [Secession Studios](https://www.youtube.com/user/thesecession/) (Cinematic Music)
+
+- [Sword Coast Soundscapes](https://www.youtube.com/channel/UCUGy8GD5oY4EX9awX4FSqBw/featured) (Ambience, Campaign-Specific Ambience)
 
 - [Tabletop Audio](https://tabletopaudio.com/) (Music and Ambience)
 
