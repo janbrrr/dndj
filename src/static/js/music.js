@@ -23,13 +23,13 @@ function stopMusic() {
     conn.send(JSON.stringify(toSend));
 }
 
-function setMusicVolume(volume) {
+function setMusicMasterVolume(volume) {
     if (conn === null) {
         onNotConnected();
         return;
     }
     const toSend = {
-        "action": "setMusicVolume",
+        "action": "setMusicMasterVolume",
         "volume": volume,
     };
     conn.send(JSON.stringify(toSend));

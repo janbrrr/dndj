@@ -160,7 +160,7 @@ class MusicManager:
             self._current_player.set_time(track.start_at)
         logger.info(f"Now Playing: {track.file}")
         await self._wait_for_current_player_to_be_playing()
-        await self._set_volume(self.volume, set_global=False)
+        await self._set_master_volume(self.volume, set_global=False)
         while self._current_player.is_playing():
             try:
                 if track.end_at is not None and self._current_player.get_time() >= track.end_at:
@@ -168,7 +168,7 @@ class MusicManager:
                 await asyncio.sleep(self.SLEEP_TIME)
             except asyncio.CancelledError:
                 logger.debug(f"Received cancellation request for {track.file}")
-                await self._set_volume(0, set_global=False)
+                await self._set_master_volume(0, set_global=False)
                 raise
         logger.info(f"Finished playing: {track.file}")
 
@@ -199,16 +199,18 @@ class MusicManager:
         else:
             await self.play_track_list(request, next_group_index, next_track_list_index)
 
-    async def set_volume(self, request, volume, seconds=1):
+    async def set_master_volume(self, request, volume, seconds=1):
         """
-        Sets the volume for the music.
+        Sets the master volume for the music.
         """
-        await self._set_volume(volume, set_global=True, seconds=seconds)
-        await self.callback_handler(action=MusicActions.VOLUME, request=request, music_info=self.currently_playing)
+        await self._set_master_volume(volume, set_global=True, seconds=seconds)
+        await self.callback_handler(
+            action=MusicActions.MASTER_VOLUME, request=request, music_info=self.currently_playing
+        )
 
-    async def _set_volume(self, volume, set_global=True, smooth=True, n_steps=20, seconds=2):
+    async def _set_master_volume(self, volume, set_global=True, smooth=True, n_steps=20, seconds=2):
         """
-        Sets the volume for the music.
+        Sets the master volume for the music.
 
         :param volume: new volume, a value between 0 (mute) and 100 (max)
         :param set_global: whether to set this as the new global volume

@@ -1,4 +1,9 @@
 <p>
+    Master Volume
+    <input id="music-volume" type="text" data-slider-min="0" data-slider-max="100"
+           data-slider-step="5" data-slider-value="{{ music.volume }}"/>
+</p>
+<p>
     Now Playing
     <strong>
         <span id="now-playing" class="ml-2">
@@ -15,11 +20,6 @@
     <button type="button" class="btn" onclick="stopMusic()">
         <i class="fas fa-stop"></i>
     </button>
-</p>
-<p>
-    Volume
-    <input id="music-volume" type="text" data-slider-min="0" data-slider-max="100"
-           data-slider-step="5" data-slider-value="{{ music.volume }}"/>
 </p>
 <hr class="row">
 <div>

@@ -30,8 +30,8 @@ function connect() {
                 _handleMusicFinished(data);
                 break;
             }
-            case "setMusicVolume": {
-                _handleSetMusicVolume(data);
+            case "setMusicMasterVolume": {
+                _handleSetMusicMasterVolume(data);
                 break;
             }
             case "setSoundMasterVolume": {
@@ -134,10 +134,10 @@ function _handleMusicFinished(data) {
     displayToast("Music", "Finished playing the music.");
 }
 
-function _handleSetMusicVolume(data) {
+function _handleSetMusicMasterVolume(data) {
     $("#music-volume").slider('setValue', data.volume);
-    console.log("Music volume set to " + data.volume);
-    displayToast("Music", "Set volume to <strong>" + data.volume + "</strong>.");
+    console.log("Music master volume set to " + data.volume);
+    displayToast("Music", "Set master volume to <strong>" + data.volume + "</strong>.");
 }
 
 function _handleSetSoundMasterVolume(data) {

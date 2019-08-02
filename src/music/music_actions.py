@@ -5,4 +5,4 @@ class MusicActions(Enum):
     START = 1
     STOP = 2
     FINISH = 3
-    VOLUME = 4
+    MASTER_VOLUME = 4

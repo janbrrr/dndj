@@ -2,7 +2,7 @@ $(document).ready(function() {
     const musicVolume = $("#music-volume");
     musicVolume.slider({});
     musicVolume.on("slideStop", function(slideEvt) {
-        setMusicVolume(slideEvt.value);
+        setMusicMasterVolume(slideEvt.value);
     });
 
     const soundMasterVolume = $("#sound-master-volume");
