@@ -11,7 +11,7 @@ able to play them without any issues.
 - Prepare a configuration file defining the music and sounds you want to use
 - Music
   - Supports MP3 files and links to YouTube videos
-  - Supports next, start_at and end_at parameters
+  - Supports next, start_at, end_at and individual volume parameters
   - One only piece of music can be played at a time
 - Sound
   - Supports WAV and OGG files
@@ -110,13 +110,13 @@ sound:
 
 The music configuration is divided into a hierarchical structure.
 
-At the root is the `music` element that defines at least the `volume`
+At the root is the `music` element that defines at least the master `volume`
 and a list of `groups` that will be used.
 
 ```yaml
 ### music > root config ###
 music:
-  volume: 20              # value from 0 (mute) to 100 (max)
+  volume: 20              # master value from 0 (mute) to 100 (max)
   directory: path/to/dir  # (Optional) used if all files are in the same dir
   sort: true              # (Optional, default=true) whether to sort the groups alphabetically
   groups: []              # a list of groups
@@ -151,6 +151,7 @@ music:
     track_lists:
     - name: Spooky Music
       directory: path/to/dir  # (Optional) used if all files of a tracklist are in the same dir
+      volume: 50              # (Optional, default=100) volume for this tracklist where 0 is mute and 100 is max
       loop: true              # (Optional, default=true) whether to loop if all tracks have been played
       shuffle: true           # (Optional, default=true) whether to shuffle the tracks before playing them all
       next: Forest Ambience   # (Optional) name of the next tracklist to play

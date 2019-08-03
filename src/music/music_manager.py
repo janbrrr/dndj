@@ -83,8 +83,10 @@ class MusicManager:
             group = self.groups[group_index]
             track_list_index = self._currently_playing.track_list_index
             track_list = group.track_lists[track_list_index]
-            return MusicCallbackInfo(group_index, group.name, track_list_index, track_list.name, self.volume)
-        return MusicCallbackInfo(None, None, None, None, self.volume)
+            return MusicCallbackInfo(
+                group_index, group.name, track_list_index, track_list.name, self.volume, track_list.volume
+            )
+        return MusicCallbackInfo(None, None, None, None, self.volume, None)
 
     async def cancel(self):
         """
@@ -210,7 +212,8 @@ class MusicManager:
 
     async def _set_master_volume(self, volume, set_global=True, smooth=True, n_steps=20, seconds=2):
         """
-        Sets the master volume for the music.
+        Sets the master volume for the music. If music is being played, the volume of the player will be adjusted
+        accordingly.
 
         :param volume: new volume, a value between 0 (mute) and 100 (max)
         :param set_global: whether to set this as the new global volume
@@ -219,15 +222,48 @@ class MusicManager:
         :param seconds: the time in which the transitions takes place
         """
         if self._current_player is not None:
+            track_list = self.groups[self._currently_playing.group_index].track_lists[
+                self.currently_playing.track_list_index
+            ]
+            new_volume = (volume * track_list.volume) // 100
             if not smooth:
-                self._current_player.audio_set_volume(volume)
+                self._current_player.audio_set_volume(new_volume)
             else:
                 current_volume = self._current_player.audio_get_volume()
-                step_size = (current_volume - volume) / n_steps
+                step_size = (current_volume - new_volume) / n_steps
                 for i in range(n_steps):
-                    new_volume = int(current_volume - (i + 1) * step_size)
-                    self._current_player.audio_set_volume(new_volume)
+                    volume_step = int(current_volume - (i + 1) * step_size)
+                    self._current_player.audio_set_volume(volume_step)
                     await asyncio.sleep(seconds / n_steps)
         if set_global:
             self.volume = volume
-            logger.debug(f"Changed music volume to {volume}")
+            logger.info(f"Changed music master volume to {volume}")
+
+    async def set_track_list_volume(self, request: Request, group_index: int, track_list_index: int, volume: int):
+        """
+        Sets the volume for a specific track list.
+
+        :param request: the request that caused the action
+        :param group_index: index of the group of the track list
+        :param track_list_index: index of the track list within the group
+        :param volume: value between 0 (mute) and 100 (max)
+        """
+        group = self.groups[group_index]
+        track_list = group.track_lists[track_list_index]
+        track_list.volume = volume
+
+        if (
+            self._current_player is not None
+            and self._currently_playing.group_index == group_index
+            and self._currently_playing.track_list_index == track_list_index
+        ):
+            new_volume = (self.volume * track_list.volume) // 100
+            self._current_player.audio_set_volume(new_volume)
+        await self.callback_handler(
+            action=MusicActions.VOLUME,
+            request=request,
+            music_info=MusicCallbackInfo(
+                group_index, group.name, track_list_index, track_list.name, self.volume, track_list.volume
+            ),
+        )
+        logger.info(f"Changed tracklist volume for group={group_index}, track_list={track_list_index} to {volume}")

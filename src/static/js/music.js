@@ -34,3 +34,17 @@ function setMusicMasterVolume(volume) {
     };
     conn.send(JSON.stringify(toSend));
 }
+
+function setMusicVolume(groupIndex, trackListIndex, volume) {
+    if (conn === null) {
+        onNotConnected();
+        return;
+    }
+    const toSend = {
+        "action": "setMusicVolume",
+        "groupIndex": groupIndex,
+        "trackListIndex": trackListIndex,
+        "volume": volume,
+    };
+    conn.send(JSON.stringify(toSend));
+}

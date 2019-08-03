@@ -2,5 +2,6 @@ from collections import namedtuple
 
 
 MusicCallbackInfo = namedtuple(
-    "MusicCallbackInfo", ["group_index", "group_name", "track_list_index", "track_list_name", "volume"]
+    "MusicCallbackInfo",
+    ["group_index", "group_name", "track_list_index", "track_list_name", "master_volume", "track_list_volume"],
 )

@@ -34,6 +34,10 @@ function connect() {
                 _handleSetMusicMasterVolume(data);
                 break;
             }
+            case "setMusicVolume": {
+                _handleSetMusicVolume(data);
+                break;
+            }
             case "setSoundMasterVolume": {
                 _handleSetSoundMasterVolume(data);
                 break;
@@ -113,6 +117,8 @@ function displayToast(title, message) {
 function _handleNowPlaying(data) {
     $("#music .playing").removeClass("playing");
     $("#group-music-" + data.groupIndex).addClass("playing");
+    $(".track-list-container").removeClass("playing");
+    $("#music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
     $("#btn-music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
     $("#now-playing").text(`${data.groupName} > ${data.trackName}`);
     console.log("Now playing " + data.trackName + " (group " + data.groupIndex + " at index "
@@ -121,6 +127,7 @@ function _handleNowPlaying(data) {
 }
 
 function _handleMusicStopped(data) {
+    $(".track-list-container").removeClass("playing");
     $("#music .playing").removeClass("playing");
     $("#now-playing").text("-");
     console.log("Music stopped playing");
@@ -128,6 +135,7 @@ function _handleMusicStopped(data) {
 }
 
 function _handleMusicFinished(data) {
+    $(".track-list-container").removeClass("playing");
     $("#music .playing").removeClass("playing");
     $("#now-playing").text("-");
     console.log("Music finished playing");
@@ -135,9 +143,15 @@ function _handleMusicFinished(data) {
 }
 
 function _handleSetMusicMasterVolume(data) {
-    $("#music-volume").slider('setValue', data.volume);
+    $("#music-master-volume").slider('setValue', data.volume);
     console.log("Music master volume set to " + data.volume);
     displayToast("Music", "Set master volume to <strong>" + data.volume + "</strong>.");
+}
+
+function _handleSetMusicVolume(data) {
+    $("#music-volume-" + data.groupIndex + "-" + data.trackListIndex).slider('setValue', data.volume);
+    console.log("music volume for group=" + data.groupIndex + ", trackList=" + data.trackListIndex +
+        " set to " + data.volume);
 }
 
 function _handleSetSoundMasterVolume(data) {

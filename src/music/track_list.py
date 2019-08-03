@@ -9,9 +9,10 @@ class TrackList:
         """
         Initializes a `TrackList` instance.
 
-        The `dict` parameter is expected to be a dictionary with the following keys:
+        The `config` parameter is expected to be a dictionary with the following keys:
         - "name": the name of the track list
         - "directory": the directory where the files for this track list are (Optional)
+        - "volume": an integer between 0 (mute) and 100 (max) (Optional, default=100)
         - "loop": bool indicating whether to loop once all tracks have been played (Optional, default=True)
         - "shuffle": bool indicating whether to shuffle the tracks (Optional, default=True)
         - "next": name of the track list to play after this one finishes (Optional)
@@ -21,6 +22,7 @@ class TrackList:
         """
         self.name = config["name"]
         self.directory = config["directory"] if "directory" in config else None
+        self.volume = int(config["volume"]) if "volume" in config else 100
         self.loop = config["loop"] if "loop" in config else True
         self.shuffle = config["shuffle"] if "shuffle" in config else True
         self.next = config["next"] if "next" in config else None

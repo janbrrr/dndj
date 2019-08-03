@@ -1,8 +1,17 @@
 $(document).ready(function() {
-    const musicVolume = $("#music-volume");
+    const musicMasterVolume = $("#music-master-volume");
+    musicMasterVolume.slider({});
+    musicMasterVolume.on("slideStop", function(slideEvt) {
+        setMusicMasterVolume(slideEvt.value);
+    });
+
+    const musicVolume = $(".music-volume");
     musicVolume.slider({});
     musicVolume.on("slideStop", function(slideEvt) {
-        setMusicMasterVolume(slideEvt.value);
+        const target = $(slideEvt.currentTarget);
+        const groupIndex = target.data("group-index");
+        const trackListIndex = target.data("track-list-index");
+        setMusicVolume(groupIndex, trackListIndex, slideEvt.value);
     });
 
     const soundMasterVolume = $("#sound-master-volume");

@@ -442,25 +442,45 @@ class TestMusicManager:
     async def test_set_master_volume_instantly_sets_player_volume_if_no_smooth_parameter(
         self, example_music_manager, monkeypatch
     ):
+        example_music_manager.groups[0].track_lists[0].volume = 50
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
         example_music_manager._current_player = MagicMock()
-        await example_music_manager._set_master_volume(volume=1, smooth=False)
+        example_music_manager._currently_playing = CurrentlyPlaying(0, 0, MagicMock())
+        await example_music_manager._set_master_volume(volume=50, smooth=False)
         sleep_mock.assert_not_awaited()
-        example_music_manager._current_player.audio_set_volume.assert_called_once_with(1)
+        # volume set on the player is the multiplication of the master and individual volume divided by 100 (the max)
+        example_music_manager._current_player.audio_set_volume.assert_called_once_with(25)
 
     async def test_set_master_volume_sets_player_volume_in_steps_if_smooth_parameter(
         self, example_music_manager, monkeypatch
     ):
+        example_music_manager.groups[0].track_lists[0].volume = 50
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.music.music_manager.asyncio.sleep", sleep_mock)
+        example_music_manager._currently_playing = CurrentlyPlaying(0, 0, MagicMock())
         example_music_manager._current_player = MagicMock()
         example_music_manager._current_player.audio_get_volume.return_value = 0
         n_steps = 10
         seconds = 10
         await example_music_manager._set_master_volume(volume=100, smooth=True, n_steps=n_steps, seconds=seconds)
         sleep_mock.assert_awaited_with(seconds / n_steps)  # seconds / n_steps
-        step_size = 100 / n_steps  # 1 = |starting_volume - new_volume|
+        step_size = 50 / n_steps  # 50 = abs(starting_volume(0) - new_volume(100*50//100))
         example_music_manager._current_player.audio_set_volume.assert_has_calls(
-            [call(int((i + 1) * step_size)) for i in range(n_steps)]  # 10, 20, 30, ..., 100
+            [call(int((i + 1) * step_size)) for i in range(n_steps)]  # 5, 10, 15, ..., 50
         )
+
+    async def test_set_track_list_volume_sets_volume(self, example_music_manager):
+        example_music_manager.groups[0].track_lists[0].volume = 75
+        await example_music_manager.set_track_list_volume(MagicMock(), 0, 0, 50)
+        assert example_music_manager.groups[0].track_lists[0].volume == 50
+
+    async def test_set_track_list_volume_sets_player_volume_if_track_list_is_being_played(self, example_music_manager):
+        example_music_manager.volume = 50
+        example_music_manager.groups[0].track_lists[0].volume = 75
+        example_music_manager._current_player = MagicMock()
+        example_music_manager._currently_playing = CurrentlyPlaying(0, 0, MagicMock())
+        await example_music_manager.set_track_list_volume(MagicMock(), 0, 0, 50)
+        assert example_music_manager.groups[0].track_lists[0].volume == 50
+        expected_volume = (50 * 50) // 100  # master volume times track list volume divided by 100
+        example_music_manager._current_player.audio_set_volume.assert_called_once_with(expected_volume)

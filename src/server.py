@@ -121,8 +121,14 @@ class Server:
             await self._stop_music()
         elif action == "setMusicMasterVolume":
             if "volume" in data_dict:
-                volume = float(data_dict["volume"])
+                volume = int(data_dict["volume"])
                 await self._set_music_master_volume(request, volume)
+        elif action == "setMusicVolume":
+            if "groupIndex" in data_dict and "trackListIndex" in data_dict and "volume" in data_dict:
+                group_index = int(data_dict["groupIndex"])
+                track_list_index = int(data_dict["trackListIndex"])
+                volume = int(data_dict["volume"])
+                await self._set_music_volume(request, group_index, track_list_index, volume)
         elif action == "playSound":
             if "groupIndex" in data_dict and "soundIndex" in data_dict:
                 group_index = int(data_dict["groupIndex"])
@@ -170,9 +176,15 @@ class Server:
 
     async def _set_music_master_volume(self, request, volume):
         """
-        Sets the music volume.
+        Sets the music master volume.
         """
         await self.music.set_master_volume(request, volume)
+
+    async def _set_music_volume(self, request, group_index, track_list_index, volume):
+        """
+        Sets the volume for a specific track list.
+        """
+        await self.music.set_track_list_volume(request, group_index, track_list_index, volume)
 
     async def _play_sound(self, request, group_index, sound_index):
         """
@@ -239,7 +251,18 @@ class Server:
         elif action == MusicActions.MASTER_VOLUME:
             logger.debug(f"Music Callback: Master Volume")
             for ws in request.app["websockets"].values():
-                await ws.send_json({"action": "setMusicMasterVolume", "volume": music_info.volume})
+                await ws.send_json({"action": "setMusicMasterVolume", "volume": music_info.master_volume})
+        elif action == MusicActions.VOLUME:
+            logger.debug(f"Music Callback: Volume")
+            for ws in request.app["websockets"].values():
+                await ws.send_json(
+                    {
+                        "action": "setMusicVolume",
+                        "groupIndex": music_info.group_index,
+                        "trackListIndex": music_info.track_list_index,
+                        "volume": music_info.track_list_volume,
+                    }
+                )
 
     async def on_sound_changes(
         self, action: SoundActions, request: Request, sound_info: Optional[SoundCallbackInfo], master_volume: float

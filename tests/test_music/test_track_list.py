@@ -32,6 +32,15 @@ class TestTrackList:
         track_list = TrackList(minimal_track_list_config)
         assert track_list.directory == "/some/dir/"
 
+    def test_volume_is_max_by_default(self, minimal_track_list_config):
+        track_list = TrackList(minimal_track_list_config)
+        assert track_list.volume == 100
+
+    def test_volume_in_config(self, minimal_track_list_config):
+        minimal_track_list_config["volume"] = 0
+        track_list = TrackList(minimal_track_list_config)
+        assert track_list.volume == 0
+
     def test_loop_is_true_by_default(self, minimal_track_list_config):
         track_list = TrackList(minimal_track_list_config)
         assert track_list.loop is True
