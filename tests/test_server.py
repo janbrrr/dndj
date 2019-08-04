@@ -103,10 +103,15 @@ class TestServer:
 
     async def test_client_can_set_music_volume(self, patched_example_client):
         ws_resp = await patched_example_client.ws_connect("/")
-        set_music_volume_request = {"action": "setMusicVolume", "groupIndex": 0, "trackListIndex": 0, "volume": 75}
+        set_music_volume_request = {"action": "setTrackListVolume", "groupIndex": 0, "trackListIndex": 0, "volume": 75}
         await ws_resp.send_str(json.dumps(set_music_volume_request))
         resp = await ws_resp.receive()
-        assert json.loads(resp.data) == {"action": "setMusicVolume", "groupIndex": 0, "trackListIndex": 0, "volume": 75}
+        assert json.loads(resp.data) == {
+            "action": "setTrackListVolume",
+            "groupIndex": 0,
+            "trackListIndex": 0,
+            "volume": 75,
+        }
 
     async def test_client_can_request_sound_to_play(self, patched_example_client):
         ws_resp = await patched_example_client.ws_connect("/")

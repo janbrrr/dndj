@@ -32,6 +32,14 @@ body.dark-mode .playing {
     color: var(--myBlue);
 }
 
+body.dark-mode .playing .btn {
+    color: var(--myBlue);
+}
+
+body.dark-mode .playing .btn:hover {
+    color: var(--myBlue);
+}
+
 body.dark-mode .looping {
     color: var(--myBlue);
 }

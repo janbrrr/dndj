@@ -34,8 +34,8 @@ function connect() {
                 _handleSetMusicMasterVolume(data);
                 break;
             }
-            case "setMusicVolume": {
-                _handleSetMusicVolume(data);
+            case "setTrackListVolume": {
+                _handleSetTrackListVolume(data);
                 break;
             }
             case "setSoundMasterVolume": {
@@ -115,41 +115,31 @@ function displayToast(title, message) {
 }
 
 function _handleNowPlaying(data) {
-    $("#music .playing").removeClass("playing");
-    $("#group-music-" + data.groupIndex).addClass("playing");
-    $(".track-list-container").removeClass("playing");
-    $("#music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
-    $("#btn-music-" + data.groupIndex + "-" + data.trackListIndex).addClass("playing");
-    $("#now-playing").text(`${data.groupName} > ${data.trackName}`);
+    setMusicPlaying(data.groupIndex, data.groupName, data.trackListIndex, data.trackName);
     console.log("Now playing " + data.trackName + " (group " + data.groupIndex + " at index "
         + data.trackListIndex + ")");
     displayToast("Music", "Now playing <strong>" + data.trackName + "</strong>.");
 }
 
 function _handleMusicStopped(data) {
-    $(".track-list-container").removeClass("playing");
-    $("#music .playing").removeClass("playing");
-    $("#now-playing").text("-");
+    setMusicNotPlaying();
     console.log("Music stopped playing");
     displayToast("Music", "Stopped the music.");
 }
 
 function _handleMusicFinished(data) {
-    $(".track-list-container").removeClass("playing");
-    $("#music .playing").removeClass("playing");
-    $("#now-playing").text("-");
+    setMusicNotPlaying();
     console.log("Music finished playing");
     displayToast("Music", "Finished playing the music.");
 }
 
 function _handleSetMusicMasterVolume(data) {
-    $("#music-master-volume").slider('setValue', data.volume);
+    setMusicMasterVolume(data.volume);
     console.log("Music master volume set to " + data.volume);
-    displayToast("Music", "Set master volume to <strong>" + data.volume + "</strong>.");
 }
 
-function _handleSetMusicVolume(data) {
-    $("#music-volume-" + data.groupIndex + "-" + data.trackListIndex).slider('setValue', data.volume);
+function _handleSetTrackListVolume(data) {
+    setTrackListVolumeSlider(data.groupIndex, data.trackListIndex, data.volume);
     console.log("music volume for group=" + data.groupIndex + ", trackList=" + data.trackListIndex +
         " set to " + data.volume);
 }

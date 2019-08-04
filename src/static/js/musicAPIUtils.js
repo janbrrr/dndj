@@ -1,4 +1,4 @@
-function playMusic(groupIndex, trackListIndex) {
+function sendCmdPlayMusic(groupIndex, trackListIndex) {
     if (conn === null) {
         onNotConnected();
         return;
@@ -12,7 +12,7 @@ function playMusic(groupIndex, trackListIndex) {
 }
 
 
-function stopMusic() {
+function sendCmdStopMusic() {
     if (conn === null) {
         onNotConnected();
         return;
@@ -23,7 +23,7 @@ function stopMusic() {
     conn.send(JSON.stringify(toSend));
 }
 
-function setMusicMasterVolume(volume) {
+function sendCmdSetMusicMasterVolume(volume) {
     if (conn === null) {
         onNotConnected();
         return;
@@ -35,13 +35,13 @@ function setMusicMasterVolume(volume) {
     conn.send(JSON.stringify(toSend));
 }
 
-function setMusicVolume(groupIndex, trackListIndex, volume) {
+function sendCmdSetTrackListVolume(groupIndex, trackListIndex, volume) {
     if (conn === null) {
         onNotConnected();
         return;
     }
     const toSend = {
-        "action": "setMusicVolume",
+        "action": "setTrackListVolume",
         "groupIndex": groupIndex,
         "trackListIndex": trackListIndex,
         "volume": volume,

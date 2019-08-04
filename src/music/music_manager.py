@@ -260,7 +260,7 @@ class MusicManager:
             new_volume = (self.volume * track_list.volume) // 100
             self._current_player.audio_set_volume(new_volume)
         await self.callback_handler(
-            action=MusicActions.VOLUME,
+            action=MusicActions.TRACK_LIST_VOLUME,
             request=request,
             music_info=MusicCallbackInfo(
                 group_index, group.name, track_list_index, track_list.name, self.volume, track_list.volume

@@ -2,16 +2,16 @@ $(document).ready(function() {
     const musicMasterVolume = $("#music-master-volume");
     musicMasterVolume.slider({});
     musicMasterVolume.on("slideStop", function(slideEvt) {
-        setMusicMasterVolume(slideEvt.value);
+        sendCmdSetMusicMasterVolume(slideEvt.value);
     });
 
-    const musicVolume = $(".music-volume");
-    musicVolume.slider({});
-    musicVolume.on("slideStop", function(slideEvt) {
+    const trackListVolume = $(".track-list-volume");
+    trackListVolume.slider({});
+    trackListVolume.on("slideStop", function(slideEvt) {
         const target = $(slideEvt.currentTarget);
         const groupIndex = target.data("group-index");
         const trackListIndex = target.data("track-list-index");
-        setMusicVolume(groupIndex, trackListIndex, slideEvt.value);
+        sendCmdSetTrackListVolume(groupIndex, trackListIndex, slideEvt.value);
     });
 
     const soundMasterVolume = $("#sound-master-volume");

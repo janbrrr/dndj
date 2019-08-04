@@ -123,12 +123,12 @@ class Server:
             if "volume" in data_dict:
                 volume = int(data_dict["volume"])
                 await self._set_music_master_volume(request, volume)
-        elif action == "setMusicVolume":
+        elif action == "setTrackListVolume":
             if "groupIndex" in data_dict and "trackListIndex" in data_dict and "volume" in data_dict:
                 group_index = int(data_dict["groupIndex"])
                 track_list_index = int(data_dict["trackListIndex"])
                 volume = int(data_dict["volume"])
-                await self._set_music_volume(request, group_index, track_list_index, volume)
+                await self._set_track_list_volume(request, group_index, track_list_index, volume)
         elif action == "playSound":
             if "groupIndex" in data_dict and "soundIndex" in data_dict:
                 group_index = int(data_dict["groupIndex"])
@@ -180,7 +180,7 @@ class Server:
         """
         await self.music.set_master_volume(request, volume)
 
-    async def _set_music_volume(self, request, group_index, track_list_index, volume):
+    async def _set_track_list_volume(self, request, group_index, track_list_index, volume):
         """
         Sets the volume for a specific track list.
         """
@@ -252,12 +252,12 @@ class Server:
             logger.debug(f"Music Callback: Master Volume")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setMusicMasterVolume", "volume": music_info.master_volume})
-        elif action == MusicActions.VOLUME:
-            logger.debug(f"Music Callback: Volume")
+        elif action == MusicActions.TRACK_LIST_VOLUME:
+            logger.debug(f"Music Callback: Track List Volume")
             for ws in request.app["websockets"].values():
                 await ws.send_json(
                     {
-                        "action": "setMusicVolume",
+                        "action": "setTrackListVolume",
                         "groupIndex": music_info.group_index,
                         "trackListIndex": music_info.track_list_index,
                         "volume": music_info.track_list_volume,

@@ -15,6 +15,14 @@
     color: var(--myBlue);
 }
 
+.playing .btn{
+    color: var(--myBlue);
+}
+
+.playing .btn:hover{
+    color: var(--myBlue);
+}
+
 .looping {
     color: var(--myBlue);
 }

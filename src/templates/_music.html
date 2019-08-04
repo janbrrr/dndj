@@ -7,7 +7,7 @@
     Now Playing
     <strong>
         <span id="now-playing" class="ml-2">
-            {% if music.currently_playing.0 %}
+            {% if music.currently_playing.1 %}
                 {{ music.currently_playing.1 }} > {{ music.currently_playing.3 }}
             {% else %}
                 -
@@ -17,7 +17,7 @@
 </p>
 <p>
     Stop the Music
-    <button type="button" class="btn" onclick="stopMusic()">
+    <button type="button" class="btn" onclick="sendCmdStopMusic()">
         <i class="fas fa-stop"></i>
     </button>
 </p>
@@ -26,9 +26,11 @@
     {% for group in music.groups %}
     {% set outer_loop = loop %}
     <div>
-        <a id="group-music-{{ outer_loop.index0 }}"
-           class="row btn collapse-btn {% if music.currently_playing
-                    and music.currently_playing.1 == group.name %}playing{% endif %}"
+        <a id="music-group-{{ outer_loop.index0 }}"
+           class="row btn collapse-btn
+                  {% if music.currently_playing and music.currently_playing.1 == group.name %}
+                    playing
+                  {% endif %}"
            data-toggle="collapse"
            href="#collapseMusicGroup{{outer_loop.index0}}" role="button"
            aria-expanded="false" aria-controls="collapseMusicGroup{{outer_loop.index0}}">
@@ -38,25 +40,28 @@
             <div class="row">
                 {% if group.track_lists %}
                 {% for _track_list in group.track_lists %}
-                <div id="music-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                <div id="track-list-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                     class="col-12 col-sm-6 col-xl-4 group-item
                      {% if music.currently_playing and music.currently_playing.1 == group.name
                            and music.currently_playing.3 == _track_list.name %}
-                        class="col-12 col-sm-6 col-xl-4 group-item track-list-container playing"
-                     {% else %}
-                        class="col-12 col-sm-6 col-xl-4 group-item track-list-container"
-                     {% endif %}>
+                        playing
+                     {% endif %}">
                     <div>
                         {{ _track_list.name }}
                     </div>
-                    <button type="button" class="btn {% if music.currently_playing
-                    and music.currently_playing.1 == group.name
-                    and music.currently_playing.3 == _track_list.name %}playing{% endif %}"
+                    <button type="button"
+                            class="btn
+                            {% if music.currently_playing
+                            and music.currently_playing.1 == group.name
+                            and music.currently_playing.3 == _track_list.name %}
+                               playing
+                            {% endif %}"
                             id="btn-music-{{ outer_loop.index0 }}-{{ loop.index0 }}"
-                            onclick="playMusic({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                            onclick="sendCmdPlayMusic({{ outer_loop.index0 }}, {{ loop.index0 }})">
                         <i class="fas fa-play play-icon"></i>
                     </button>
-                    <input id="music-volume-{{ outer_loop.index0 }}-{{ loop.index0 }}"
-                           class="music-volume" type="text" data-slider-min="0" data-slider-max="100"
+                    <input id="track-list-volume-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                           class="track-list-volume" type="text" data-slider-min="0" data-slider-max="100"
                            data-slider-step="5" data-slider-value="{{ _track_list.volume }}"
                            data-group-index="{{ outer_loop.index0 }}" data-track-list-index="{{ loop.index0 }}"/>
                 </div>
