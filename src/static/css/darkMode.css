@@ -1,6 +1,6 @@
 body.dark-mode {
     background-color: #212121;
-    color: var(--myWhite);
+    color: var(--myDarkText);
 }
 
 body.dark-mode .toast {
@@ -8,40 +8,40 @@ body.dark-mode .toast {
 }
 
 body.dark-mode .nav-link {
-    color: var(--myWhite);
+    color: var(--myDarkText);
 }
 
 body.dark-mode .nav-link:hover {
-    color: var(--myBlue);
+    color: var(--myDarkHighlight);
 }
 
 body.dark-mode .nav-link.active {
     background-color: #212121;
-    color: var(--myWhite);
+    color: var(--myDarkText);
 }
 
 body.dark-mode .btn {
-    color: var(--myWhite);
+    color: var(--myDarkText);
 }
 
 body.dark-mode .btn:hover {
-    color: var(--myBlue);
+    color: var(--myDarkHighlight);
 }
 
 body.dark-mode .playing {
-    color: var(--myBlue);
+    color: var(--myDarkHighlight);
 }
 
 body.dark-mode .playing .music-stop-btn {
-    color: var(--myBlue);
+    color: var(--myDarkHighlight);
 }
 
 body.dark-mode .playing .sound-stop-btn {
-    color: var(--myBlue);
+    color: var(--myDarkHighlight);
 }
 
 body.dark-mode .looping {
-    color: var(--myBlue);
+    color: var(--myDarkHighlight);
 }
 
 body.dark-mode hr.row {

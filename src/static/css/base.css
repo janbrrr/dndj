@@ -1,18 +1,24 @@
 :root {
-    --myBlue: #337ab7;
-    --myWhite: #E0E0E0;
+    --myLightText: #373d3f;
+    --myLightHighlight: #1A73E8;
+    --myDarkText: #E0E0E0;
+    --myDarkHighlight: #337ab7;
+}
+
+body {
+    color: var(--myLightText);
 }
 
 .btn:hover {
-    color: var(--myBlue);
+    color: var(--myLightHighlight);
 }
 
 .playing {
-    color: var(--myBlue);
+    color: var(--myLightHighlight);
 }
 
 .playing:hover {
-    color: var(--myBlue);
+    color: var(--myLightHighlight);
 }
 
 .playing .music-play-btn{
@@ -24,7 +30,7 @@
 }
 
 .playing .music-stop-btn{
-    color: var(--myBlue);
+    color: var(--myLightHighlight);
     display: inline-block;
 }
 
@@ -37,20 +43,20 @@
 }
 
 .playing .sound-stop-btn{
-    color: var(--myBlue);
+    color: var(--myLightHighlight);
     display: inline-block;
 }
 
 .playing .sound-btn:hover{
-    color: var(--myBlue);
+    color: var(--myLightHighlight);
 }
 
 .looping {
-    color: var(--myBlue);
+    color: var(--myLightHighlight);
 }
 
 .looping:hover {
-    color: var(--myBlue);
+    color: var(--myLightHighlight);
 }
 
 .slider {
