@@ -15,12 +15,17 @@
     color: var(--myBlue);
 }
 
-.playing .music-btn{
-    color: var(--myBlue);
+.playing .music-play-btn{
+    display: none;
 }
 
-.playing .music-btn:hover{
+.music-stop-btn {
+    display: none;
+}
+
+.playing .music-stop-btn{
     color: var(--myBlue);
+    display: inline-block;
 }
 
 .playing .sound-btn{

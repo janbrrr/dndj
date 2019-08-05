@@ -50,15 +50,16 @@
                         {{ _track_list.name }}
                     </div>
                     <button type="button"
-                            class="btn music-btn
-                            {% if music.currently_playing
-                            and music.currently_playing.1 == group.name
-                            and music.currently_playing.3 == _track_list.name %}
-                               playing
-                            {% endif %}"
-                            id="btn-music-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                            class="btn music-play-btn"
+                            id="btn-music-play-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                             onclick="sendCmdPlayMusic({{ outer_loop.index0 }}, {{ loop.index0 }})">
                         <i class="fas fa-play play-icon"></i>
+                    </button>
+                    <button type="button"
+                            class="btn music-stop-btn"
+                            id="btn-music-stop-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                            onclick="sendCmdStopMusic()">
+                        <i class="fas fa-stop play-icon"></i>
                     </button>
                     <input id="track-list-volume-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                            class="track-list-volume" type="text" data-slider-min="0" data-slider-max="100"
