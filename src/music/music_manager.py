@@ -201,11 +201,11 @@ class MusicManager:
         else:
             await self.play_track_list(request, next_group_index, next_track_list_index)
 
-    async def set_master_volume(self, request, volume, seconds=1):
+    async def set_master_volume(self, request, volume):
         """
         Sets the master volume for the music.
         """
-        await self._set_master_volume(volume, set_global=True, seconds=seconds)
+        await self._set_master_volume(volume, set_global=True, smooth=False)
         await self.callback_handler(
             action=MusicActions.MASTER_VOLUME, request=request, music_info=self.currently_playing
         )
