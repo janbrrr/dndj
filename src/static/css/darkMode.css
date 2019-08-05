@@ -32,11 +32,11 @@ body.dark-mode .playing {
     color: var(--myBlue);
 }
 
-body.dark-mode .playing .btn {
+body.dark-mode .playing .music-btn {
     color: var(--myBlue);
 }
 
-body.dark-mode .playing .btn:hover {
+body.dark-mode .playing .music-btn:hover {
     color: var(--myBlue);
 }
 

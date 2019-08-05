@@ -15,11 +15,11 @@
     color: var(--myBlue);
 }
 
-.playing .btn{
+.playing .music-btn{
     color: var(--myBlue);
 }
 
-.playing .btn:hover{
+.playing .music-btn:hover{
     color: var(--myBlue);
 }
 
