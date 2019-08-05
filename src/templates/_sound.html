@@ -32,24 +32,14 @@
                     </div>
                     <div>
                         <button type="button"
-                            {% if (outer_loop.index0, loop.index0) in sound.sounds_currently_playing %}
-                                class="btn hidden"
-                            {% else %}
-                                class="btn"
-                            {% endif %}
-                            id="btn-sound-play-{{ outer_loop.index0 }}-{{ loop.index0 }}"
-                            onclick="sendCmdPlaySound({{ outer_loop.index0 }}, {{ loop.index0 }})">
-                            <i class="fas fa-play play-icon"></i>
+                                class="btn sound-play-btn"
+                                onclick="sendCmdPlaySound({{ outer_loop.index0 }}, {{ loop.index0 }})">
+                            <i class="fas fa-play player-icon"></i>
                         </button>
                         <button type="button"
-                                {% if (outer_loop.index0, loop.index0) in sound.sounds_currently_playing %}
-                                    class="btn sound-btn"
-                                {% else %}
-                                    class="btn sound-btn hidden"
-                                {% endif %}
-                                id="btn-sound-stop-{{ outer_loop.index0 }}-{{ loop.index0 }}"
+                                class="btn sound-stop-btn"
                                 onclick="sendCmdStopSound({{ outer_loop.index0 }}, {{ loop.index0 }})">
-                            <i class="fas fa-stop play-icon"></i>
+                            <i class="fas fa-stop player-icon"></i>
                         </button>
                         <input id="sound-volume-{{ outer_loop.index0 }}-{{ loop.index0 }}"
                                class="sound-volume" type="text" data-slider-min="0" data-slider-max="1"

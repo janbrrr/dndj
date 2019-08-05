@@ -12,14 +12,6 @@ function selectSoundContainer(groupIndex, soundIndex) {
     return $("#sound-" + groupIndex + "-" + soundIndex);
 }
 
-function selectSoundPlayButton(groupIndex, soundIndex) {
-    return $("#btn-sound-play-" + groupIndex + "-" + soundIndex);
-}
-
-function selectSoundStopButton(groupIndex, soundIndex) {
-    return $("#btn-sound-stop-" + groupIndex + "-" + soundIndex);
-}
-
 function selectSoundVolumeSlider(groupIndex, soundIndex) {
     return $("#sound-volume-" + groupIndex + "-" + soundIndex);
 }
@@ -45,14 +37,10 @@ function setSoundVolume(groupIndex, soundIndex, volume) {
 function setSoundPlaying(groupIndex, soundIndex) {
     selectSoundGroupHeader(groupIndex).addClass("playing");
     selectSoundContainer(groupIndex, soundIndex).addClass("playing");
-    selectSoundPlayButton(groupIndex, soundIndex).addClass("hidden");
-    selectSoundStopButton(groupIndex, soundIndex).removeClass("hidden");
 }
 
 function setSoundNotPlaying(groupIndex, soundIndex) {
     selectSoundContainer(groupIndex, soundIndex).removeClass("playing");
-    selectSoundPlayButton(groupIndex, soundIndex).removeClass("hidden");
-    selectSoundStopButton(groupIndex, soundIndex).addClass("hidden");
     const groupContainer = selectSoundGroupHeader(groupIndex).parent();
     if (groupContainer.find(".group-item.playing").length === 0) {
         groupContainer.find(".group-header").removeClass("playing");

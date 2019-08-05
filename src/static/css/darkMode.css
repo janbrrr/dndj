@@ -36,11 +36,7 @@ body.dark-mode .playing .music-stop-btn {
     color: var(--myBlue);
 }
 
-body.dark-mode .playing .sound-btn {
-    color: var(--myBlue);
-}
-
-body.dark-mode .playing .sound-btn:hover {
+body.dark-mode .playing .sound-stop-btn {
     color: var(--myBlue);
 }
 
