@@ -40,6 +40,14 @@ body.dark-mode .playing .music-btn:hover {
     color: var(--myBlue);
 }
 
+body.dark-mode .playing .sound-btn {
+    color: var(--myBlue);
+}
+
+body.dark-mode .playing .sound-btn:hover {
+    color: var(--myBlue);
+}
+
 body.dark-mode .looping {
     color: var(--myBlue);
 }

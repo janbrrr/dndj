@@ -26,7 +26,7 @@
     {% for group in music.groups %}
     {% set outer_loop = loop %}
     <div>
-        <a id="music-group-{{ outer_loop.index0 }}"
+        <a id="music-group-header-{{ outer_loop.index0 }}"
            class="row btn collapse-btn
                   {% if music.currently_playing and music.currently_playing.1 == group.name %}
                     playing

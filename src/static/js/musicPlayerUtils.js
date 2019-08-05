@@ -12,8 +12,8 @@ function selectMusicMasterVolumeSlider() {
     return $("#music-master-volume");
 }
 
-function selectMusicGroupContainer(groupIndex) {
-    return $("#music-group-" + groupIndex);
+function selectMusicGroupHeader(groupIndex) {
+    return $("#music-group-header-" + groupIndex);
 }
 
 function selectTrackListContainer(groupIndex, trackListIndex) {
@@ -33,7 +33,7 @@ function setMusicNotPlaying() {
 
 function setMusicPlaying(groupIndex, groupName, trackListIndex, trackName) {
     setMusicNotPlaying();
-    selectMusicGroupContainer(groupIndex).addClass("playing");
+    selectMusicGroupHeader(groupIndex).addClass("playing");
     selectTrackListContainer(groupIndex, trackListIndex).addClass("playing");
     selectMusicOverview().text(`${groupName} > ${trackName}`);
 }

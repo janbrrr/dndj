@@ -145,73 +145,42 @@ function _handleSetTrackListVolume(data) {
 }
 
 function _handleSetSoundMasterVolume(data) {
-    $("#sound-volume").slider('setValue', data.volume);
+    setSoundMasterVolume(data.volume);
     console.log("Sound master volume set to " + data.volume);
-    displayToast("Sound", "Set master volume to <strong>" + data.volume + "</strong>.");
 }
 
 function _handleSetSoundVolume(data) {
-    $("#sound-volume-" + data.groupIndex + "-" + data.soundIndex).slider('setValue', data.volume);
+    setSoundVolume(data.groupIndex, data.soundIndex, data.volume);
     console.log("Sound volume for group=" + data.groupIndex + ", sound=" + data.soundIndex +
         " set to " + data.volume);
 }
 
 function _handleSoundPlaying(data) {
-    $("#group-sound-" + data.groupIndex).addClass("playing");
-    const soundDiv = $("#sound-" + data.groupIndex + "-" + data.soundIndex);
-    const playButton = $("#btn-sound-play-" + data.groupIndex + "-" + data.soundIndex);
-    const stopButton = $("#btn-sound-stop-" + data.groupIndex + "-" + data.soundIndex);
-    soundDiv.addClass("playing");
-    playButton.addClass("hidden");
-    stopButton.removeClass("hidden").addClass("playing");
+    setSoundPlaying(data.groupIndex, data.soundIndex);
     console.log("Now playing sound " + data.soundName + " (group " + data.groupIndex + " at index "
         + data.soundIndex + ")");
 }
 
 function _handleSoundStopped(data){
-    const soundDiv = $("#sound-" + data.groupIndex + "-" + data.soundIndex);
-    const playButton = $("#btn-sound-play-" + data.groupIndex + "-" + data.soundIndex);
-    const stopButton = $("#btn-sound-stop-" + data.groupIndex + "-" + data.soundIndex);
-    soundDiv.removeClass("playing");
-    stopButton.removeClass("playing").addClass("hidden");
-    playButton.removeClass("hidden");
-    const groupElement = $("#group-sound-" + data.groupIndex).parent();
-    if (groupElement.find("div.playing").length === 0) {
-        groupElement.children("a").removeClass("playing");
-    }
+    setSoundNotPlaying(data.groupIndex, data.soundIndex);
     console.log("Stopped sound " + data.soundName + " (group " + data.groupIndex + " at index "
         + data.soundIndex + ")");
 }
 
 function _handleSoundFinished(data){
-    const soundDiv = $("#sound-" + data.groupIndex + "-" + data.soundIndex);
-    const playButton = $("#btn-sound-play-" + data.groupIndex + "-" + data.soundIndex);
-    const stopButton = $("#btn-sound-stop-" + data.groupIndex + "-" + data.soundIndex);
-    soundDiv.removeClass("playing");
-    stopButton.removeClass("playing").addClass("hidden");
-    playButton.removeClass("hidden");
-    const groupElement = $("#group-sound-" + data.groupIndex).parent();
-    if (groupElement.find("div.playing").length === 0) {
-        groupElement.children("a").removeClass("playing");
-    }
+    setSoundNotPlaying(data.groupIndex, data.soundIndex);
     console.log("Finished sound " + data.soundName + " (group " + data.groupIndex + " at index "
         + data.soundIndex + ")");
 }
 
 function _handleSetSoundLoop(data) {
-    const soundLoopIcon = $("#btn-sound-loop-" + data.groupIndex + "-" + data.soundIndex);
-    if (data.loop) {
-        soundLoopIcon.addClass("looping");
-    } else {
-        soundLoopIcon.removeClass("looping");
-    }
+    setSoundLoop(data.groupIndex, data.soundIndex, data.loop);
     console.log("Sound loop for group=" + data.groupIndex + ", sound=" + data.soundIndex +
         " set to " + data.loop);
 }
 
 function _handleSetSoundLoopDelay(data) {
-    const soundLoopDelayInput = $("#sound-loop-delay-" + data.groupIndex + "-" + data.soundIndex);
-    soundLoopDelayInput.val(data.loopDelay);
+    setSoundLoopDelay(data.groupIndex, data.soundIndex, data.loopDelay);
     console.log("Sound loop delay for group=" + data.groupIndex + ", sound=" + data.soundIndex +
         " set to " + data.loopDelay);
 }

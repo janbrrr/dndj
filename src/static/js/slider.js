@@ -17,7 +17,7 @@ $(document).ready(function() {
     const soundMasterVolume = $("#sound-master-volume");
     soundMasterVolume.slider({});
     soundMasterVolume.on("slideStop", function(slideEvt) {
-        setSoundMasterVolume(slideEvt.value);
+        sendCmdSetSoundMasterVolume(slideEvt.value);
     });
 
     const soundVolume = $(".sound-volume");
@@ -26,6 +26,6 @@ $(document).ready(function() {
         const target = $(slideEvt.currentTarget);
         const groupIndex = target.data("group-index");
         const soundIndex = target.data("sound-index");
-        setSoundVolume(groupIndex, soundIndex, slideEvt.value);
+        sendCmdSetSoundVolume(groupIndex, soundIndex, slideEvt.value);
     });
 });

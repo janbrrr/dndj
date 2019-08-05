@@ -23,6 +23,14 @@
     color: var(--myBlue);
 }
 
+.playing .sound-btn{
+    color: var(--myBlue);
+}
+
+.playing .sound-btn:hover{
+    color: var(--myBlue);
+}
+
 .looping {
     color: var(--myBlue);
 }

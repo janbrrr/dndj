@@ -1,4 +1,4 @@
-function playSound(groupIndex, soundIndex) {
+function sendCmdPlaySound(groupIndex, soundIndex) {
     if (conn === null) {
         onNotConnected();
         return;
@@ -11,7 +11,7 @@ function playSound(groupIndex, soundIndex) {
     conn.send(JSON.stringify(toSend));
 }
 
-function stopSound(groupIndex, soundIndex) {
+function sendCmdStopSound(groupIndex, soundIndex) {
     if (conn === null) {
         onNotConnected();
         return;
@@ -24,7 +24,7 @@ function stopSound(groupIndex, soundIndex) {
     conn.send(JSON.stringify(toSend));
 }
 
-function setSoundMasterVolume(volume) {
+function sendCmdSetSoundMasterVolume(volume) {
     if (conn === null) {
         onNotConnected();
         return;
@@ -36,7 +36,7 @@ function setSoundMasterVolume(volume) {
     conn.send(JSON.stringify(toSend));
 }
 
-function setSoundVolume(groupIndex, soundIndex, volume) {
+function sendCmdSetSoundVolume(groupIndex, soundIndex, volume) {
     if (conn === null) {
         onNotConnected();
         return;
@@ -50,32 +50,30 @@ function setSoundVolume(groupIndex, soundIndex, volume) {
     conn.send(JSON.stringify(toSend));
 }
 
-function setSoundLoop(groupIndex, soundIndex) {
+function sendCmdSetSoundLoop(groupIndex, soundIndex) {
     if (conn === null) {
         onNotConnected();
         return;
     }
-    const currentValue = $("#btn-sound-loop-" + groupIndex + "-" + soundIndex).hasClass("looping");
     const toSend = {
         "action": "setSoundLoop",
         "groupIndex": groupIndex,
         "soundIndex": soundIndex,
-        "loop": !currentValue,
+        "loop": !isSoundLooping(groupIndex, soundIndex),
     };
     conn.send(JSON.stringify(toSend));
 }
 
-function setSoundLoopDelay(groupIndex, soundIndex) {
+function sendCmdSetSoundLoopDelay(groupIndex, soundIndex) {
     if (conn === null) {
         onNotConnected();
         return;
     }
-    const inputElement = $("#sound-loop-delay-" + groupIndex + "-" + soundIndex);
     const toSend = {
         "action": "setSoundLoopDelay",
         "groupIndex": groupIndex,
         "soundIndex": soundIndex,
-        "loopDelay": inputElement.val(),
+        "loopDelay": selectSoundLoopDelayInput(groupIndex, soundIndex).val(),
     };
     conn.send(JSON.stringify(toSend));
 }
