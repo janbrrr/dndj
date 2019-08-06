@@ -58,8 +58,8 @@ function connect() {
                 _handleSoundFinished(data);
                 break;
             }
-            case "setSoundLoop": {
-                _handleSetSoundLoop(data);
+            case "setSoundRepeatCount": {
+                _handleSetSoundRepeatCount(data);
                 break;
             }
             case "setSoundLoopDelay": {
@@ -173,10 +173,10 @@ function _handleSoundFinished(data){
         + data.soundIndex + ")");
 }
 
-function _handleSetSoundLoop(data) {
-    setSoundLoop(data.groupIndex, data.soundIndex, data.loop);
-    console.log("Sound loop for group=" + data.groupIndex + ", sound=" + data.soundIndex +
-        " set to " + data.loop);
+function _handleSetSoundRepeatCount(data) {
+    setSoundRepeatCount(data.groupIndex, data.soundIndex, data.repeatCount);
+    console.log("Sound repeat count for group=" + data.groupIndex + ", sound=" + data.soundIndex +
+        " set to " + data.repeatCount);
 }
 
 function _handleSetSoundLoopDelay(data) {

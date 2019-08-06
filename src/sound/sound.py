@@ -23,7 +23,7 @@ class Sound:
         - "name": a descriptive name for the sound
         - "directory": the directory where the files for this sound are (Optional)
         - "volume": a value between 0 and 1 where 1 is maximum volume and 0 is no volume (Optional, default=1)
-        - "loop": whether to loop the sound (Optional, default=False)
+        - "repeat_count": total repeats the sound (including initial) where 0 means infinite (Optional, default=1)
         - "loop_delay": delay in ms used when looping. Either an int or a string '<min>-<max>' (Optional, default=0)
         - "files": a list of files (or `SoundFile` configs) associated with this sound
 
@@ -32,7 +32,7 @@ class Sound:
         self.name = config["name"]
         self.directory = config["directory"] if "directory" in config else None
         self.volume = config["volume"] if "volume" in config else 1
-        self.loop = config["loop"] if "loop" in config else False
+        self.repeat_count = int(config["repeat_count"]) if "repeat_count" in config else 1
         if "loop_delay" in config:
             self.loop_delay = config["loop_delay"]
         else:

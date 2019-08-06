@@ -31,9 +31,14 @@ class TestSound:
         sound = Sound(minimal_sound_config)
         assert sound.directory == "/some/dir/"
 
-    def test_loop_is_false_by_default(self, minimal_sound_config):
+    def test_repeat_count_is_one_by_default(self, minimal_sound_config):
         sound = Sound(minimal_sound_config)
-        assert sound.loop is False
+        assert sound.repeat_count == 1
+
+    def test_repeat_count_in_config(self, minimal_sound_config):
+        minimal_sound_config["repeat_count"] = 42
+        sound = Sound(minimal_sound_config)
+        assert sound.repeat_count == 42
 
     def test_loop_delay_is_zero_by_default(self, minimal_sound_config):
         sound = Sound(minimal_sound_config)

@@ -16,7 +16,8 @@ able to play them without any issues.
 - Sound
   - Supports WAV and OGG files
   - Supports end_at and individual volume parameters
-  - Sounds support looping (every X milliseconds or random within an interval)
+  - Repeat a sound X times or for an infinite number of times
+  - Repeat a sound every X milliseconds or every interval X-Y
   - Each sound can only be played once at a time
   - Different sounds can be played at the same time
 - Start the server with the config (and connect the server to the speakers)
@@ -231,7 +232,7 @@ sound:
     - name: Sword Hit
       directory: path/to/dir  # (Optional) used if all files of a sound are in the same dir
       volume: 0.5             # (Optional, default=1) value from 0 (mute) to 1 (max)
-      loop: false             # (Optional, default=false) whether to loop the sound
+      repeat_count: 3         # (Optional, default=1) #times to play the sound (includes initial, 0 = ∞)
       loop_delay: 5000-7000   # (Optional, default=0) delay to use in ms, single number or interval
       files: []               # a list of sound files
 ```

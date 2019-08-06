@@ -51,14 +51,6 @@ body {
     color: var(--myLightHighlight);
 }
 
-.looping {
-    color: var(--myLightHighlight);
-}
-
-.looping:hover {
-    color: var(--myLightHighlight);
-}
-
 .slider {
     margin-left: 15px;
     margin-right: 15px;
@@ -112,4 +104,13 @@ body {
 
 .hidden {
     display: none;
+}
+
+.repeat-count-input {
+    max-width: 50px;
+    margin-right: 5px;
+}
+
+.repeat-delay-input {
+    max-width: 150px;
 }

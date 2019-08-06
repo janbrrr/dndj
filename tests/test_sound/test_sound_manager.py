@@ -100,55 +100,58 @@ class TestSoundManager:
         manager = SoundManager({"volume": 1, "directory": "default/dir/", "groups": []})
         do_all_checks_mock.assert_called_once_with(manager.groups, manager.directory)
 
-    async def test_play_repeating_sound_repeats_if_loop_is_set(self, example_sound_manager, monkeypatch):
+    async def test_play_repeating_sound_repeats_if_replay_count_is_zero(self, example_sound_manager, monkeypatch):
         """
-        Test that the `_play_repeating_sound()` will repeatedly call `_play_sound()` if the `loop` attribute on
-        the `Sound` instance is set.
+        Test that the `_play_repeating_sound()` will repeatedly call `_play_sound()` if the `repeat_count` attribute on
+        the `Sound` instance is zero (meaning infinite replays).
         """
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
-        sound.loop = True
+        sound.repeat_count = 0
         count = 0
 
-        def unset_loop(*args, **kwargs):
+        def unset_infinite_replay(*args, **kwargs):
             nonlocal count
             nonlocal sound
             count += 1
             if count == 3:
-                sound.loop = False
+                sound.repeat_count = 1  # to stop the replay as it has exceeded a single replay
 
-        play_sound_mock = CoroutineMock(side_effect=unset_loop)
+        play_sound_mock = CoroutineMock(side_effect=unset_infinite_replay)
         example_sound_manager._play_sound = play_sound_mock
         request_mock = MagicMock()
         await example_sound_manager._play_repeating_sound(request_mock, 0, 0)
         assert play_sound_mock.await_count == 3
         play_sound_mock.assert_has_awaits([call(0, 0), call(0, 0), call(0, 0)])
 
+    async def test_play_repeating_sound_replays_sound_for_replay_count_times(self, example_sound_manager, monkeypatch):
+        """
+        Test that `_play_repeating_sound()` will call `_play_sound()` for `repeat_count` times (attribute on
+        the `Sound` instance).
+        """
+        group = example_sound_manager.groups[0]
+        sound = group.sounds[0]
+        sound.repeat_count = 5
+        play_sound_mock = CoroutineMock()
+        example_sound_manager._play_sound = play_sound_mock
+        await example_sound_manager._play_repeating_sound(MagicMock(), 0, 0)
+        assert play_sound_mock.await_count == 5
+        play_sound_mock.assert_has_awaits([call(0, 0), call(0, 0), call(0, 0), call(0, 0)])
+
     async def test_play_repeating_sound_waits_for_loop_delay_before_repeating(self, example_sound_manager, monkeypatch):
         """
-        Test that the `_play_repeating_sound()` will call `_play_sound()` again (if the `loop` attribute on
-        the `Sound` instance is set) AFTER waiting for `loop_delay` ms.
+        Test that the `_play_repeating_sound()` will wait for `loop_delay` ms.
         """
         sleep_mock = CoroutineMock()
         monkeypatch.setattr("src.sound.sound_manager.asyncio.sleep", sleep_mock)
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
-        sound.loop = True
-        sound._loop_delay_min = 42
-        sound._loop_delay_max = 42
-        count = 0
-
-        def unset_loop(*args, **kwargs):
-            nonlocal count
-            nonlocal sound
-            count += 1
-            if count == 3:
-                sound.loop = False
-
-        example_sound_manager._play_sound = CoroutineMock(side_effect=unset_loop)
+        sound.repeat_count = 4
+        sound.loop_delay = 42
+        example_sound_manager._play_sound = CoroutineMock()
         await example_sound_manager._play_repeating_sound(MagicMock(), 0, 0)
-        assert sleep_mock.await_count == 2
-        sleep_mock.assert_has_awaits([call(42 / 1000.0), call(42 / 1000.0)])
+        assert sleep_mock.await_count == 3
+        sleep_mock.assert_has_awaits([call(42 / 1000.0), call(42 / 1000.0), call(42 / 1000.0)])
 
     async def test_play_sound_uses_correct_file_path(self, example_sound_manager, monkeypatch):
         """
@@ -285,12 +288,14 @@ class TestSoundManager:
         assert currently_playing[1].sound_name == example_sound_manager.groups[0].sounds[1].name
         await asyncio.gather(dummy_task_one, dummy_task_two)
 
-    async def test_set_sound_loop(self, example_sound_manager):
+    async def test_set_sound_repeat_count(self, example_sound_manager):
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]
-        sound.loop = False
-        await example_sound_manager.set_sound_loop(request=MagicMock(), group_index=0, sound_index=0, loop_value=True)
-        assert sound.loop is True
+        sound.repeat_count = 1
+        await example_sound_manager.set_sound_repeat_count(
+            request=MagicMock(), group_index=0, sound_index=0, repeat_count=42
+        )
+        assert sound.repeat_count == 42
 
     async def test_set_sound_loop_delay(self, example_sound_manager):
         group = example_sound_manager.groups[0]

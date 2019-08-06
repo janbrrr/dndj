@@ -100,9 +100,11 @@ class SoundManager:
         try:
             await self.callback_handler(SoundActions.START, request, sound_info, self.volume)
             logger.info(f"Playing sound on repeat: {sound.name}")
+            repeat_count = 0
             while True:
                 await self._play_sound(group_index, sound_index)
-                if not sound.loop:
+                repeat_count += 1
+                if sound.repeat_count != 0 and repeat_count >= sound.repeat_count:
                     break
                 delay = sound.loop_delay
                 if delay == 0:
@@ -184,21 +186,21 @@ class SoundManager:
         logger.info(f"Changed sound volume for group={group_index}, sound={sound_index} to {volume}")
         await self.callback_handler(SoundActions.VOLUME, request, sound_info, self.volume)
 
-    async def set_sound_loop(self, request: Request, group_index: int, sound_index: int, loop_value: bool):
+    async def set_sound_repeat_count(self, request: Request, group_index: int, sound_index: int, repeat_count: int):
         """
         Sets the loop attribute for a specific sound.
 
         :param request: the request that caused this action
         :param group_index: index of the group of the sound
         :param sound_index: index of the sound in the group
-        :param loop_value: new value of the loop attribute
+        :param repeat_count: number of times to repeat the sound (includes initial replay, 0 means infinity)
         """
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
-        sound.loop = loop_value
+        sound.repeat_count = repeat_count
         sound_info = self._get_sound_callback_info(group_index, sound_index)
-        logger.info(f"Changed sound loop attribute for group={group_index}, sound={sound_index} to {loop_value}")
-        await self.callback_handler(SoundActions.LOOP, request, sound_info, self.volume)
+        logger.info(f"Changed sound repeat count for group={group_index}, sound={sound_index} to {repeat_count}")
+        await self.callback_handler(SoundActions.REPEAT_COUNT, request, sound_info, self.volume)
 
     async def set_sound_loop_delay(self, request: Request, group_index: int, sound_index: int, loop_delay: str):
         """
@@ -226,7 +228,7 @@ class SoundManager:
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
         return SoundCallbackInfo(
-            group_index, group.name, sound_index, sound.name, sound.volume, sound.loop, sound.loop_delay_config
+            group_index, group.name, sound_index, sound.name, sound.volume, sound.repeat_count, sound.loop_delay_config
         )
 
     def __eq__(self, other):

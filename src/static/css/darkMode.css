@@ -40,10 +40,14 @@ body.dark-mode .playing .sound-stop-btn {
     color: var(--myDarkHighlight);
 }
 
-body.dark-mode .looping {
-    color: var(--myDarkHighlight);
-}
-
 body.dark-mode hr.row {
     border-color: #3D3D3D;
+}
+
+body.dark-mode .input-field .border {
+    background: var(--myDarkHighlight);
+}
+
+body.dark-mode .input-field input:focus + span {
+    color: var(--myDarkHighlight);
 }

@@ -45,15 +45,20 @@
                                class="sound-volume" type="text" data-slider-min="0" data-slider-max="1"
                                data-slider-step="0.05" data-slider-value="{{ _sound.volume }}"
                                data-group-index="{{ outer_loop.index0 }}" data-sound-index="{{ loop.index0 }}"/>
-                        <button type="button" class="btn" onclick="sendCmdSetSoundLoop({{ outer_loop.index0 }}, {{ loop.index0 }})">
-                            <i id="sound-loop-icon-{{ outer_loop.index0 }}-{{ loop.index0 }}"
-                               class="fas fa-undo {% if _sound.loop %}looping{% endif %}"></i>
-                        </button>
+                        <label for="sound-repeat-count-input-{{ outer_loop.index0 }}-{{ loop.index0 }}" class="input-field">
+                            <input id="sound-repeat-count-input-{{ outer_loop.index0 }}-{{ loop.index0 }}" type="number"
+                                   min="0"
+                                   class="repeat-count-input"
+                                   onfocusout="sendCmdSetSoundRepeatCount({{ outer_loop.index0 }}, {{ loop.index0 }})"
+                                   value="{{ _sound.repeat_count }}">
+                            <span class="label">#Repeats</span>
+                            <span class="border"></span>
+                        </label>
                         <label for="sound-loop-delay-input-{{ outer_loop.index0 }}-{{ loop.index0 }}" class="input-field">
                             <input id="sound-loop-delay-input-{{ outer_loop.index0 }}-{{ loop.index0 }}" type="text"
-                               class="input-field"
-                               onfocusout="sendCmdSetSoundLoopDelay({{ outer_loop.index0 }}, {{ loop.index0 }})"
-                               value="{{ _sound.loop_delay_config }}">
+                                   class="repeat-delay-input"
+                                   onfocusout="sendCmdSetSoundLoopDelay({{ outer_loop.index0 }}, {{ loop.index0 }})"
+                                   value="{{ _sound.loop_delay_config }}">
                             <span class="label">Loop Delay (in ms)</span>
                             <span class="border"></span>
                         </label>

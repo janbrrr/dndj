@@ -149,12 +149,12 @@ class Server:
                 sound_index = int(data_dict["soundIndex"])
                 volume = float(data_dict["volume"])
                 await self._set_sound_volume(request, group_index, sound_index, volume)
-        elif action == "setSoundLoop":
-            if "groupIndex" in data_dict and "soundIndex" in data_dict and "loop" in data_dict:
+        elif action == "setSoundRepeatCount":
+            if "groupIndex" in data_dict and "soundIndex" in data_dict and "repeatCount" in data_dict:
                 group_index = int(data_dict["groupIndex"])
                 sound_index = int(data_dict["soundIndex"])
-                loop = bool(data_dict["loop"])
-                await self._set_sound_loop(request, group_index, sound_index, loop)
+                repeat_count = int(data_dict["repeatCount"])
+                await self._set_sound_replay_count(request, group_index, sound_index, repeat_count)
         elif action == "setSoundLoopDelay":
             if "groupIndex" in data_dict and "soundIndex" in data_dict and "loopDelay" in data_dict:
                 group_index = int(data_dict["groupIndex"])
@@ -210,11 +210,11 @@ class Server:
         """
         await self.sound.set_sound_volume(request, group_index, sound_index, volume)
 
-    async def _set_sound_loop(self, request, group_index, sound_index, loop):
+    async def _set_sound_replay_count(self, request, group_index, sound_index, repeat_count):
         """
-        Sets the loop attribute for a specific sound.
+        Sets the repeat count for a specific sound.
         """
-        await self.sound.set_sound_loop(request, group_index, sound_index, loop)
+        await self.sound.set_sound_repeat_count(request, group_index, sound_index, repeat_count)
 
     async def _set_sound_loop_delay(self, request, group_index, sound_index, loop_delay):
         """
@@ -279,7 +279,7 @@ class Server:
                 "groupName": sound_info.group_name,
                 "soundName": sound_info.sound_name,
                 "volume": sound_info.volume,
-                "loop": sound_info.loop,
+                "repeatCount": sound_info.repeat_count,
                 "loopDelay": sound_info.loop_delay_config,
             }
         else:
@@ -304,10 +304,10 @@ class Server:
             logger.debug(f"Sound Callback: Volume")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setSoundVolume", **sound_info_dict})
-        elif action == SoundActions.LOOP:
-            logger.debug(f"Sound Callback: Loop")
+        elif action == SoundActions.REPEAT_COUNT:
+            logger.debug(f"Sound Callback: Repeat Count")
             for ws in request.app["websockets"].values():
-                await ws.send_json({"action": "setSoundLoop", **sound_info_dict})
+                await ws.send_json({"action": "setSoundRepeatCount", **sound_info_dict})
         elif action == SoundActions.LOOP_DELAY:
             logger.debug(f"Sound Callback: Loop Delay")
             for ws in request.app["websockets"].values():

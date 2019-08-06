@@ -125,7 +125,7 @@ class TestServer:
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
             "volume": 1,
-            "loop": False,
+            "repeatCount": 1,
             "loopDelay": "0",
         }
 
@@ -142,7 +142,7 @@ class TestServer:
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
             "volume": 1,
-            "loop": False,
+            "repeatCount": 1,
             "loopDelay": "0",
         }
 
@@ -163,19 +163,19 @@ class TestServer:
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
             "volume": 1,
-            "loop": False,
+            "repeatCount": 1,
             "loopDelay": "0",
         }
 
-    async def test_client_can_request_sound_to_stop_that_is_waiting_for_next_loop(
+    async def test_client_can_request_sound_to_stop_that_is_waiting_for_next_repeat(
         self, patched_example_server, aiohttp_client, monkeypatch
     ):
         """
-        Test that a sound that has `loop` set with a high `loop_delay` will stop and notify the client that the
-        (looping) sound has been stopped.
+        Test that a sound that has `loop` set to infinite with a high `loop_delay` will stop and notify the client that
+        the (repeating) sound has been stopped.
         """
         sound = patched_example_server.sound.groups[0].sounds[0]
-        sound.loop = True
+        sound.repeat_count = 0  # infinite loops
         sound.loop_delay = 42000  # 42 sec
         app = await patched_example_server._init_app()
         client = await aiohttp_client(app)
@@ -194,7 +194,7 @@ class TestServer:
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
             "volume": 1,
-            "loop": True,
+            "repeatCount": 0,
             "loopDelay": "42000",  # Remember that loop_delay was set
         }
 
@@ -217,23 +217,23 @@ class TestServer:
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
             "volume": 0.25,
-            "loop": False,
+            "repeatCount": 1,
             "loopDelay": "0",
         }
 
-    async def test_client_can_set_sound_loop(self, patched_example_client):
+    async def test_client_can_set_sound_repeat_count(self, patched_example_client):
         ws_resp = await patched_example_client.ws_connect("/")
-        set_sound_loop_request = {"action": "setSoundLoop", "groupIndex": 0, "soundIndex": 0, "loop": True}
+        set_sound_loop_request = {"action": "setSoundRepeatCount", "groupIndex": 0, "soundIndex": 0, "repeatCount": 42}
         await ws_resp.send_str(json.dumps(set_sound_loop_request))
         resp = await ws_resp.receive()
         assert json.loads(resp.data) == {
-            "action": "setSoundLoop",
+            "action": "setSoundRepeatCount",
             "groupIndex": 0,
             "soundIndex": 0,
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
             "volume": 1,
-            "loop": True,
+            "repeatCount": 42,
             "loopDelay": "0",
         }
 
@@ -249,7 +249,7 @@ class TestServer:
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
             "volume": 1,
-            "loop": False,
+            "repeatCount": 1,
             "loopDelay": "24",
         }
 
@@ -265,7 +265,7 @@ class TestServer:
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
             "volume": 1,
-            "loop": False,
+            "repeatCount": 1,
             "loopDelay": "24-42",
         }
 
@@ -281,6 +281,6 @@ class TestServer:
             "groupName": "Footsteps",
             "soundName": "Footsteps on Dry Leaves",
             "volume": 1,
-            "loop": False,
+            "repeatCount": 1,
             "loopDelay": "0",  # Nothing changed!
         }

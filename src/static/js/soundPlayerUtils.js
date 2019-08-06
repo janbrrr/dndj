@@ -16,8 +16,8 @@ function selectSoundVolumeSlider(groupIndex, soundIndex) {
     return $("#sound-volume-" + groupIndex + "-" + soundIndex);
 }
 
-function selectSoundLoopIcon(groupIndex, soundIndex) {
-    return $("#sound-loop-icon-" + groupIndex + "-" + soundIndex);
+function selectSoundRepeatCountInput(groupIndex, soundIndex) {
+    return $("#sound-repeat-count-input-" + groupIndex + "-" + soundIndex);
 }
 
 function selectSoundLoopDelayInput(groupIndex, soundIndex) {
@@ -47,16 +47,8 @@ function setSoundNotPlaying(groupIndex, soundIndex) {
     }
 }
 
-function isSoundLooping(groupIndex, soundIndex) {
-    return selectSoundLoopIcon(groupIndex, soundIndex).hasClass("looping");
-}
-
-function setSoundLoop(groupIndex, soundIndex, loopValue) {
-    if (loopValue) {
-        selectSoundLoopIcon(groupIndex, soundIndex).addClass("looping");
-    } else {
-        selectSoundLoopIcon(groupIndex, soundIndex).removeClass("looping");
-    }
+function setSoundRepeatCount(groupIndex, soundIndex, repeatCount) {
+    selectSoundRepeatCountInput(groupIndex, soundIndex).val(repeatCount);
 }
 
 function setSoundLoopDelay(groupIndex, soundIndex, loopDelay) {
