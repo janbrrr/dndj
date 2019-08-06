@@ -54,12 +54,12 @@
                             <span class="label">#Repeats</span>
                             <span class="border"></span>
                         </label>
-                        <label for="sound-loop-delay-input-{{ outer_loop.index0 }}-{{ loop.index0 }}" class="input-field">
-                            <input id="sound-loop-delay-input-{{ outer_loop.index0 }}-{{ loop.index0 }}" type="text"
+                        <label for="sound-repeat-delay-input-{{ outer_loop.index0 }}-{{ loop.index0 }}" class="input-field">
+                            <input id="sound-repeat-delay-input-{{ outer_loop.index0 }}-{{ loop.index0 }}" type="text"
                                    class="repeat-delay-input"
-                                   onfocusout="sendCmdSetSoundLoopDelay({{ outer_loop.index0 }}, {{ loop.index0 }})"
-                                   value="{{ _sound.loop_delay_config }}">
-                            <span class="label">Loop Delay (in ms)</span>
+                                   onfocusout="sendCmdSetSoundRepeatDelay({{ outer_loop.index0 }}, {{ loop.index0 }})"
+                                   value="{{ _sound.repeat_delay_config }}">
+                            <span class="label">Repeat Delay (in ms)</span>
                             <span class="border"></span>
                         </label>
                     </div>

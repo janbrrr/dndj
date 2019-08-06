@@ -92,7 +92,8 @@ class SoundManager:
 
     async def _play_repeating_sound(self, request: Request, group_index: int, sound_index: int):
         """
-        Plays the given sound. Repeats the sound if its `loop` attribute is set after waiting for `loop_delay` ms.
+        Plays the given sound. Repeats the sound if its `repeat_count` attribute is greater than one after waiting for
+        `repeat_delay` ms.
         """
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
@@ -106,7 +107,7 @@ class SoundManager:
                 repeat_count += 1
                 if sound.repeat_count != 0 and repeat_count >= sound.repeat_count:
                     break
-                delay = sound.loop_delay
+                delay = sound.repeat_delay
                 if delay == 0:
                     continue
                 await asyncio.sleep(delay / 1000.0)
@@ -188,12 +189,12 @@ class SoundManager:
 
     async def set_sound_repeat_count(self, request: Request, group_index: int, sound_index: int, repeat_count: int):
         """
-        Sets the loop attribute for a specific sound.
+        Sets the repeat count attribute for a specific sound.
 
         :param request: the request that caused this action
         :param group_index: index of the group of the sound
         :param sound_index: index of the sound in the group
-        :param repeat_count: number of times to repeat the sound (includes initial replay, 0 means infinity)
+        :param repeat_count: number of times to repeat the sound (includes initial play, 0 means infinity)
         """
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
@@ -202,33 +203,40 @@ class SoundManager:
         logger.info(f"Changed sound repeat count for group={group_index}, sound={sound_index} to {repeat_count}")
         await self.callback_handler(SoundActions.REPEAT_COUNT, request, sound_info, self.volume)
 
-    async def set_sound_loop_delay(self, request: Request, group_index: int, sound_index: int, loop_delay: str):
+    async def set_sound_repeat_delay(self, request: Request, group_index: int, sound_index: int, repeat_delay: str):
         """
-        Sets the loop delay for a specific sound. The `loop_delay` argument is expected to be either a single
-        integer or an interval of the form `<int>-<int>`.
+        Sets the repeat delay for a specific sound. The `repeat_delay` argument is expected to be a string of
+        either a single integer or an interval of the form `<int>-<int>`.
 
         :param request: the request that caused this action
         :param group_index: index of the group of the sound
         :param sound_index: index of the sound in the group
-        :param loop_delay: new value of the loop delay
+        :param repeat_delay: new value of the repeat delay
         """
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
         try:
-            sound.loop_delay = loop_delay
-            logger.info(f"Changed sound loop delay for group={group_index}, sound={sound_index} to {loop_delay}")
+            sound.repeat_delay = repeat_delay
+            logger.info(f"Changed sound repeat delay for group={group_index}, sound={sound_index} to {repeat_delay}")
         except ValueError:
             logger.info(
-                f"Failed to change sound loop delay for group={group_index}, sound={sound_index} to " f"{loop_delay}"
+                f"Failed to change sound repeat delay for group={group_index}, sound={sound_index} to "
+                f"{repeat_delay}"
             )
         sound_info = self._get_sound_callback_info(group_index, sound_index)
-        await self.callback_handler(SoundActions.LOOP_DELAY, request, sound_info, self.volume)
+        await self.callback_handler(SoundActions.REPEAT_DELAY, request, sound_info, self.volume)
 
     def _get_sound_callback_info(self, group_index, sound_index):
         group = self.groups[group_index]
         sound = group.sounds[sound_index]
         return SoundCallbackInfo(
-            group_index, group.name, sound_index, sound.name, sound.volume, sound.repeat_count, sound.loop_delay_config
+            group_index,
+            group.name,
+            sound_index,
+            sound.name,
+            sound.volume,
+            sound.repeat_count,
+            sound.repeat_delay_config,
         )
 
     def __eq__(self, other):

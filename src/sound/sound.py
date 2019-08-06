@@ -24,7 +24,7 @@ class Sound:
         - "directory": the directory where the files for this sound are (Optional)
         - "volume": a value between 0 and 1 where 1 is maximum volume and 0 is no volume (Optional, default=1)
         - "repeat_count": total repeats the sound (including initial) where 0 means infinite (Optional, default=1)
-        - "loop_delay": delay in ms used when looping. Either an int or a string '<min>-<max>' (Optional, default=0)
+        - "repeat_delay": delay in ms used when repeating. Either an int or a string '<min>-<max>' (Optional, default=0)
         - "files": a list of files (or `SoundFile` configs) associated with this sound
 
         :param config: `dict`
@@ -33,58 +33,58 @@ class Sound:
         self.directory = config["directory"] if "directory" in config else None
         self.volume = config["volume"] if "volume" in config else 1
         self.repeat_count = int(config["repeat_count"]) if "repeat_count" in config else 1
-        if "loop_delay" in config:
-            self.loop_delay = config["loop_delay"]
+        if "repeat_delay" in config:
+            self.repeat_delay = config["repeat_delay"]
         else:
-            self.loop_delay = 0
+            self.repeat_delay = 0
         files = [SoundFile(sound_file) for sound_file in config["files"]]
         self.files = tuple(files)
 
     @property
-    def loop_delay(self) -> int:
+    def repeat_delay(self) -> int:
         """
-        Returns the delay used for looping in ms. If the delay is an interval, a random number within this
+        Returns the delay used for repeating in ms. If the delay is an interval, a random number within this
         interval is returned.
         """
-        if self._loop_delay_min == self._loop_delay_max:
-            return self._loop_delay_min
+        if self._repeat_delay_min == self._repeat_delay_max:
+            return self._repeat_delay_min
         else:
-            return random.randint(self._loop_delay_min, self._loop_delay_max)
+            return random.randint(self._repeat_delay_min, self._repeat_delay_max)
 
-    @loop_delay.setter
-    def loop_delay(self, value):
+    @repeat_delay.setter
+    def repeat_delay(self, value):
         if not isinstance(value, int) and not isinstance(value, str):
-            raise ValueError("The 'loop_delay' for a 'Sound' must be an integer or string.")
+            raise ValueError("The 'repeat_delay' for a 'Sound' must be an integer or string.")
         if isinstance(value, int):
-            self._loop_delay_min = value
-            self._loop_delay_max = self._loop_delay_min
+            self._repeat_delay_min = value
+            self._repeat_delay_max = self._repeat_delay_min
             return
         single_number_match = self.delay_single_int_regex.match(value)
         if single_number_match is not None:
-            self._loop_delay_min = int(single_number_match.group(0))
-            self._loop_delay_max = self._loop_delay_min
+            self._repeat_delay_min = int(single_number_match.group(0))
+            self._repeat_delay_max = self._repeat_delay_min
             return
         interval_match = self.delay_interval_regex.match(value)
         if interval_match is not None:
-            self._loop_delay_min = int(interval_match.group(1))
-            self._loop_delay_max = int(interval_match.group(2))
-            if self._loop_delay_max < self._loop_delay_min:
-                raise ValueError("The 'loop_delay' cannot have a min value higher than the max value.")
+            self._repeat_delay_min = int(interval_match.group(1))
+            self._repeat_delay_max = int(interval_match.group(2))
+            if self._repeat_delay_max < self._repeat_delay_min:
+                raise ValueError("The 'repeat_delay' cannot have a min value higher than the max value.")
             return
         raise ValueError(
-            "The 'loop_delay' for a 'Sound' must be an integer, a string of an integer or an interval in "
+            "The 'repeat_delay' for a 'Sound' must be an integer, a string of an integer or an interval in "
             "the form '<int>-<int>'."
         )
 
     @property
-    def loop_delay_config(self) -> str:
+    def repeat_delay_config(self) -> str:
         """
-        Returns the configuration as string for the current loop delay.
+        Returns the configuration as string for the current repeat delay.
         """
-        if self._loop_delay_min == self._loop_delay_max:
-            return str(self._loop_delay_min)
+        if self._repeat_delay_min == self._repeat_delay_max:
+            return str(self._repeat_delay_min)
         else:
-            return f"{self._loop_delay_min}-{self._loop_delay_max}"
+            return f"{self._repeat_delay_min}-{self._repeat_delay_max}"
 
     def __eq__(self, other):
         if isinstance(other, Sound):

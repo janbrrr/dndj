@@ -233,7 +233,7 @@ sound:
       directory: path/to/dir  # (Optional) used if all files of a sound are in the same dir
       volume: 0.5             # (Optional, default=1) value from 0 (mute) to 1 (max)
       repeat_count: 3         # (Optional, default=1) #times to play the sound (includes initial, 0 = ∞)
-      loop_delay: 5000-7000   # (Optional, default=0) delay to use in ms, single number or interval
+      repeat_delay: 5000-7000 # (Optional, default=0) delay in ms, single number or interval (not on initial)
       files: []               # a list of sound files
 ```
 

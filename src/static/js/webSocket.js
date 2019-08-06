@@ -62,8 +62,8 @@ function connect() {
                 _handleSetSoundRepeatCount(data);
                 break;
             }
-            case "setSoundLoopDelay": {
-                _handleSetSoundLoopDelay(data);
+            case "setSoundRepeatDelay": {
+                _handleSetSoundRepeatDelay(data);
                 break;
             }
             default:
@@ -179,8 +179,8 @@ function _handleSetSoundRepeatCount(data) {
         " set to " + data.repeatCount);
 }
 
-function _handleSetSoundLoopDelay(data) {
-    setSoundLoopDelay(data.groupIndex, data.soundIndex, data.loopDelay);
+function _handleSetSoundRepeatDelay(data) {
+    setSoundRepeatDelay(data.groupIndex, data.soundIndex, data.repeatDelay);
     console.log("Sound loop delay for group=" + data.groupIndex + ", sound=" + data.soundIndex +
-        " set to " + data.loopDelay);
+        " set to " + data.repeatDelay);
 }

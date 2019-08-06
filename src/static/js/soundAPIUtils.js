@@ -64,16 +64,16 @@ function sendCmdSetSoundRepeatCount(groupIndex, soundIndex) {
     conn.send(JSON.stringify(toSend));
 }
 
-function sendCmdSetSoundLoopDelay(groupIndex, soundIndex) {
+function sendCmdSetSoundRepeatDelay(groupIndex, soundIndex) {
     if (conn === null) {
         onNotConnected();
         return;
     }
     const toSend = {
-        "action": "setSoundLoopDelay",
+        "action": "setSoundRepeatDelay",
         "groupIndex": groupIndex,
         "soundIndex": soundIndex,
-        "loopDelay": selectSoundLoopDelayInput(groupIndex, soundIndex).val(),
+        "repeatDelay": selectSoundRepeatDelayInput(groupIndex, soundIndex).val(),
     };
     conn.send(JSON.stringify(toSend));
 }

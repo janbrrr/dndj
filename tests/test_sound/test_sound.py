@@ -40,57 +40,57 @@ class TestSound:
         sound = Sound(minimal_sound_config)
         assert sound.repeat_count == 42
 
-    def test_loop_delay_is_zero_by_default(self, minimal_sound_config):
+    def test_repeat_delay_is_zero_by_default(self, minimal_sound_config):
         sound = Sound(minimal_sound_config)
-        assert sound.loop_delay == 0
+        assert sound.repeat_delay == 0
 
-    def test_loop_delay_single_int(self):
-        sound = Sound({"name": "Sound", "files": [], "loop_delay": 42})
-        assert sound._loop_delay_min == 42
-        assert sound._loop_delay_max == 42
-        assert sound.loop_delay == 42
-        sound.loop_delay = 24
-        assert sound._loop_delay_min == 24
-        assert sound._loop_delay_max == 24
+    def test_repeat_delay_single_int(self):
+        sound = Sound({"name": "Sound", "files": [], "repeat_delay": 42})
+        assert sound._repeat_delay_min == 42
+        assert sound._repeat_delay_max == 42
+        assert sound.repeat_delay == 42
+        sound.repeat_delay = 24
+        assert sound._repeat_delay_min == 24
+        assert sound._repeat_delay_max == 24
 
-    def test_loop_delay_interval(self):
-        sound = Sound({"name": "Sound", "files": [], "loop_delay": "24-42"})
-        assert sound._loop_delay_min == 24
-        assert sound._loop_delay_max == 42
-        loop_delay_sample_value = sound.loop_delay
-        assert loop_delay_sample_value >= 24
-        assert loop_delay_sample_value <= 42
-        sound.loop_delay = "25-43"
-        assert sound._loop_delay_min == 25
-        assert sound._loop_delay_max == 43
+    def test_repeat_delay_interval(self):
+        sound = Sound({"name": "Sound", "files": [], "repeat_delay": "24-42"})
+        assert sound._repeat_delay_min == 24
+        assert sound._repeat_delay_max == 42
+        repeat_delay_sample_value = sound.repeat_delay
+        assert repeat_delay_sample_value >= 24
+        assert repeat_delay_sample_value <= 42
+        sound.repeat_delay = "25-43"
+        assert sound._repeat_delay_min == 25
+        assert sound._repeat_delay_max == 43
 
-    def test_raises_value_error_if_loop_delay_neither_int_nor_string_type(self):
+    def test_raises_value_error_if_repeat_delay_neither_int_nor_string_type(self):
         with pytest.raises(ValueError):
-            Sound({"name": "Sound", "files": [], "loop_delay": 5.6})
-        sound = Sound({"name": "Sound", "files": [], "loop_delay": "42"})
+            Sound({"name": "Sound", "files": [], "repeat_delay": 5.6})
+        sound = Sound({"name": "Sound", "files": [], "repeat_delay": "42"})
         with pytest.raises(ValueError):
-            sound.loop_delay = 12.5
+            sound.repeat_delay = 12.5
 
-    def test_raises_value_error_if_loop_delay_neither_int_nor_interval(self):
+    def test_raises_value_error_if_repeat_delay_neither_int_nor_interval(self):
         with pytest.raises(ValueError):
-            Sound({"name": "Sound", "files": [], "loop_delay": "?"})
-        sound = Sound({"name": "Sound", "files": [], "loop_delay": "42"})
+            Sound({"name": "Sound", "files": [], "repeat_delay": "?"})
+        sound = Sound({"name": "Sound", "files": [], "repeat_delay": "42"})
         with pytest.raises(ValueError):
-            sound.loop_delay = "?"
+            sound.repeat_delay = "?"
 
-    def test_raises_value_error_if_loop_delay_interval_max_higher_than_min(self):
+    def test_raises_value_error_if_repeat_delay_interval_max_higher_than_min(self):
         with pytest.raises(ValueError):
-            Sound({"name": "Sound", "files": [], "loop_delay": "42-24"})
-        sound = Sound({"name": "Sound", "files": [], "loop_delay": "42"})
+            Sound({"name": "Sound", "files": [], "repeat_delay": "42-24"})
+        sound = Sound({"name": "Sound", "files": [], "repeat_delay": "42"})
         with pytest.raises(ValueError):
-            sound.loop_delay = "42-24"
+            sound.repeat_delay = "42-24"
 
-    def test_loop_delay_interval_returns_random_value_in_range(self, monkeypatch):
+    def test_repeat_delay_interval_returns_random_value_in_range(self, monkeypatch):
         randint_mock = MagicMock(return_value=42)
         monkeypatch.setattr("src.sound.sound.random.randint", randint_mock)
-        sound = Sound({"name": "Sound", "files": [], "loop_delay": "24-42"})
-        assert sound.loop_delay == 42
-        randint_mock.assert_called_once_with(sound._loop_delay_min, sound._loop_delay_max)
+        sound = Sound({"name": "Sound", "files": [], "repeat_delay": "24-42"})
+        assert sound.repeat_delay == 42
+        randint_mock.assert_called_once_with(sound._repeat_delay_min, sound._repeat_delay_max)
 
     def test_files_use_tuple_instead_of_list(self, minimal_sound_config):
         sound = Sound(minimal_sound_config)

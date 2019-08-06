@@ -20,8 +20,8 @@ function selectSoundRepeatCountInput(groupIndex, soundIndex) {
     return $("#sound-repeat-count-input-" + groupIndex + "-" + soundIndex);
 }
 
-function selectSoundLoopDelayInput(groupIndex, soundIndex) {
-    return $("#sound-loop-delay-input-" + groupIndex + "-" + soundIndex);
+function selectSoundRepeatDelayInput(groupIndex, soundIndex) {
+    return $("#sound-repeat-delay-input-" + groupIndex + "-" + soundIndex);
 }
 
 // Utility functions
@@ -51,6 +51,6 @@ function setSoundRepeatCount(groupIndex, soundIndex, repeatCount) {
     selectSoundRepeatCountInput(groupIndex, soundIndex).val(repeatCount);
 }
 
-function setSoundLoopDelay(groupIndex, soundIndex, loopDelay) {
-    selectSoundLoopDelayInput(groupIndex, soundIndex).val(loopDelay);
+function setSoundRepeatDelay(groupIndex, soundIndex, repeatDelay) {
+    selectSoundRepeatDelayInput(groupIndex, soundIndex).val(repeatDelay);
 }

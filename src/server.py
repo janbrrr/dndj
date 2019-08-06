@@ -154,13 +154,13 @@ class Server:
                 group_index = int(data_dict["groupIndex"])
                 sound_index = int(data_dict["soundIndex"])
                 repeat_count = int(data_dict["repeatCount"])
-                await self._set_sound_replay_count(request, group_index, sound_index, repeat_count)
-        elif action == "setSoundLoopDelay":
-            if "groupIndex" in data_dict and "soundIndex" in data_dict and "loopDelay" in data_dict:
+                await self._set_sound_repeat_count(request, group_index, sound_index, repeat_count)
+        elif action == "setSoundRepeatDelay":
+            if "groupIndex" in data_dict and "soundIndex" in data_dict and "repeatDelay" in data_dict:
                 group_index = int(data_dict["groupIndex"])
                 sound_index = int(data_dict["soundIndex"])
-                loop_delay = data_dict["loopDelay"]
-                await self._set_sound_loop_delay(request, group_index, sound_index, loop_delay)
+                repeat_delay = data_dict["repeatDelay"]
+                await self._set_sound_repeat_delay(request, group_index, sound_index, repeat_delay)
 
     async def _play_music(self, request, group_index, track_list_index):
         """
@@ -210,17 +210,17 @@ class Server:
         """
         await self.sound.set_sound_volume(request, group_index, sound_index, volume)
 
-    async def _set_sound_replay_count(self, request, group_index, sound_index, repeat_count):
+    async def _set_sound_repeat_count(self, request, group_index, sound_index, repeat_count):
         """
         Sets the repeat count for a specific sound.
         """
         await self.sound.set_sound_repeat_count(request, group_index, sound_index, repeat_count)
 
-    async def _set_sound_loop_delay(self, request, group_index, sound_index, loop_delay):
+    async def _set_sound_repeat_delay(self, request, group_index, sound_index, repeat_delay):
         """
-        Sets the loop delay for a specific sound.
+        Sets the repeat delay for a specific sound.
         """
-        await self.sound.set_sound_loop_delay(request, group_index, sound_index, loop_delay)
+        await self.sound.set_sound_repeat_delay(request, group_index, sound_index, repeat_delay)
 
     async def on_music_changes(self, action: MusicActions, request: Request, music_info: MusicCallbackInfo):
         """
@@ -280,7 +280,7 @@ class Server:
                 "soundName": sound_info.sound_name,
                 "volume": sound_info.volume,
                 "repeatCount": sound_info.repeat_count,
-                "loopDelay": sound_info.loop_delay_config,
+                "repeatDelay": sound_info.repeat_delay_config,
             }
         else:
             sound_info_dict = {}
@@ -308,7 +308,7 @@ class Server:
             logger.debug(f"Sound Callback: Repeat Count")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setSoundRepeatCount", **sound_info_dict})
-        elif action == SoundActions.LOOP_DELAY:
-            logger.debug(f"Sound Callback: Loop Delay")
+        elif action == SoundActions.REPEAT_DELAY:
+            logger.debug(f"Sound Callback: Repeat Delay")
             for ws in request.app["websockets"].values():
-                await ws.send_json({"action": "setSoundLoopDelay", **sound_info_dict})
+                await ws.send_json({"action": "setSoundRepeatDelay", **sound_info_dict})
