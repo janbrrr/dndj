@@ -10,7 +10,7 @@ env:
 
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -qq vlc
+  - sudo apt-get install -qq vlc ffmpeg
 
 install:
   - pip install -r requirements-dev.txt

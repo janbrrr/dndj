@@ -77,7 +77,11 @@ Next, set up a virtual environment.
 
 Whenever you want to execute the program from the terminal, make sure the virtual environment is active.
 
-This project uses the [VLC media player](https://www.videolan.org/vlc/) to play the music, so make sure to have it installed as well.
+There are two additional dependencies you have to install:
+- The [VLC media player](https://www.videolan.org/vlc/) is used to play the music, so make sure to have it installed.
+- File types and conversions are handled by [pydub](https://pydub.com/), which requires 
+[FFmpeg](https://ffmpeg.org/) being installed. Make sure to add the `/bin` folder to your `PATH` on Windows.
+
 
 ## <a name="example"/>Running the Example
 
@@ -343,7 +347,7 @@ For sound files the only supported formats are `.wav` and `.ogg`.
 If you happen to have a different format or simply want to convert your audio files into a different format,
 you can use the `scripts/convert_file.py` script. This script uses [pydub](https://pydub.com/) to perform the conversion.
 Note that working with formats other than `.wav` requires having 
-[ffmpeg](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up) installed. 
+[FFmpeg](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up) installed. 
 When converting a `.wav` file, the sample format will be set to 16-bit, which is the format pygame supports.
 
 `python convert_file.py path/to/file-or-dir format`
