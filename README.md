@@ -399,8 +399,10 @@ Here is small collection of sources where you can discover great music.
 ## <a name="resources-sound"/>Sounds
 
 Finding sounds is quite challenging. So far I make use of the following free websites and hope they have what I need.
-- [Freesound](https://freesound.org/)
-- [Zapsplat](https://www.zapsplat.com/)
+- [Freesound](https://freesound.org/) (Collaborative collection of sounds released under CC license)
+- [GameSounds.xyz](https://gamesounds.xyz/) (Collection of royalty free sounds)
+- [Phanary](http://phanary.com/) (No downloads, but has a searchable collection and lists the original sources)
+- [Zapsplat](https://www.zapsplat.com/) (Free sound effects)
 
 If you can spend some coin, there is also the option to buy professional sound packs that fulfill your needs.
 
