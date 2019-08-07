@@ -13,10 +13,13 @@ class TestSoundChecker:
         Test that the `do_all_checks()` method does all the checks.
         """
         check_sound_files_do_exist_mock = MagicMock()
+        check_sound_files_can_be_played_mock = MagicMock()
         monkeypatch.setattr(SoundChecker, "check_sound_files_do_exist", check_sound_files_do_exist_mock)
+        monkeypatch.setattr(SoundChecker, "check_sound_files_can_be_played", check_sound_files_can_be_played_mock)
         groups = []
         SoundChecker().do_all_checks(groups, "default/dir/")
         check_sound_files_do_exist_mock.assert_called_once_with(groups, "default/dir/")
+        check_sound_files_can_be_played_mock.assert_called_once_with(groups, "default/dir/")
 
     def test_check_sound_files_do_exist(self, monkeypatch):
         """
@@ -62,3 +65,38 @@ class TestSoundChecker:
         group = SoundGroup({"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["file-does-not-exist.wav"]}]})
         with pytest.raises(ValueError):
             SoundChecker().check_sound_files_do_exist([group], "dir")
+
+    def test_check_sound_files_can_be_played(self):
+        """
+        Test that `check_sound_files_can_be_played()` checks that the sound files can be played with pygame.
+        """
+        group_1 = SoundGroup(
+            {
+                "name": "Group 1",
+                "sounds": [
+                    {"name": "Supported Format 1", "files": ["supported_format.wav"]},
+                    {"name": "Supported Format 2", "files": ["supported_format.wav"]},
+                ],
+            }
+        )
+        group_2 = SoundGroup(
+            {"name": "Group 2", "sounds": [{"name": "Supported Format 3", "files": ["supported_format.ogg"]}]}
+        )
+        SoundChecker().check_sound_files_can_be_played([group_1, group_2], "tests/_resources")
+        # Test is a success if no error has been raised
+
+    def test_check_sound_files_can_be_played_raises_type_error_if_file_not_playable(self):
+        """
+        Test that `check_sound_files_can_be_played()` raises a `TypeError` if a sound file cannot be played with pygame.
+        """
+        group = SoundGroup(
+            {
+                "name": "Group 1",
+                "sounds": [
+                    {"name": "Supported Format", "files": ["supported_format.wav"]},
+                    {"name": "Unsupported Format", "files": ["unsupported_format.wav"]},
+                ],
+            }
+        )
+        with pytest.raises(TypeError):
+            SoundChecker().check_sound_files_can_be_played([group], "tests/_resources")

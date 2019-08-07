@@ -13,6 +13,8 @@ def convert_file(file_path, _format, start=None, end=None, out=None):
     if end is not None:
         end = int(end)
         audio = audio[:end]
+    if _format == "wav":
+        audio = audio.set_sample_width(2)  # pygame only supports a sample format of 16 bit (2 byte)
     if out is not None:
         head, tail = os.path.split(file_path)
         audio.export(os.path.join(head, f"{out}.{_format}"), format=_format)

@@ -238,7 +238,8 @@ sound:
 ```
 
 Finally, a sound `file` is in the simplest case just a filename, but it also can be a more
-specific configuration. Note that only `.ogg` and `.wav` files are supported.
+specific configuration. Note that only `.ogg` and `.wav` files are supported and 
+pygame requires them to have a signed 16-bit sample format.
 
 ```yaml
 ### sound > file config ###
@@ -341,7 +342,9 @@ For sound files the only supported formats are `.wav` and `.ogg`.
 
 If you happen to have a different format or simply want to convert your audio files into a different format,
 you can use the `scripts/convert_file.py` script. This script uses [pydub](https://pydub.com/) to perform the conversion.
-Refer to the official pydub homepage for more information regarding the installation.
+Note that working with formats other than `.wav` requires having 
+[ffmpeg](https://github.com/jiaaro/pydub#getting-ffmpeg-set-up) installed. 
+When converting a `.wav` file, the sample format will be set to 16-bit, which is the format pygame supports.
 
 `python convert_file.py path/to/file-or-dir format`
 
