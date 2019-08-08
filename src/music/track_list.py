@@ -46,6 +46,8 @@ class TrackList:
                 and self.directory == other.directory
                 and self.loop == other.loop
                 and self.shuffle == other.shuffle
+                and self.volume == other.volume
+                and self.next == other.next
             )
             if not attrs_are_the_same:
                 return False

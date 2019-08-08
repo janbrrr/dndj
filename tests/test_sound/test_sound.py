@@ -102,9 +102,27 @@ class TestSound:
         assert sound_1 == sound_2
         assert sound_2 == sound_1
 
-    def test_not_equal_if_different_attributes(self):
+    def test_not_equal_if_different_names(self):
         sound_1 = Sound({"name": "Sound 1", "files": []})
         sound_2 = Sound({"name": "Sound 2", "files": []})
+        assert sound_1 != sound_2
+        assert sound_2 != sound_1
+
+    def test_not_equal_if_different_volumes(self):
+        sound_1 = Sound({"name": "Sound", "volume": 0.5, "files": []})
+        sound_2 = Sound({"name": "Sound", "files": []})
+        assert sound_1 != sound_2
+        assert sound_2 != sound_1
+
+    def test_not_equal_if_different_repeat_counts(self):
+        sound_1 = Sound({"name": "Sound", "repeat_count": 2, "files": []})
+        sound_2 = Sound({"name": "Sound", "files": []})
+        assert sound_1 != sound_2
+        assert sound_2 != sound_1
+
+    def test_not_equal_if_different_repeat_delays(self):
+        sound_1 = Sound({"name": "Sound", "repeat_delay": "1000-2000", "files": []})
+        sound_2 = Sound({"name": "Sound", "files": []})
         assert sound_1 != sound_2
         assert sound_2 != sound_1
 

@@ -88,7 +88,13 @@ class Sound:
 
     def __eq__(self, other):
         if isinstance(other, Sound):
-            attrs_are_the_same = self.name == other.name and self.directory == other.directory
+            attrs_are_the_same = (
+                self.name == other.name
+                and self.directory == other.directory
+                and self.volume == other.volume
+                and self.repeat_count == other.repeat_count
+                and self.repeat_delay_config == other.repeat_delay_config
+            )
             if not attrs_are_the_same:
                 return False
             if len(self.files) != len(other.files):

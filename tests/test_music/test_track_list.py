@@ -98,6 +98,18 @@ class TestTrackList:
         assert track_list_1 != track_list_2
         assert track_list_2 != track_list_1
 
+    def test_not_equal_if_different_volume(self):
+        track_list_1 = TrackList({"name": "Same Name", "volume": 50, "tracks": []})
+        track_list_2 = TrackList({"name": "Same Name", "volume": 100, "tracks": []})
+        assert track_list_1 != track_list_2
+        assert track_list_2 != track_list_1
+
+    def test_not_equal_if_different_next_attrs(self):
+        track_list_1 = TrackList({"name": "Same Name", "next": "Track List 1", "tracks": []})
+        track_list_2 = TrackList({"name": "Same Name", "tracks": []})
+        assert track_list_1 != track_list_2
+        assert track_list_2 != track_list_1
+
     def test_not_equal_if_different_files(self):
         track_list_1 = TrackList({"name": "Same Name", "tracks": ["some-filename.mp3"]})
         track_list_2 = TrackList({"name": "Same Name", "tracks": ["different-filename.mp3"]})
