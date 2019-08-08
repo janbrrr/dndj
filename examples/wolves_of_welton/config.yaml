@@ -1,6 +1,6 @@
 music:
   volume: 20
-  directory: "example/music"
+  directory: "examples/wolves_of_welton/music"
   sort: false
   groups:
   - name: Scene 1 - Wolfpack
@@ -131,7 +131,7 @@ music:
       - https://www.youtube.com/watch?v=gYX3jRbNZh8  # Darkness of Light
 sound:
   volume: 1
-  directory: "example/sounds"
+  directory: "examples/wolves_of_welton/sounds"
   groups:
   - name: Scene 4 - Owlbear
     sounds:

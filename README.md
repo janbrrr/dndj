@@ -26,9 +26,9 @@ able to play them without any issues.
   - The web page displays the available music and sounds (as specified in the config)
   - Play music, stop the music, change the volume or play sounds
 
-Desktop View (Light Mode)            |  Mobile (Dark Mode)
+Desktop View (Music Tab)            |  Mobile (Sound Tab)
 :-------------------------:|:-------------------------:
-![Desktop View](docs/_static/example_page_desktop.jpg "Desktop View")  |  ![Mobile View](docs/_static/example_page_mobile.jpg "Mobile View")
+![Desktop View](docs/_static/example_page_desktop.png "Desktop View")  |  ![Mobile View](docs/_static/example_page_mobile.png "Mobile View")
 
 
 ### How does it work under the hood?
@@ -80,22 +80,27 @@ Whenever you want to execute the program from the terminal, make sure the virtua
 There are two additional dependencies you have to install:
 - The [VLC media player](https://www.videolan.org/vlc/) is used to play the music, so make sure to have it installed.
 - File types and conversions are handled by [pydub](https://pydub.com/), which requires 
-[FFmpeg](https://ffmpeg.org/) being installed. Make sure to add the `/bin` folder to your `PATH` on Windows.
+[FFmpeg](https://ffmpeg.org/) being installed. Make sure to add the `/bin` folder of FFmpeg to your `PATH` on Windows.
 
 
-## <a name="example"/>Running the Example
+## <a name="example"/>Running the Examples
 
-Run the example by typing `python start_server.py example/config.yaml`.
+Run the example by typing `python start_server.py examples/death_house/config.yaml`.
 
-Now you can visit `127.0.0.1:8080` in your browser and start playing around with it. 
-It is based on [The Wolves of Welton by Winghorn Press](https://winghornpress.com/adventures/wolves-of-welton/).
+Now you can visit `127.0.0.1:8080` in your browser and start playing around with it. It is an example configuration for running (a variation of) 
+[Death House](https://media.wizards.com/2016/downloads/DND/Curse%20of%20Strahd%20Introductory%20Adventure.pdf).
 
-Credits to [Tabletop Audio](https://tabletopaudio.com/) for some of the music/ambience in the example.
+The second example at `examples/wolves_of_welton/` is based on 
+[The Wolves of Welton by Winghorn Press](https://winghornpress.com/adventures/wolves-of-welton/)
+(and it uses too much music for my taste).
+
+Credits to [Tabletop Audio](https://tabletopaudio.com/) for some of the music/ambience in the examples.
 The audio is licensed under
 [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 
 Sound Credits (licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/))
-- "Monster footsteps on wood" by [Suburbanwizard](https://freesound.org/people/Suburbanwizard/) at [Freesound.org](https://freesound.org)
+- Monster footsteps: "Monster footsteps on wood" by [Suburbanwizard](https://freesound.org/people/Suburbanwizard/) at [Freesound.org](https://freesound.org)
+- Grinding noise: "brick becomes slab.wav" by [Timbre](https://freesound.org/people/Timbre/) at [Freesound.org](https://freesound.org)
 
 # <a name="guide"/>User Guide
 

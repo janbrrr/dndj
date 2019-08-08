@@ -1,0 +1,69 @@
+music:
+  volume: 100
+  sort: false
+  groups:
+  - name: Adventure Hook
+    sort: false
+    track_lists:
+    - name: Tavern
+      volume: 70
+      tracks:
+      - https://www.youtube.com/watch?v=EULoybB2Nsw  # Crowded Local Tavern
+    - name: Forest
+      volume: 50
+      tracks:
+      - https://www.youtube.com/watch?v=HAw37tUHcOo  # Daytime Forest
+  - name: Land of Barovia
+    sort: false
+    track_lists:
+    - name: Mists of Ravenloft Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=J41ipvUvIzI  # Mists of Ravenloft
+  - name: Death House - General
+    sort: false
+    track_lists:
+    - name: Death House Ambience
+      loop: false
+      tracks:
+      - https://www.youtube.com/watch?v=GOTyzCntzJo  # Death House
+    - name: Ghostly Chanting
+      tracks:
+      - https://www.youtube.com/watch?v=eqUiXz1tcmM  # Death House Dungeon
+  - name: Death House - First Floor
+    sort: false
+    track_lists:
+    - name: 2. Main Hall (Harpsichord)
+      loop: false
+      volume: 50
+      next: Death House Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=EFJ7kDva7JE  # Spring Waltz
+  - name: Death House - Second Floor
+    sort: false
+    track_lists:
+    - name: 10. Conservatory (Playing the sheet music)
+      loop: false
+      volume: 50
+      next: Death House Ambience
+      tracks:
+      - https://www.youtube.com/watch?v=T5i95GFgQFo  # Ballroom Waltz
+  - name: Death House - Dungeon
+    sort: false
+    track_lists:
+    - name: 34. Gustav's Suicide Note
+      loop: false
+      volume: 50
+      next: Ghostly Chanting
+      tracks:
+      - file: https://www.youtube.com/watch?v=pUZeSYsU0Uk  # Cold
+        start_at: 0:0:11
+sound:
+  volume: 1
+  directory: "examples/death_house/sounds"
+  groups:
+  - name: Attic - Secret Passage
+    sounds:
+    - name: Grinding Noise
+      volume: 0.4
+      files:
+      - grinding_noise.ogg
