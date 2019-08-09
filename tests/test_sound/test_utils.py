@@ -50,3 +50,28 @@ class TestGetSoundRootDirectory:
         sound.directory = None
         with pytest.raises(ValueError):
             utils.get_sound_root_directory(group=example_group, sound=sound, default_dir=None)
+
+
+class TestSoundTupleGenerator:
+    def test_sound_tuple_generator(self):
+        """
+        Test that calling `sound_tuple_generator()` returns an iterator over all tuples of the form
+        (group, sound, sound_file).
+        """
+        group_config = {
+            "name": "Group 1",
+            "sounds": [
+                {"name": "Sound 1", "files": ["sound_file_1.wav"]},
+                {"name": "Sound 2", "files": ["sound_file_2.wav", "sound_file_3.wav"]},
+            ],
+        }
+        groups = [SoundGroup(group_config)]
+        generator = utils.sound_tuple_generator(groups)
+        first_tuple = (groups[0], groups[0].sounds[0], groups[0].sounds[0].files[0])
+        second_tuple = (groups[0], groups[0].sounds[1], groups[0].sounds[1].files[0])
+        third_tuple = (groups[0], groups[0].sounds[1], groups[0].sounds[1].files[1])
+        assert first_tuple == next(generator)
+        assert second_tuple == next(generator)
+        assert third_tuple == next(generator)
+        with pytest.raises(StopIteration):
+            next(generator)

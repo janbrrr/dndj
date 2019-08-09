@@ -52,7 +52,7 @@ class SoundManager:
         self.callback_handler = SoundCallbackHandler(callback_fn=callback_fn)
         self.tracker = SoundTracker()
         self.players = {}
-        SoundChecker().do_all_checks(self.groups, self.directory)
+        SoundChecker(self.groups, self.directory).do_all_checks()
 
     def _get_player_key(self, group_index: int, sound_index: int):
         """

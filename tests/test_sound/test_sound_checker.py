@@ -18,9 +18,9 @@ class TestSoundChecker:
         monkeypatch.setattr(SoundChecker, "check_sound_files_do_exist", check_sound_files_do_exist_mock)
         monkeypatch.setattr(SoundChecker, "check_sound_files_can_be_played", check_sound_files_can_be_played_mock)
         groups = []
-        SoundChecker().do_all_checks(groups, "default/dir/")
-        check_sound_files_do_exist_mock.assert_called_once_with(groups, "default/dir/")
-        check_sound_files_can_be_played_mock.assert_called_once_with(groups, "default/dir/")
+        SoundChecker(groups, "default/dir/").do_all_checks()
+        check_sound_files_do_exist_mock.assert_called_once()
+        check_sound_files_can_be_played_mock.assert_called_once()
 
     def test_check_sound_files_do_exist(self, monkeypatch):
         """
@@ -35,7 +35,7 @@ class TestSoundChecker:
             {"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["sound-1.wav", "sound-2.wav"]}]}
         )
         group_2 = SoundGroup({"name": "Group 2", "sounds": [{"name": "Sound 2", "files": ["sound-3.wav"]}]})
-        SoundChecker().check_sound_files_do_exist([group_1, group_2], "default/dir")
+        SoundChecker([group_1, group_2], "default/dir").check_sound_files_do_exist()
         expected_get_root_calls = [
             call(group_1, group_1.sounds[0], default_dir="default/dir"),
             call(group_2, group_2.sounds[0], default_dir="default/dir"),
@@ -57,7 +57,7 @@ class TestSoundChecker:
         """
         group = SoundGroup({"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["no-directory.wav"]}]})
         with pytest.raises(ValueError):
-            SoundChecker().check_sound_files_do_exist([group], None)
+            SoundChecker([group], None).check_sound_files_do_exist()
 
     def test_check_sound_files_do_exist_raises_exception_if_file_invalid(self):
         """
@@ -65,7 +65,7 @@ class TestSoundChecker:
         """
         group = SoundGroup({"name": "Group 1", "sounds": [{"name": "Sound 1", "files": ["file-does-not-exist.wav"]}]})
         with pytest.raises(ValueError):
-            SoundChecker().check_sound_files_do_exist([group], "dir")
+            SoundChecker([group], "dir").check_sound_files_do_exist()
 
     def test_check_sound_files_can_be_played(self):
         """
@@ -83,7 +83,7 @@ class TestSoundChecker:
         group_2 = SoundGroup(
             {"name": "Group 2", "sounds": [{"name": "Supported Format 3", "files": ["supported_format.ogg"]}]}
         )
-        SoundChecker().check_sound_files_can_be_played([group_1, group_2], "tests/_resources")
+        SoundChecker([group_1, group_2], "tests/_resources").check_sound_files_can_be_played()
         # Test is a success if no error has been raised
 
     def test_check_sound_files_can_be_played_raises_type_error_if_file_not_playable(self):
@@ -104,4 +104,4 @@ class TestSoundChecker:
             }
         )
         with pytest.raises(TypeError):
-            SoundChecker().check_sound_files_can_be_played([group], "tests/_resources")
+            SoundChecker([group], "tests/_resources").check_sound_files_can_be_played()

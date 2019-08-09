@@ -1,3 +1,6 @@
+from typing import Generator, Iterable, Tuple
+
+from src.sound import SoundFile
 from src.sound.sound import Sound
 from src.sound.sound_group import SoundGroup
 
@@ -18,3 +21,14 @@ def get_sound_root_directory(group: SoundGroup, sound: Sound, default_dir=None) 
     if root_directory is None:
         raise ValueError(f"Sound '{sound.name}' is missing directory.")
     return root_directory
+
+
+def sound_tuple_generator(groups: Iterable[SoundGroup]) -> Generator[Tuple[SoundGroup, Sound, SoundFile], None, None]:
+    """
+    Iterates through the groups, the sounds in the groups and returns a tuple
+    (group, sound, sound_file) for every sound file.
+    """
+    for group in groups:
+        for sound in group.sounds:
+            for sound_file in sound.files:
+                yield (group, sound, sound_file)

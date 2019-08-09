@@ -95,10 +95,12 @@ class TestSoundManager:
         assert manager != config
 
     def test_performs_checks_on_initialization(self, monkeypatch):
-        do_all_checks_mock = MagicMock()
-        monkeypatch.setattr("src.sound.sound_manager.SoundChecker.do_all_checks", do_all_checks_mock)
+        sound_checker_instance_mock = MagicMock()
+        sound_checker_mock = MagicMock(return_value=sound_checker_instance_mock)
+        monkeypatch.setattr("src.sound.sound_manager.SoundChecker", sound_checker_mock)
         manager = SoundManager({"volume": 1, "directory": "default/dir/", "groups": []})
-        do_all_checks_mock.assert_called_once_with(manager.groups, manager.directory)
+        sound_checker_mock.assert_called_once_with(manager.groups, manager.directory)
+        sound_checker_instance_mock.do_all_checks.assert_called_once()
 
     async def test_play_repeating_sound_repeats_if_repeat_count_is_zero(self, example_sound_manager, monkeypatch):
         """
