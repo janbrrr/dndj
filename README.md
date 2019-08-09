@@ -248,7 +248,8 @@ sound:
 
 Finally, a sound `file` is in the simplest case just a filename, but it also can be a more
 specific configuration. Note that only `.ogg` and `.wav` files are supported and 
-pygame requires them to have a signed 16-bit sample format.
+pygame requires them to have a signed 16-bit sample format. Fear not, files will be converted automatically
+if they appear to be incompatible.
 
 ```yaml
 ### sound > file config ###

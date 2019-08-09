@@ -60,7 +60,7 @@ class MusicChecker:
         Iterates through every track and attempts to get its path. Logs any error and re-raises any exception.
         """
         logger.info("Checking that tracks point to valid paths...")
-        valid_youtube_tracks = collections.deque(cache.load(self.VALID_YOUTUBE_TRACKS_CACHE), maxlen=100)
+        valid_youtube_tracks = collections.deque(cache.load_list(self.VALID_YOUTUBE_TRACKS_CACHE), maxlen=100)
         for group, track_list, track in utils.music_tuple_generator(groups):
             try:
                 if not track.is_youtube_link:
@@ -76,5 +76,5 @@ class MusicChecker:
             except Exception as ex:
                 logger.error(f"Track '{track.file}' does not point to a valid path.")
                 raise ex
-        cache.save(list(valid_youtube_tracks), self.VALID_YOUTUBE_TRACKS_CACHE)
+        cache.save_list(list(valid_youtube_tracks), self.VALID_YOUTUBE_TRACKS_CACHE)
         logger.info("Success! All tracks point to valid paths.")
