@@ -7,12 +7,9 @@ import pydub
 def convert_file(file_path, _format, start=None, end=None, out=None):
     filename, file_extension = os.path.splitext(file_path)
     audio = pydub.audio_segment.AudioSegment.from_file(file_path)
-    if start is not None:
-        start = int(start)
-        audio = audio[start:]
-    if end is not None:
-        end = int(end)
-        audio = audio[:end]
+    start = int(start) if start is not None else 0
+    end = int(end) if end is not None else len(audio)
+    audio = audio[start:end]
     if _format == "wav":
         audio = audio.set_sample_width(2)  # pygame only supports a sample format of 16 bit (2 byte)
     if out is not None:
