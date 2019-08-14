@@ -256,6 +256,16 @@ class TestSoundManager:
         await example_sound_manager.set_master_volume(request=MagicMock(), volume=0)
         assert example_sound_manager.volume == 0
 
+    async def test_set_master_volume_sets_volume_on_players(self, example_sound_manager):
+        player_key = example_sound_manager._get_player_key(0, 0)
+        player_mock = MagicMock()
+        example_sound_manager.players[player_key] = player_mock
+        sound = example_sound_manager.groups[0].sounds[0]
+        sound.volume = 0.5
+        example_sound_manager.volume = 1
+        await example_sound_manager.set_master_volume(request=MagicMock(), volume=0.5)
+        player_mock.set_volume.assert_called_once_with(sound.volume * 0.5)
+
     async def test_set_volume(self, example_sound_manager):
         group = example_sound_manager.groups[0]
         sound = group.sounds[0]

@@ -60,6 +60,15 @@ class SoundManager:
         """
         return f"{group_index}-{sound_index}"
 
+    def _get_sound_from_player_key(self, player_key: str):
+        """
+        Returns the sound instance for the player key.
+        """
+        components = player_key.split("-")
+        group_index = int(components[0])
+        sound_index = int(components[1])
+        return self.groups[group_index].sounds[sound_index]
+
     @property
     def currently_playing(self) -> List[SoundCallbackInfo]:
         """
@@ -158,12 +167,16 @@ class SoundManager:
 
     async def set_master_volume(self, request: Request, volume: float):
         """
-        Sets the master volume for the sounds.
+        Sets the master volume for the sounds. If sounds are currently being played, the volume of the players
+        is updated.
 
         :param request: the request that caused this action
         :param volume: new volume, a value between 0 (mute) and 1 (max)
         """
         self.volume = volume
+        for player_key in self.players:
+            sound = self._get_sound_from_player_key(player_key)
+            self.players[player_key].set_volume(self.volume * sound.volume)
         logger.info(f"Changed sound master volume to {volume}")
         await self.callback_handler(SoundActions.MASTER_VOLUME, request, None, self.volume)
 
