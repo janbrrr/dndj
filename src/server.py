@@ -229,7 +229,7 @@ class Server:
         Notifies all connected web sockets about the changes.
         """
         if action == MusicActions.START:
-            logger.debug(f"Music Callback: Start")
+            logger.debug("Music Callback: Start")
             for ws in request.app["websockets"].values():
                 await ws.send_json(
                     {
@@ -241,19 +241,19 @@ class Server:
                     }
                 )
         elif action == MusicActions.STOP:
-            logger.debug(f"Music Callback: Stop")
+            logger.debug("Music Callback: Stop")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "musicStopped"})
         elif action == MusicActions.FINISH:
-            logger.debug(f"Music Callback: Finish")
+            logger.debug("Music Callback: Finish")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "musicFinished"})
         elif action == MusicActions.MASTER_VOLUME:
-            logger.debug(f"Music Callback: Master Volume")
+            logger.debug("Music Callback: Master Volume")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setMusicMasterVolume", "volume": music_info.master_volume})
         elif action == MusicActions.TRACK_LIST_VOLUME:
-            logger.debug(f"Music Callback: Track List Volume")
+            logger.debug("Music Callback: Track List Volume")
             for ws in request.app["websockets"].values():
                 await ws.send_json(
                     {
@@ -285,30 +285,30 @@ class Server:
         else:
             sound_info_dict = {}
         if action == SoundActions.START:
-            logger.debug(f"Sound Callback: Start")
+            logger.debug("Sound Callback: Start")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "soundPlaying", **sound_info_dict})
         elif action == SoundActions.STOP:
-            logger.debug(f"Sound Callback: Stop")
+            logger.debug("Sound Callback: Stop")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "soundStopped", **sound_info_dict})
         elif action == SoundActions.FINISH:
-            logger.debug(f"Sound Callback: Finish")
+            logger.debug("Sound Callback: Finish")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "soundFinished", **sound_info_dict})
         elif action == SoundActions.MASTER_VOLUME:
-            logger.debug(f"Sound Callback: Master Volume")
+            logger.debug("Sound Callback: Master Volume")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setSoundMasterVolume", "volume": master_volume})
         elif action == SoundActions.VOLUME:
-            logger.debug(f"Sound Callback: Volume")
+            logger.debug("Sound Callback: Volume")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setSoundVolume", **sound_info_dict})
         elif action == SoundActions.REPEAT_COUNT:
-            logger.debug(f"Sound Callback: Repeat Count")
+            logger.debug("Sound Callback: Repeat Count")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setSoundRepeatCount", **sound_info_dict})
         elif action == SoundActions.REPEAT_DELAY:
-            logger.debug(f"Sound Callback: Repeat Delay")
+            logger.debug("Sound Callback: Repeat Delay")
             for ws in request.app["websockets"].values():
                 await ws.send_json({"action": "setSoundRepeatDelay", **sound_info_dict})

@@ -68,9 +68,9 @@ class SoundChecker:
                 path_in_cache = os.path.join(cache.CONVERSION_CACHE_DIR, file_hash)
                 if not cache.exists_converted_file(f"{file_hash}.wav"):
                     logger.warning(f"Found incompatible wav file {sound_file_path}.")
-                    logger.warning(f"Attempting to convert it...")
+                    logger.warning("Attempting to convert it...")
                     convert_file(sound_file_path, "wav", out=path_in_cache)
-                    logger.warning(f"Success! Conversion done.")
+                    logger.warning("Success! Conversion done.")
                 sound_file.file = f"{path_in_cache}.wav"
         logger.info("Success! All .wav files should have compatible formats.")
 
