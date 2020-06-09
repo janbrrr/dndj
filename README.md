@@ -6,6 +6,8 @@
 *D&DJ* was created to help dungeon masters incorporate music and sounds into their storytelling. The idea is to prepare the music and sounds you want to use for specific scenes in advance and then being
 able to play them without any issues.
 
+*For the discord version [click here](https://github.com/janbrrr/dndj-discord).*
+
 ### Overview
 
 - Prepare a configuration file defining the music and sounds you want to use
